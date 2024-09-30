@@ -165,7 +165,6 @@ class AnthropicTest {
     // when
     val response = client.messages.create {
       +Message {
-        role = Role.USER
         +"What's 15 multiplied by 7?"
       }
       tools = listOf(calculatorTool)
