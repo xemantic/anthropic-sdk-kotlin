@@ -42,7 +42,18 @@ me to write AI code once, and target all the platforms automatically.
 
 ## Usage
 
-The simplest code would look like:
+_:warning: This SDK is in the early stage of development, but at the same time it is completely functional and passing
+[test cases](src/commonTest/kotlin)._
+
+Add to your `build.gradle.kts`:
+
+```kotlin
+dependencies {
+  implementation("com.xemantic.anthropic:anthropic-sdk-kotlin:0.1-SNAPSHOT")
+}
+```
+
+The simplest code look like:
 
 ```kotlin
 fun main() {
@@ -58,7 +69,28 @@ fun main() {
 }
 ```
 
-This SDK is in an early stage o development, but at the same time it is completely functional and passing
-live test cases.
+Streaming is also possible:
 
-More examples coming soon.
+```kotlin
+fun main() {
+  val client = Anthropic()
+  val pong = runBlocking {
+    client.messages.stream {
+      +Message {
+        role = Role.USER
+        +"ping!"
+      }
+    }
+      .filterIsInstance<ContentBlockDelta>()
+      .map { (it.delta as TextDelta).text }
+      .toList()
+      .joinToString(separator = "")
+  }
+  println(pong)
+}
+```
+
+More sophisticated code examples targeting various
+platforms will follow in the
+[anthropic-sdk-kotlin-demo](https://github.com/xemantic/anthropic-sdk-kotlin-demo)
+project.
