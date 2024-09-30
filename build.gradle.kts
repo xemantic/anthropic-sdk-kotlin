@@ -121,14 +121,14 @@ powerAssert {
   includedSourceSets = listOf("commonTest", "jvmTest", "nativeTest")
 }
 
-val javadocJar by tasks.register<Jar>("dokkaHtmlJar") {
-  group = "documentation"
-  dependsOn(tasks.dokkaHtml)
-  from(tasks.dokkaHtml.flatMap { it.outputDirectory })
-  archiveClassifier.set("javadoc")
-}
-
-val sourcesJar by tasks.named("sourcesJar")
+//val javadocJar by tasks.register<Jar>("dokkaHtmlJar") {
+//  group = "documentation"
+//  dependsOn(tasks.dokkaHtml)
+//  from(tasks.dokkaHtml.flatMap { it.outputDirectory })
+//  archiveClassifier.set("javadoc")
+//}
+//
+//val sourcesJar by tasks.named("sourcesJar")
 
 publishing {
   repositories {
@@ -144,10 +144,10 @@ publishing {
     }
   }
   publications {
-    create<MavenPublication>("maven") {
-      from(components["kotlin"])
-      artifact(javadocJar)
-      artifact(sourcesJar)
+    withType<MavenPublication> {
+//      from(components["kotlin"])
+//      artifact(javadocJar)
+//      artifact(sourcesJar)
       pom {
         name = "anthropic-sdk-kotlin"
         description = "Kotlin multiplatform client for accessing Ahtropic APIs"
