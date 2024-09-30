@@ -78,7 +78,7 @@ kotlin {
     nativeTest {
       dependencies {
         // on mac/ios it should be rather Darwin
-        runtimeOnly(libs.ktor.client.curl)
+        implementation(libs.ktor.client.curl)
       }
     }
 
