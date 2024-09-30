@@ -90,6 +90,67 @@ fun main() {
 }
 ```
 
+It can also use tools:
+
+```kotlin
+fun main() {
+  val client = Anthropic()
+
+  // soon the Tool will use generic serializable type and the schema
+  // will be generated automatically
+  val calculatorTool = Tool(
+    name = "calculator",
+    description = "Perform basic arithmetic operations",
+    inputSchema = buildJsonObject {
+      put("type", "object")
+      put("properties", buildJsonObject {
+        put("operation", buildJsonObject {
+          put("type", "string")
+          putJsonArray("enum") {
+            add("add")
+            add("subtract")
+            add("multiply")
+            add("divide")
+          }
+        })
+        put("a", buildJsonObject { put("type", "number") })
+        put("b", buildJsonObject { put("type", "number") })
+      })
+      putJsonArray("required") {
+        add("operation")
+        add("a")
+        add("b")
+      }
+    },
+    cacheControl = null
+  )
+
+  val response = runBlocking {
+    client.messages.create {
+      +Message {
+        role = Role.USER
+        +"What's 15 multiplied by 7?"
+      }
+      tools = listOf(calculatorTool)
+      toolChoice = ToolChoice.Any()
+    }
+  }
+
+  val operation = input["operation"]?.jsonPrimitive?.content
+  val a = input["a"]?.jsonPrimitive?.double
+  val b = input["b"]?.jsonPrimitive?.double
+  
+  val result = if (operation == "multiply") {
+    a * b
+  } else {
+    throw IllegalStateException("returned operation is not 'multiply'")
+  }
+  
+  // It's a bit ridiculous at the moment without schema generation from strongly
+  // typed entity. This feature will follow soon 
+}
+```
+
 More sophisticated code examples targeting various
 platforms will follow in the
 [anthropic-sdk-kotlin-demo](https://github.com/xemantic/anthropic-sdk-kotlin-demo)

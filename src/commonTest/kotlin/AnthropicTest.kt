@@ -8,10 +8,20 @@ import com.xemantic.anthropic.message.MessageResponse
 import com.xemantic.anthropic.message.Role
 import com.xemantic.anthropic.message.StopReason
 import com.xemantic.anthropic.message.Text
+import com.xemantic.anthropic.message.Tool
+import com.xemantic.anthropic.message.ToolChoice
+import com.xemantic.anthropic.message.ToolUse
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.double
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -95,6 +105,84 @@ class AnthropicTest {
 
     // then
     assertTrue(response == "The quick brown fox jumps over the lazy dog.")
+  }
+
+  @Test
+  fun shouldUseSimpleTool() = runTest {
+    // given
+    val client = Anthropic()
+
+
+    // when
+    val response = client.messages.stream {
+      +Message {
+        role = Role.USER
+        +"Say: 'The quick brown fox jumps over the lazy dog'"
+      }
+    }
+      .filterIsInstance<ContentBlockDelta>()
+      .map { (it.delta as TextDelta).text }
+      .toList()
+      .joinToString(separator = "")
+
+    // then
+    assertTrue(response == "The quick brown fox jumps over the lazy dog.")
+  }
+
+  @Test
+  fun shouldUseCalculatorTool() = runTest {
+    // given
+    val client = Anthropic()
+    // soon the Tool will use generic serializable type and the schema
+    // will be generated automatically
+    val calculatorTool = Tool(
+      name = "calculator",
+      description = "Perform basic arithmetic operations",
+      inputSchema = buildJsonObject {
+        put("type", "object")
+        put("properties", buildJsonObject {
+          put("operation", buildJsonObject {
+            put("type", "string")
+            putJsonArray("enum") {
+              add("add")
+              add("subtract")
+              add("multiply")
+              add("divide")
+            }
+          })
+          put("a", buildJsonObject { put("type", "number") })
+          put("b", buildJsonObject { put("type", "number") })
+        })
+        putJsonArray("required") {
+          add("operation")
+          add("a")
+          add("b")
+        }
+      },
+      cacheControl = null
+    )
+
+    // when
+    val response = client.messages.create {
+      +Message {
+        role = Role.USER
+        +"What's 15 multiplied by 7?"
+      }
+      tools = listOf(calculatorTool)
+      toolChoice = ToolChoice.Any()
+    }
+
+    // then
+    response.apply {
+      assertTrue(content.size == 1)
+      assertTrue(content[0] is ToolUse)
+      val toolUse = content[0] as ToolUse
+      assertTrue(toolUse.name == "calculator")
+      val input = toolUse.input.jsonObject
+      assertTrue(input["operation"]?.jsonPrimitive?.content == "multiply")
+      assertTrue(input["a"]?.jsonPrimitive?.double == 15.0)
+      assertTrue(input["b"]?.jsonPrimitive?.double == 7.0)
+    }
   }
 
 }
