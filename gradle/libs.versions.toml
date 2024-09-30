@@ -12,6 +12,7 @@ jackson = "2.18.0"
 
 versionsPlugin = "0.51.0"
 dokkaPlugin = "1.9.20"
+publishPlugin = "2.0.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -37,3 +38,4 @@ kotlin-plugin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization"
 kotlin-plugin-power-assert = { id = "org.jetbrains.kotlin.plugin.power-assert", version.ref = "kotlin" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokkaPlugin" }
 versions = { id = "com.github.ben-manes.versions", version.ref = "versionsPlugin" }
+publish = { id = "io.github.gradle-nexus.publish-plugin", version.ref = "publishPlugin" }
