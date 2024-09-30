@@ -194,6 +194,14 @@ publishing {
 
 if (isReleaseBuild) {
 
+  // workaround for KMP/gradle signing issue
+  // https://github.com/gradle/gradle/issues/26091
+  tasks {
+    withType<PublishToMavenRepository> {
+      dependsOn(withType<Sign>())
+    }
+  }
+
   signing {
     useInMemoryPgpKeys(
       signingKey,
