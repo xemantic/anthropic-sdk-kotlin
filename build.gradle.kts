@@ -131,6 +131,15 @@ powerAssert {
 //
 //val sourcesJar by tasks.named("sourcesJar")
 
+tasks.dokkaHtml.configure {
+  outputDirectory.set(buildDir.resolve("dokka"))
+}
+
+val javadocJar by tasks.registering(Jar::class) {
+  archiveClassifier.set("javadoc")
+  from(tasks.dokkaHtml)
+}
+
 publishing {
   repositories {
     if (!isReleaseBuild) {
@@ -146,6 +155,7 @@ publishing {
   }
   publications {
     withType<MavenPublication> {
+      artifact(javadocJar)
 //      from(components["kotlin"])
 //      artifact(javadocJar)
 //      artifact(sourcesJar)
