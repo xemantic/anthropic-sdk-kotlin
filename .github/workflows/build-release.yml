@@ -39,7 +39,7 @@ jobs:
         ORG_GRADLE_PROJECT_sonatypeUser: ${{ secrets.SONATYPE_USER }}
         ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.SONATYPE_PASSWORD }}
         ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      run: ./gradlew -Pversion=$VERSION build sourcesJar javadocJar publishToSonatype closeAndReleaseSonatypeStagingRepository
+      run: ./gradlew -Pversion=$VERSION build sourcesJar dokkaHtmlJar publishToSonatype closeAndReleaseSonatypeStagingRepository
 
     - name: Find branch from tag
       id: find-branch
