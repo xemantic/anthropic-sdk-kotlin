@@ -1,7 +1,6 @@
 @file:OptIn(ExperimentalKotlinGradlePluginApi::class)
 
 import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
-import org.gradle.kotlin.dsl.assign
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
@@ -14,6 +13,7 @@ plugins {
   alias(libs.plugins.dokka)
   alias(libs.plugins.versions)
   `maven-publish`
+  signing
 }
 
 val githubAccount = "xemantic"
@@ -119,4 +119,82 @@ powerAssert {
     "kotlin.test.assertNull"
   )
   includedSourceSets = listOf("commonTest", "jvmTest", "nativeTest")
+}
+
+val javadocJar by tasks.register<Jar>("dokkaHtmlJar") {
+  group = "documentation"
+  dependsOn(tasks.dokkaHtml)
+  from(tasks.dokkaHtml.flatMap { it.outputDirectory })
+  archiveClassifier.set("javadoc")
+}
+
+val sourcesJar by tasks.named("sourcesJar")
+
+publishing {
+  repositories {
+    if (!isReleaseBuild) {
+      maven {
+        name = "GitHubPackages"
+        setUrl("https://maven.pkg.github.com/$githubAccount/${rootProject.name}")
+        credentials {
+          username = githubActor
+          password = githubToken
+        }
+      }
+    }
+  }
+  publications {
+    create<MavenPublication>("maven") {
+      from(components["kotlin"])
+      artifact(javadocJar)
+      artifact(sourcesJar)
+      pom {
+        name = "anthropic-sdk-kotlin"
+        description = "Kotlin multiplatform client for accessing Ahtropic APIs"
+        url = "https://github.com/$githubAccount/${rootProject.name}"
+        inceptionYear = "2024"
+        organization {
+          name = "Xemantic"
+          url = "https://xemantic.com"
+        }
+        licenses {
+          license {
+            name = "The MIT License"
+            url = "https://opensource.org/license/MIT"
+            distribution = "repo"
+          }
+        }
+        scm {
+          url = "https://github.com/$githubAccount/${rootProject.name}"
+          connection = "scm:git:git:github.com/$githubAccount/${rootProject.name}.git"
+          developerConnection = "scm:git:https://github.com/$githubAccount/${rootProject.name}.git"
+        }
+        ciManagement {
+          system = "GitHub"
+          url = "https://github.com/$githubAccount/${rootProject.name}/actions"
+        }
+        issueManagement {
+          system = "GitHub"
+          url = "https://github.com/$githubAccount/${rootProject.name}/issues"
+        }
+        developers {
+          developer {
+            id = "morisil"
+            name = "Kazik Pogoda"
+            email = "morisil@xemantic.com"
+          }
+        }
+      }
+    }
+  }
+}
+
+if (isReleaseBuild) {
+  signing {
+    useInMemoryPgpKeys(
+      signingKey,
+      signingPassword
+    )
+    sign(publishing.publications["maven"])
+  }
 }
