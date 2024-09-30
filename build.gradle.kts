@@ -122,15 +122,7 @@ powerAssert {
   includedSourceSets = listOf("commonTest", "jvmTest", "nativeTest")
 }
 
-//val javadocJar by tasks.register<Jar>("dokkaHtmlJar") {
-//  group = "documentation"
-//  dependsOn(tasks.dokkaHtml)
-//  from(tasks.dokkaHtml.flatMap { it.outputDirectory })
-//  archiveClassifier.set("javadoc")
-//}
-//
-//val sourcesJar by tasks.named("sourcesJar")
-
+// maybe this one is not necessary?
 tasks.dokkaHtml.configure {
   outputDirectory.set(buildDir.resolve("dokka"))
 }
@@ -207,7 +199,7 @@ if (isReleaseBuild) {
       signingKey,
       signingPassword
     )
-    sign(publishing.publications["maven"])
+    sign(publishing.publications)
   }
 
   nexusPublishing {
