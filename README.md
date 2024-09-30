@@ -94,3 +94,14 @@ More sophisticated code examples targeting various
 platforms will follow in the
 [anthropic-sdk-kotlin-demo](https://github.com/xemantic/anthropic-sdk-kotlin-demo)
 project.
+
+## Building the project
+
+```shell
+export ANTHROPIC_API_KEY=your-key-goes-here
+./gradlew build
+```
+
+Many [unit tests](src/commonTest/kotlin) are actually integration tests calling Anthropic APIs
+and asserting against results. This is the reason why they might be flaky from time to time. For
+example if the test image is misinterpreted, or Claude is randomly fantasizing too much.
