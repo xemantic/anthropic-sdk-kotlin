@@ -49,7 +49,7 @@ Add to your `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-  implementation("com.xemantic.anthropic:anthropic-sdk-kotlin:0.1.3")
+  implementation("com.xemantic.anthropic:anthropic-sdk-kotlin:0.2")
 }
 ```
 
