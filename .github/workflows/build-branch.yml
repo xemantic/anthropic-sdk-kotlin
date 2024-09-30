@@ -23,6 +23,9 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
 
+    - name: Install libcurl4
+      run: sudo apt-get install -y libcurl4-gnutls-dev
+
     - name: Build
       run: ./gradlew build
       env:
