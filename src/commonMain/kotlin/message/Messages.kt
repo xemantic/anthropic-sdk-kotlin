@@ -180,13 +180,13 @@ data class Tool(
   val name: String,
   val description: String,
   @SerialName("input_schema")
-  val inputSchema: JsonObject,
+  val inputSchema: JsonObject, // soon it will be a generic type
   val cacheControl: CacheControl?
 )
 
-@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 @JsonClassDiscriminator("type")
+@OptIn(ExperimentalSerializationApi::class)
 sealed class Content {
 
   abstract val cacheControl: CacheControl?
@@ -268,15 +268,20 @@ data class CacheControl(
 }
 
 @Serializable
+@JsonClassDiscriminator("type")
+@OptIn(ExperimentalSerializationApi::class)
 sealed class ToolChoice {
 
   @Serializable
+  @SerialName("auto")
   class Auto : ToolChoice()
 
   @Serializable
+  @SerialName("any")
   class Any : ToolChoice()
 
   @Serializable
+  @SerialName("tool")
   class Tool(
     val name: String
   ) : ToolChoice()
