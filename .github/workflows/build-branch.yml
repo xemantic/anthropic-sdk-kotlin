@@ -25,3 +25,5 @@ jobs:
 
     - name: Build
       run: ./gradlew build
+      env:
+        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
