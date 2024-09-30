@@ -1,0 +1,67 @@
+name: Build release
+on:
+  release:
+    types: [published]
+jobs:
+  build_release:
+    runs-on: ubuntu-latest
+    permissions:
+      # Give the default GITHUB_TOKEN write permission to commit and push the
+      # added or changed files to the repository.
+      contents: write
+    steps:
+    - name: Write release version
+      run: |
+        VERSION=${GITHUB_REF_NAME#v}
+        echo Version: $VERSION
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+    - name: Checkout sources
+      uses: actions/checkout@v4.1.7
+      with:
+        fetch-depth: 0
+
+    - name: Setup Java
+      uses: actions/setup-java@v4.2.2
+      with:
+        distribution: 'temurin'
+        java-version: 22
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
+
+    - name: Build
+      env:
+        ORG_GRADLE_PROJECT_githubActor: ${{ secrets.GITHUBACTOR }}
+        ORG_GRADLE_PROJECT_githubToken: ${{ secrets.GITHUBTOKEN }}
+        ORG_GRADLE_PROJECT_signingKey: ${{ secrets.SIGNING_KEY }}
+        ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.SIGNING_PASSWORD }}
+        ORG_GRADLE_PROJECT_sonatypeUser: ${{ secrets.SONATYPE_USER }}
+        ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.SONATYPE_PASSWORD }}
+      run: ./gradlew -Pversion=$VERSION build sourcesJar javadocJar publishToSonatype closeAndReleaseSonatypeStagingRepository
+
+    - name: Find branch from tag
+      id: find-branch
+      env:
+        TAG_NAME: ${{ github.event.release.tag_name }}
+      run: |
+        BRANCH=$(git branch -r --contains $TAG_NAME | grep -v '\->' | sed 's/origin\///' | head -n 1)
+        if [ -z "$BRANCH" ]; then
+          echo "Branch not found for tag $TAG"
+          exit 1
+        fi
+        echo Branch: $BRANCH
+        echo "BRANCH=$BRANCH" >> $GITHUB_ENV
+
+    - name: Checkout branch HEAD
+      run: git checkout ${BRANCH}
+
+    - name: Update README
+      run: sed -i "s/com\.xemantic\.anthropic:anthropic-sdk-kotlin:[0-9]\+\(\.[0-9]\+\)*\>/com.xemantic.anthropic:anthropic-sdk-kotlin:$VERSION/g" README.md
+
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v6
+      with:
+        token: ${{ secrets.WORKFLOW_SECRET }}
+        commit-message: README.md gradle dependencies update to ${{ env.VERSION }}
+        title: PR Action - README.md gradle dependencies update to ${{ env.VERSION }}
