@@ -94,35 +94,34 @@ It can also use tools:
 
 ```kotlin
 fun main() {
+
+  // our tool
+  @Serializable
+  data class Calculator(
+    val operation: Operation,
+    val a: Double,
+    val b: Double
+  ) {
+
+    enum class Operation(
+      val calculate: (a: Double, b: Double) -> Double
+    ) {
+      ADD({ a: Double, b: Double -> a + b }),
+      SUBTRACT({ a: Double, b: Double -> a - b }),
+      MULTIPLY({ a: Double, b: Double -> a * b }),
+      DIVIDE({ a: Double, b: Double -> a / b })
+    }
+
+    fun calculate() = operation.calculate(a, b)
+
+  }  
+  
   val client = Anthropic()
 
-  // soon the Tool will use generic serializable type and the schema
-  // will be generated automatically
   val calculatorTool = Tool(
     name = "calculator",
     description = "Perform basic arithmetic operations",
-    inputSchema = buildJsonObject {
-      put("type", "object")
-      put("properties", buildJsonObject {
-        put("operation", buildJsonObject {
-          put("type", "string")
-          putJsonArray("enum") {
-            add("add")
-            add("subtract")
-            add("multiply")
-            add("divide")
-          }
-        })
-        put("a", buildJsonObject { put("type", "number") })
-        put("b", buildJsonObject { put("type", "number") })
-      })
-      putJsonArray("required") {
-        add("operation")
-        add("a")
-        add("b")
-      }
-    },
-    cacheControl = null
+    inputSchema = jsonSchemaOf<Calculator>(),
   )
 
   val response = runBlocking {
@@ -134,19 +133,11 @@ fun main() {
       toolChoice = ToolChoice.Any()
     }
   }
-
-  val operation = input["operation"]?.jsonPrimitive?.content
-  val a = input["a"]?.jsonPrimitive?.double
-  val b = input["b"]?.jsonPrimitive?.double
   
-  val result = if (operation == "multiply") {
-    a * b
-  } else {
-    throw IllegalStateException("returned operation is not 'multiply'")
-  }
-  
-  // It's a bit ridiculous at the moment without schema generation from strongly
-  // typed entity. This feature will follow soon 
+  val toolUse = response.content[0] as ToolUse
+  val calculator = toolUse.inputAs<Calculator>()
+  val result = calculator.calculate()
+  println(result)
 }
 ```
 
