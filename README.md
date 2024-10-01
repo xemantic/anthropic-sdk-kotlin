@@ -106,10 +106,10 @@ fun main() {
     enum class Operation(
       val calculate: (a: Double, b: Double) -> Double
     ) {
-      ADD({ a: Double, b: Double -> a + b }),
-      SUBTRACT({ a: Double, b: Double -> a - b }),
-      MULTIPLY({ a: Double, b: Double -> a * b }),
-      DIVIDE({ a: Double, b: Double -> a / b })
+      ADD({ a, b -> a + b }),
+      SUBTRACT({ a, b -> a - b }),
+      MULTIPLY({ a, b -> a * b }),
+      DIVIDE({ a, b -> a / b })
     }
 
     fun calculate() = operation.calculate(a, b)
@@ -135,7 +135,7 @@ fun main() {
   }
   
   val toolUse = response.content[0] as ToolUse
-  val calculator = toolUse.inputAs<Calculator>()
+  val calculator = toolUse.input<Calculator>()
   val result = calculator.calculate()
   println(result)
 }
