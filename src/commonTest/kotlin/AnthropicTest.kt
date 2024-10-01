@@ -11,17 +11,12 @@ import com.xemantic.anthropic.message.Text
 import com.xemantic.anthropic.message.Tool
 import com.xemantic.anthropic.message.ToolChoice
 import com.xemantic.anthropic.message.ToolUse
+import com.xemantic.anthropic.schema.jsonSchemaOf
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.json.add
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.double
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.put
-import kotlinx.serialization.json.putJsonArray
+import kotlinx.serialization.Serializable
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -107,58 +102,35 @@ class AnthropicTest {
     assertTrue(response == "The quick brown fox jumps over the lazy dog.")
   }
 
-  @Test
-  fun shouldUseSimpleTool() = runTest {
-    // given
-    val client = Anthropic()
+  // given
+  @Serializable
+  data class Calculator(
+    val operation: Operation,
+    val a: Double,
+    val b: Double
+  ) {
 
-
-    // when
-    val response = client.messages.stream {
-      +Message {
-        role = Role.USER
-        +"Say: 'The quick brown fox jumps over the lazy dog'"
-      }
+    enum class Operation(
+      val calculate: (a: Double, b: Double) -> Double
+    ) {
+      ADD({ a, b -> a + b }),
+      SUBTRACT({ a, b -> a - b }),
+      MULTIPLY({ a, b -> a * b }),
+      DIVIDE({ a, b -> a / b })
     }
-      .filterIsInstance<ContentBlockDelta>()
-      .map { (it.delta as TextDelta).text }
-      .toList()
-      .joinToString(separator = "")
 
-    // then
-    assertTrue(response == "The quick brown fox jumps over the lazy dog.")
+    fun calculate() = operation.calculate(a, b)
+
   }
 
   @Test
   fun shouldUseCalculatorTool() = runTest {
     // given
     val client = Anthropic()
-    // soon the Tool will use generic serializable type and the schema
-    // will be generated automatically
     val calculatorTool = Tool(
       name = "calculator",
       description = "Perform basic arithmetic operations",
-      inputSchema = buildJsonObject {
-        put("type", "object")
-        put("properties", buildJsonObject {
-          put("operation", buildJsonObject {
-            put("type", "string")
-            putJsonArray("enum") {
-              add("add")
-              add("subtract")
-              add("multiply")
-              add("divide")
-            }
-          })
-          put("a", buildJsonObject { put("type", "number") })
-          put("b", buildJsonObject { put("type", "number") })
-        })
-        putJsonArray("required") {
-          add("operation")
-          add("a")
-          add("b")
-        }
-      },
+      inputSchema = jsonSchemaOf<Calculator>(),
       cacheControl = null
     )
 
@@ -177,10 +149,9 @@ class AnthropicTest {
       assertTrue(content[0] is ToolUse)
       val toolUse = content[0] as ToolUse
       assertTrue(toolUse.name == "calculator")
-      val input = toolUse.input.jsonObject
-      assertTrue(input["operation"]?.jsonPrimitive?.content == "multiply")
-      assertTrue(input["a"]?.jsonPrimitive?.double == 15.0)
-      assertTrue(input["b"]?.jsonPrimitive?.double == 7.0)
+      val calculator = toolUse.input<Calculator>()
+      val result = calculator.calculate()
+      assertTrue(result == 15.0 * 7.0)
     }
   }
 

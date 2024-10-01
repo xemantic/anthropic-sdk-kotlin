@@ -1,10 +1,14 @@
 package com.xemantic.anthropic.message
 
+import com.xemantic.anthropic.anthropicJson
+import com.xemantic.anthropic.schema.JsonSchema
+import com.xemantic.anthropic.schema.jsonSchemaOf
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.decodeFromJsonElement
 import kotlin.collections.mutableListOf
 
 enum class Role {
@@ -180,8 +184,18 @@ data class Tool(
   val name: String,
   val description: String,
   @SerialName("input_schema")
-  val inputSchema: JsonObject, // soon it will be a generic type
+  val inputSchema: JsonSchema,
   val cacheControl: CacheControl?
+)
+
+inline fun <reified T> Tool(
+  description: String,
+  cacheControl: CacheControl? = null
+): Tool = Tool(
+  name = T::class.qualifiedName!!,
+  description = description,
+  inputSchema = jsonSchemaOf<T>(),
+  cacheControl = cacheControl
 )
 
 @Serializable
@@ -242,7 +256,12 @@ data class ToolUse(
   val id: String,
   val name: String,
   val input: JsonObject
-) : Content()
+) : Content() {
+
+  inline fun <reified T> input(): T =
+    anthropicJson.decodeFromJsonElement<T>(input)
+
+}
 
 @Serializable
 @SerialName("tool_result")

@@ -27,7 +27,6 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonBuilder
 
 const val ANTHROPIC_API_BASE: String = "https://api.anthropic.com/"
 
@@ -42,6 +41,12 @@ expect val envApiKey: String?
 
 expect val missingApiKeyMessage: String
 
+val anthropicJson: Json = Json {
+  allowSpecialFloatingPointValues = true
+  explicitNulls = false
+  encodeDefaults = true
+}
+
 fun Anthropic(
   block: Anthropic.Config.() -> Unit = {}
 ): Anthropic {
@@ -54,7 +59,8 @@ fun Anthropic(
     anthropicVersion = config.anthropicVersion,
     anthropicBeta = config.anthropicBeta,
     apiBase = config.apiBase,
-    defaultModel = defaultModel
+    defaultModel = defaultModel,
+    directBrowserAccess = config.directBrowserAccess
   )
 }
 
@@ -63,7 +69,8 @@ class Anthropic internal constructor(
   val anthropicVersion: String,
   val anthropicBeta: String?,
   val apiBase: String,
-  val defaultModel: String
+  val defaultModel: String,
+  val directBrowserAccess: Boolean
 ) {
 
   class Config {
@@ -72,12 +79,12 @@ class Anthropic internal constructor(
     var anthropicBeta: String? = null
     var apiBase: String = ANTHROPIC_API_BASE
     var defaultModel: String? = null
+    var directBrowserAccess: Boolean = false
   }
 
-  private val json = Json(builderAction = anthropicJsonConfigurer)
   private val client = HttpClient {
     install(ContentNegotiation) {
-      json(json)
+      json(anthropicJson)
     }
     install(SSE)
     install(Logging) {
@@ -89,6 +96,9 @@ class Anthropic internal constructor(
       header("anthropic-version", anthropicVersion)
       if (anthropicBeta != null) {
         header("anthropic-beta", anthropicBeta)
+      }
+      if (directBrowserAccess) {
+        header("anthropic-dangerous-direct-browser-access", true)
       }
     }
   }
@@ -134,7 +144,7 @@ class Anthropic internal constructor(
       ) {
         incoming
           .filter { it.data != null }
-          .map { json.decodeFromString<Event>(it.data!!) }
+          .map { anthropicJson.decodeFromString<Event>(it.data!!) }
           .collect {
             emit(it)
           }
@@ -145,10 +155,4 @@ class Anthropic internal constructor(
 
   val messages = Messages()
 
-}
-
-val anthropicJsonConfigurer: JsonBuilder.() -> Unit = {
-  allowSpecialFloatingPointValues = true
-  explicitNulls = false
-  encodeDefaults = true
 }

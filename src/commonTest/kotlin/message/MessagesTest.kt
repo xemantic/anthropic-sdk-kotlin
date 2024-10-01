@@ -1,7 +1,8 @@
 package com.xemantic.anthropic.message
 
-import com.xemantic.anthropic.anthropicJsonConfigurer
+import com.xemantic.anthropic.anthropicJson
 import io.kotest.assertions.json.shouldEqualJson
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
@@ -14,9 +15,10 @@ class MessagesTest {
   /**
    * A pretty JSON printing for testing.
    */
-  private val json = Json {
-    anthropicJsonConfigurer()
+  private val json = Json(from = anthropicJson) {
     prettyPrint = true
+    @OptIn(ExperimentalSerializationApi::class)
+    prettyPrintIndent = "  "
   }
 
   @Test
