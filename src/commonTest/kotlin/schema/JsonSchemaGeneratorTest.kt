@@ -42,26 +42,27 @@ class JsonSchemaGeneratorTest {
 
     // then
     schemaJson shouldEqualJson """
-      {
-        "properties": {
-          "street": {
-            "type": "string"
-          },
-          "city": {
-            "type": "string"
-          },
-          "zipCode": {
-            "type": "string"
-          },
-          "country": {
-            "type": "string"
-          }
+    {
+      "type": "object",      
+      "properties": {
+        "street": {
+          "type": "string"
         },
-        "required": [
-          "zipCode",
-          "country"
-        ]
-      }
+        "city": {
+          "type": "string"
+        },
+        "zipCode": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "zipCode",
+        "country"
+      ]
+    }
     """.trimIndent()
   }
 
@@ -74,56 +75,58 @@ class JsonSchemaGeneratorTest {
     // then
     print(schemaJson)
     schemaJson shouldEqualJson """
-      {
-        "definitions": {
-          "com.xemantic.anthropic.schema.Address": {
-            "properties": {
-              "street": {
-                "type": "string"
-              },
-              "city": {
-                "type": "string"
-              },
-              "zipCode": {
-                "type": "string"
-              },
-              "country": {
-                "type": "string"
-              }
+    {
+      "type": "object",
+      "definitions": {
+        "com.xemantic.anthropic.schema.Address": {
+          "type": "object",
+          "properties": {
+            "street": {
+              "type": "string"
             },
-            "required": [
-              "zipCode",
-              "country"
-            ]
-          }
-        },
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "age": {
-            "type": "integer"
-          },
-          "email": {
-            "type": "string"
-          },
-          "hobbies": {
-            "type": "array",
-            "items": {
+            "city": {
+              "type": "string"
+            },
+            "zipCode": {
+              "type": "string"
+            },
+            "country": {
               "type": "string"
             }
           },
-          "address": {
-            "type": "${'$'}ref",
-            "ref": "#/definitions/com.xemantic.anthropic.schema.Address"
+          "required": [
+            "zipCode",
+            "country"
+          ]
+        }
+      },
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "age": {
+          "type": "integer"
+        },
+        "email": {
+          "type": "string"
+        },
+        "hobbies": {
+          "type": "array",
+          "items": {
+            "type": "string"
           }
         },
-        "required": [
-          "name",
-          "age",
-          "email"
-        ]
-      }
+        "address": {
+          "type": "${'$'}ref",
+          "ref": "#/definitions/com.xemantic.anthropic.schema.Address"
+        }
+      },
+      "required": [
+        "name",
+        "age",
+        "email"
+      ]
+    }
     """.trimIndent()
   }
 
