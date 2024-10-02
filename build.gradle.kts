@@ -1,6 +1,8 @@
 @file:OptIn(ExperimentalKotlinGradlePluginApi::class)
 
 import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
@@ -108,6 +110,18 @@ fun isNonStable(version: String): Boolean {
 tasks.withType<DependencyUpdatesTask> {
   rejectVersionIf {
     isNonStable(candidate.version) && !isNonStable(currentVersion)
+  }
+}
+
+tasks.withType<Test>() {
+  testLogging {
+    events(
+      TestLogEvent.PASSED,
+      TestLogEvent.SKIPPED,
+      TestLogEvent.FAILED
+    )
+    showStackTraces = true
+    exceptionFormat = TestExceptionFormat.FULL
   }
 }
 
