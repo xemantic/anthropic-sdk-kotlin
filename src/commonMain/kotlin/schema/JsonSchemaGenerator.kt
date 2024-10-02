@@ -52,7 +52,7 @@ private fun generateSchemaProperty(
     )
     StructureKind.MAP -> JsonSchemaProperty("object")
     StructureKind.CLASS -> {
-      val refName = descriptor.serialName.trimEnd('?')
+      val refName = descriptor.serialName.replace('.', '_').trimEnd('?')
       definitions[refName] = generateSchema(descriptor)
       JsonSchemaProperty("\$ref", ref = "#/definitions/$refName")
     }

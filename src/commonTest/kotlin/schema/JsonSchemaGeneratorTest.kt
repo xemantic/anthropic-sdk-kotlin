@@ -73,12 +73,11 @@ class JsonSchemaGeneratorTest {
     val schemaJson = json.encodeToString(schema)
 
     // then
-    print(schemaJson)
     schemaJson shouldEqualJson """
     {
       "type": "object",
       "definitions": {
-        "com.xemantic.anthropic.schema.Address": {
+        "com_xemantic_anthropic_schema_Address": {
           "type": "object",
           "properties": {
             "street": {
@@ -118,7 +117,7 @@ class JsonSchemaGeneratorTest {
         },
         "address": {
           "type": "${'$'}ref",
-          "ref": "#/definitions/com.xemantic.anthropic.schema.Address"
+          "ref": "#/definitions/com_xemantic_anthropic_schema_Address"
         }
       },
       "required": [

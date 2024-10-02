@@ -114,14 +114,12 @@ fun main() {
 
     fun calculate() = operation.calculate(a, b)
 
-  }  
-  
+  }
+
   val client = Anthropic()
 
-  val calculatorTool = Tool(
-    name = "calculator",
-    description = "Perform basic arithmetic operations",
-    inputSchema = jsonSchemaOf<Calculator>(),
+  val calculatorTool = Tool<Calculator>(
+    description = "Perform basic arithmetic operations"
   )
 
   val response = runBlocking {
@@ -133,7 +131,7 @@ fun main() {
       toolChoice = ToolChoice.Any()
     }
   }
-  
+
   val toolUse = response.content[0] as ToolUse
   val calculator = toolUse.input<Calculator>()
   val result = calculator.calculate()

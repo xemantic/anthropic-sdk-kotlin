@@ -11,7 +11,6 @@ import com.xemantic.anthropic.message.Text
 import com.xemantic.anthropic.message.Tool
 import com.xemantic.anthropic.message.ToolChoice
 import com.xemantic.anthropic.message.ToolUse
-import com.xemantic.anthropic.schema.jsonSchemaOf
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
@@ -110,6 +109,7 @@ class AnthropicTest {
     val b: Double
   ) {
 
+    @Suppress("unused") // it is used, but by Anthropic, so we skip the warning
     enum class Operation(
       val calculate: (a: Double, b: Double) -> Double
     ) {
@@ -127,11 +127,8 @@ class AnthropicTest {
   fun shouldUseCalculatorTool() = runTest {
     // given
     val client = Anthropic()
-    val calculatorTool = Tool(
-      name = "calculator",
+    val calculatorTool = Tool<Calculator>(
       description = "Perform basic arithmetic operations",
-      inputSchema = jsonSchemaOf<Calculator>(),
-      cacheControl = null
     )
 
     // when
@@ -148,7 +145,7 @@ class AnthropicTest {
       assertTrue(content.size == 1)
       assertTrue(content[0] is ToolUse)
       val toolUse = content[0] as ToolUse
-      assertTrue(toolUse.name == "calculator")
+      assertTrue(toolUse.name == "com_xemantic_anthropic_AnthropicTest_Calculator")
       val calculator = toolUse.input<Calculator>()
       val result = calculator.calculate()
       assertTrue(result == 15.0 * 7.0)

@@ -156,3 +156,6 @@ class Anthropic internal constructor(
   val messages = Messages()
 
 }
+
+inline fun <reified T> anthropicTypeOf(): String =
+  T::class.qualifiedName!!.replace('.', '_')

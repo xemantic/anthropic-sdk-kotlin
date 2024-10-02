@@ -1,6 +1,7 @@
 package com.xemantic.anthropic.message
 
 import com.xemantic.anthropic.anthropicJson
+import com.xemantic.anthropic.anthropicTypeOf
 import com.xemantic.anthropic.schema.JsonSchema
 import com.xemantic.anthropic.schema.jsonSchemaOf
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -192,7 +193,7 @@ inline fun <reified T> Tool(
   description: String,
   cacheControl: CacheControl? = null
 ): Tool = Tool(
-  name = T::class.qualifiedName!!,
+  name = anthropicTypeOf<T>(),
   description = description,
   inputSchema = jsonSchemaOf<T>(),
   cacheControl = cacheControl
