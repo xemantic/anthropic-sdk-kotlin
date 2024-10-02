@@ -93,29 +93,28 @@ fun main() {
 It can also use tools:
 
 ```kotlin
-fun main() {
+@Serializable
+data class Calculator(
+  val operation: Operation,
+  val a: Double,
+  val b: Double
+) {
 
-  // our tool
-  @Serializable
-  data class Calculator(
-    val operation: Operation,
-    val a: Double,
-    val b: Double
+  @Suppress("unused") // will be used by Anthropic :)
+  enum class Operation(
+    val calculate: (a: Double, b: Double) -> Double
   ) {
-
-    enum class Operation(
-      val calculate: (a: Double, b: Double) -> Double
-    ) {
-      ADD({ a, b -> a + b }),
-      SUBTRACT({ a, b -> a - b }),
-      MULTIPLY({ a, b -> a * b }),
-      DIVIDE({ a, b -> a / b })
-    }
-
-    fun calculate() = operation.calculate(a, b)
-
+    ADD({ a, b -> a + b }),
+    SUBTRACT({ a, b -> a - b }),
+    MULTIPLY({ a, b -> a * b }),
+    DIVIDE({ a, b -> a / b })
   }
 
+  fun calculate() = operation.calculate(a, b)
+
+}
+
+fun main() {
   val client = Anthropic()
 
   val calculatorTool = Tool<Calculator>(
@@ -134,7 +133,7 @@ fun main() {
 
   val toolUse = response.content[0] as ToolUse
   val calculator = toolUse.input<Calculator>()
-  val result = calculator.calculate()
+  val result = calculator.calculate() // we are doing the job for LLM here
   println(result)
 }
 ```

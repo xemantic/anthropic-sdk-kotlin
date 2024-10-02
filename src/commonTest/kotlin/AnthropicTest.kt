@@ -152,4 +152,41 @@ class AnthropicTest {
     }
   }
 
+  @Serializable
+  data class Fibonacci(val n: Int)
+
+  tailrec fun fibonacci(
+    n: Int, a: Int = 0, b: Int = 1
+  ): Int = when (n) {
+    0 -> a; 1 -> b; else -> fibonacci(n - 1, b, a + b)
+  }
+
+  @Test
+  fun shouldUseCalculatorToolForFibonacci() = runTest {
+    // given
+    val client = Anthropic()
+    val fibonacciTool = Tool<Fibonacci>(
+      description = "Calculates fibonacci number of a given n",
+    )
+
+    // when
+    val response = client.messages.create {
+      +Message { +"What's fibonacci number 42" }
+      tools = listOf(fibonacciTool)
+      toolChoice = ToolChoice.Any()
+    }
+
+    // then
+    response.apply {
+      assertTrue(content.size == 1)
+      assertTrue(content[0] is ToolUse)
+      val toolUse = content[0] as ToolUse
+      assertTrue(toolUse.name == "com_xemantic_anthropic_AnthropicTest_Fibonacci")
+      val n = toolUse.input<Fibonacci>().n
+      assertTrue(n == 42)
+      val fibonacciNumber = fibonacci(n) // doing the job for Anthropic
+      assertTrue(fibonacciNumber == 267914296)
+    }
+  }
+
 }
