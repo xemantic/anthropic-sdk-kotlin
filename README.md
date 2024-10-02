@@ -49,7 +49,7 @@ Add to your `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-  implementation("com.xemantic.anthropic:anthropic-sdk-kotlin:0.2.1")
+  implementation("com.xemantic.anthropic:anthropic-sdk-kotlin:.0.2.2")
   // for a JVM project, the client engine will differ per platform
   // check ktor doucmentation for details
   implementation("io.ktor:ktor-client-java:3.0.0-rc-1")
