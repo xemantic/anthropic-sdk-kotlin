@@ -17,18 +17,18 @@ jobs:
         echo "VERSION=$VERSION" >> $GITHUB_ENV
 
     - name: Checkout sources
-      uses: actions/checkout@v4.1.7
+      uses: actions/checkout@v4.2.0
       with:
         fetch-depth: 0
 
     - name: Setup Java
-      uses: actions/setup-java@v4.2.2
+      uses: actions/setup-java@v4.4.0
       with:
         distribution: 'temurin'
         java-version: 22
 
     - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v4
+      uses: gradle/actions/setup-gradle@v4.1.0
 
     - name: Install libcurl4
       run: sudo apt-get install -y libcurl4-gnutls-dev
@@ -64,7 +64,7 @@ jobs:
       run: sed -i "s/com\.xemantic\.anthropic:anthropic-sdk-kotlin:[0-9]\+\(\.[0-9]\+\)*\>/com.xemantic.anthropic:anthropic-sdk-kotlin:$VERSION/g" README.md
 
     - name: Create Pull Request
-      uses: peter-evans/create-pull-request@v6
+      uses: peter-evans/create-pull-request@v7.0.5
       with:
         token: ${{ secrets.WORKFLOW_SECRET }}
         commit-message: README.md gradle dependencies update to ${{ env.VERSION }}
