@@ -1,7 +1,8 @@
 package com.xemantic.anthropic.message
 
+import com.xemantic.anthropic.Calculator
 import com.xemantic.anthropic.anthropicJson
-import com.xemantic.anthropic.testToolsSerializersModule
+import com.xemantic.anthropic.tool.toSerializersModule
 import io.kotest.assertions.json.shouldEqualJson
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToString
@@ -20,7 +21,7 @@ class MessagesTest {
     prettyPrint = true
     @OptIn(ExperimentalSerializationApi::class)
     prettyPrintIndent = "  "
-    serializersModule = testToolsSerializersModule
+    //serializersModule = testToolsSerializersModule
   }
 
   @Test
@@ -59,6 +60,9 @@ class MessagesTest {
 
   @Test
   fun shouldDeserializeToolUseRequest() {
+    val json = Json(from = json) {
+      serializersModule = listOf(Calculator::class).toSerializersModule()
+    }
     val request = """
       {
         "id": "msg_01PspkNzNG3nrf5upeTsmWLF",

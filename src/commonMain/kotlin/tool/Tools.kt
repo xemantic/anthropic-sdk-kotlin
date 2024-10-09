@@ -1,11 +1,14 @@
 package com.xemantic.anthropic.tool
 
+import com.xemantic.anthropic.anthropicJson
 import com.xemantic.anthropic.message.CacheControl
 import com.xemantic.anthropic.message.Tool
 import com.xemantic.anthropic.message.ToolResult
+import com.xemantic.anthropic.message.ToolUse
 import com.xemantic.anthropic.schema.toJsonSchema
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
@@ -16,7 +19,7 @@ annotation class Description(
   val value: String
 )
 
-@JsonClassDiscriminator("type")
+@JsonClassDiscriminator("name")
 @OptIn(ExperimentalSerializationApi::class)
 //@Serializable(with = UsableToolSerializer::class)
 interface UsableTool {
@@ -24,6 +27,10 @@ interface UsableTool {
   fun use(
     toolUseId: String
   ): ToolResult
+
+}
+
+class ToolContentSerializer() {
 
 }
 
@@ -72,3 +79,12 @@ fun <T : UsableTool> List<KClass<T>>.toSerializersModule(): SerializersModule = 
 //  inputSchema = jsonSchemaOf<T>(),
 //  cacheControl = cacheControl
 //)
+
+
+fun <T : UsableTool> ToolUse.use(
+  map: Map<String, KSerializer<T>>
+): ToolResult {
+  val serializer = map[name]!!
+  val tool = anthropicJson.decodeFromJsonElement(serializer, input)
+  return tool.use(toolUseId = id)
+}

@@ -9,6 +9,7 @@ import com.xemantic.anthropic.message.Role
 import com.xemantic.anthropic.message.StopReason
 import com.xemantic.anthropic.message.Text
 import com.xemantic.anthropic.message.ToolUse
+import com.xemantic.anthropic.tool.use
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList

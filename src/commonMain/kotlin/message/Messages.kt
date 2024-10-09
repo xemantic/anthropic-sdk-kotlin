@@ -2,12 +2,7 @@ package com.xemantic.anthropic.message
 
 import com.xemantic.anthropic.schema.JsonSchema
 import com.xemantic.anthropic.tool.UsableTool
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.InternalSerializationApi
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.SerializationException
+import kotlinx.serialization.*
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.PolymorphicKind
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -16,7 +11,7 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.json.JsonDecoder
-import kotlinx.serialization.serializerOrNull
+import kotlinx.serialization.json.JsonObject
 import kotlin.collections.mutableListOf
 import kotlin.reflect.KClass
 
@@ -282,14 +277,8 @@ data class ToolUse(
   override val cacheControl: CacheControl? = null,
   val id: String,
   val name: String,
-  val input: UsableTool
-) : Content() {
-
-  fun use(): ToolResult = input.use(
-    toolUseId = id
-  )
-
-}
+  val input: JsonObject
+) : Content()
 
 @Serializable
 @SerialName("tool_result")
