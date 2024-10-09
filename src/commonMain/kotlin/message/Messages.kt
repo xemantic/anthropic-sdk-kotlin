@@ -1,7 +1,7 @@
 package com.xemantic.anthropic.message
 
-import com.xemantic.anthropic.Anthropic
 import com.xemantic.anthropic.schema.JsonSchema
+import com.xemantic.anthropic.tool.UsableTool
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -68,6 +68,10 @@ data class MessageRequest(
     var tools: List<Tool>? = null
     val topK: Int? = null
     val topP: Int? = null
+
+    fun tools(vararg classes: KClass<out UsableTool>) {
+      // TODO it needs access to Anthropic, therefore either needs a constructor parameter, or needs to be inner class
+    }
 
     fun messages(vararg messages: Message) {
       this.messages += messages.toList()
@@ -281,38 +285,9 @@ data class ToolUse(
   val input: UsableTool
 ) : Content() {
 
-//  inline fun <reified T> input(): T =
-//    anthropicJson.decodeFromJsonElement<T>(input)
-
-  fun use(
-    context: Anthropic.Context = Anthropic.EMPTY_CONTEXT
-  ): ToolResult = input.use(
-    toolUseId = id,
-    context
+  fun use(): ToolResult = input.use(
+    toolUseId = id
   )
-
-}
-
-@JsonClassDiscriminator("type")
-@OptIn(ExperimentalSerializationApi::class)
-//@Serializable(with = UsableToolSerializer::class)
-interface UsableTool {
-
-  fun use(
-    toolUseId: String,
-    context: Anthropic.Context
-  ): ToolResult
-
-}
-
-interface SimpleUsableTool : UsableTool {
-
-  override fun use(
-    toolUseId: String,
-    context: Anthropic.Context
-  ): ToolResult = use(toolUseId)
-
-  fun use(toolUseId: String): ToolResult
 
 }
 

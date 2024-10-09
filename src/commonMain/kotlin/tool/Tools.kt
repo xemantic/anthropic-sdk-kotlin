@@ -2,10 +2,11 @@ package com.xemantic.anthropic.tool
 
 import com.xemantic.anthropic.message.CacheControl
 import com.xemantic.anthropic.message.Tool
-import com.xemantic.anthropic.message.UsableTool
+import com.xemantic.anthropic.message.ToolResult
 import com.xemantic.anthropic.schema.toJsonSchema
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.serializer
@@ -14,6 +15,17 @@ import kotlin.reflect.KClass
 annotation class Description(
   val value: String
 )
+
+@JsonClassDiscriminator("type")
+@OptIn(ExperimentalSerializationApi::class)
+//@Serializable(with = UsableToolSerializer::class)
+interface UsableTool {
+
+  fun use(
+    toolUseId: String
+  ): ToolResult
+
+}
 
 @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
 fun <T : UsableTool> KClass<T>.verify() {
@@ -51,12 +63,12 @@ fun <T : UsableTool> List<KClass<T>>.toSerializersModule(): SerializersModule = 
   }
 }
 
-inline fun <reified T : UsableTool> Tool(
-  description: String,
-  cacheControl: CacheControl? = null
-): Tool = Tool(
-  name = anthropicTypeOf<T>(),
-  description = description,
-  inputSchema = jsonSchemaOf<T>(),
-  cacheControl = cacheControl
-)
+//inline fun <reified T : UsableTool> Tool(
+//  description: String,
+//  cacheControl: CacheControl? = null
+//): Tool = Tool(
+//  name = anthropicTypeOf<T>(),
+//  description = description,
+//  inputSchema = jsonSchemaOf<T>(),
+//  cacheControl = cacheControl
+//)

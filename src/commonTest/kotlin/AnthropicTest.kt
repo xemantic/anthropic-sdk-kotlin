@@ -8,7 +8,6 @@ import com.xemantic.anthropic.message.MessageResponse
 import com.xemantic.anthropic.message.Role
 import com.xemantic.anthropic.message.StopReason
 import com.xemantic.anthropic.message.Text
-import com.xemantic.anthropic.message.Tool
 import com.xemantic.anthropic.message.ToolUse
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
@@ -104,43 +103,39 @@ class AnthropicTest {
   fun shouldUseCalculatorTool() = runTest {
     // given
     val client = Anthropic()
-    client.tools += Calculator::class
+    client.usableTools += Calculator::class
 
-//    // when
-//    val response = client.messages.create {
-//      +Message {
-//        +"What's 15 multiplied by 7?"
-//      }
-//      tools = listOf(calculatorTool)
-//    }
-//
-//    // then
-//    response.apply {
-//      assertTrue(content.size == 1)
-//      assertTrue(content[0] is ToolUse)
-//      val toolUse = content[0] as ToolUse
-//      assertTrue(toolUse.name == "com_xemantic_anthropic_AnthropicTest_Calculator")
-//      val result = toolUse.use()
-//      assertTrue(result.toolUseId == toolUse.id)
-//      assertFalse(result.isError)
-//      assertTrue(result.content == listOf(Text(text = "${15.0 * 7.0}")))
-//    }
+    // when
+    val response = client.messages.create {
+      +Message {
+        +"What's 15 multiplied by 7?"
+      }
+      tools(Calculator::class)
+    }
+
+    // then
+    response.apply {
+      assertTrue(content.size == 1)
+      assertTrue(content[0] is ToolUse)
+      val toolUse = content[0] as ToolUse
+      assertTrue(toolUse.name == "com_xemantic_anthropic_AnthropicTest_Calculator")
+      val result = toolUse.use()
+      assertTrue(result.toolUseId == toolUse.id)
+      assertFalse(result.isError)
+      assertTrue(result.content == listOf(Text(text = "${15.0 * 7.0}")))
+    }
   }
 
   @Test
   fun shouldUseCalculatorToolForFibonacci() = runTest {
     // given
-    val client = Anthropic {
-      tools = listOf(FibonacciTool::class)
-    }
-    val fibonacciTool = Tool<FibonacciTool>(
-      description = "Calculates fibonacci number of a given n",
-    )
+    val client = Anthropic()
+    client.usableTools += FibonacciTool::class
 
     // when
     val response = client.messages.create {
       +Message { +"What's fibonacci number 42" }
-      tools = listOf(fibonacciTool)
+      tools(FibonacciTool::class)
     }
 
     // then

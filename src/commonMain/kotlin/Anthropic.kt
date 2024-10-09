@@ -1,12 +1,11 @@
 package com.xemantic.anthropic
 
 import com.xemantic.anthropic.event.Event
-import com.xemantic.anthropic.event.Usage
 import com.xemantic.anthropic.message.Error
 import com.xemantic.anthropic.message.ErrorResponse
 import com.xemantic.anthropic.message.MessageRequest
 import com.xemantic.anthropic.message.MessageResponse
-import com.xemantic.anthropic.message.UsableTool
+import com.xemantic.anthropic.tool.UsableTool
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -28,14 +27,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
-import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.polymorphic
-import kotlinx.serialization.serializer
 import kotlin.reflect.KClass
-import kotlin.reflect.KType
-import kotlin.reflect.typeOf
 
 const val ANTHROPIC_API_BASE: String = "https://api.anthropic.com/"
 
@@ -75,7 +68,7 @@ fun Anthropic(
     apiBase = config.apiBase,
     defaultModel = defaultModel,
     directBrowserAccess = config.directBrowserAccess,
-    context = config.context
+    usableTools = config.usableTools
   )
 }
 
@@ -86,8 +79,7 @@ class Anthropic internal constructor(
   val apiBase: String,
   val defaultModel: String,
   val directBrowserAccess: Boolean,
-  val tools: MutableList<KClass<out UsableTool>> = mutableListOf<KClass<out UsableTool>>(),
-  val context: Context?
+  val usableTools: MutableList<KClass<out UsableTool>> = mutableListOf()
 ) {
 
   class Config {
@@ -97,25 +89,8 @@ class Anthropic internal constructor(
     var apiBase: String = ANTHROPIC_API_BASE
     var defaultModel: String? = null
     var directBrowserAccess: Boolean = false
-    var tools: MutableList<KClass<out UsableTool>>? = null
-    var context: Context? = null
+    var usableTools: MutableList<KClass<out UsableTool>> = mutableListOf()
   }
-
-  interface Context {
-
-    fun <T> service(type: KType): T
-
-  }
-
-  companion object {
-    val EMPTY_CONTEXT: Context = object : Context {
-      override fun <T> service(type: KType): T {
-        throw UnsupportedOperationException("No services available")
-      }
-    }
-  }
-
-  inline fun <reified T> Context.service(): T = service(typeOf<T>())
 
   private val client = HttpClient {
     install(ContentNegotiation) {
