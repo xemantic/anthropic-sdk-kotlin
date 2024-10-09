@@ -1,16 +1,24 @@
 package com.xemantic.anthropic.message
 
-import com.xemantic.anthropic.anthropicJson
-import com.xemantic.anthropic.anthropicTypeOf
+import com.xemantic.anthropic.Anthropic
 import com.xemantic.anthropic.schema.JsonSchema
-import com.xemantic.anthropic.schema.jsonSchemaOf
 import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.PolymorphicKind
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonClassDiscriminator
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.serializerOrNull
 import kotlin.collections.mutableListOf
+import kotlin.reflect.KClass
 
 enum class Role {
   @SerialName("user")
@@ -35,7 +43,7 @@ data class MessageRequest(
   @SerialName("stop_sequences")
   val stopSequences: List<String>?,
   val stream: Boolean?,
-  val system: List<Text>?,
+  val system: List<System>?,
   val temperature: Double?,
   @SerialName("tool_choice")
   val toolChoice: ToolChoice?,
@@ -49,12 +57,12 @@ data class MessageRequest(
   ) {
     var model: String? = null
     var maxTokens = 1024
-    val messages = mutableListOf<Message>()
+    var messages: List<Message> = mutableListOf<Message>()
     var metadata = null
     val stopSequences = mutableListOf<String>()
     var stream: Boolean? = null
       internal set
-    val systemTexts = mutableListOf<Text>()
+    var system: List<System>? = null
     var temperature: Double? = null
     var toolChoice: ToolChoice? = null
     var tools: List<Tool>? = null
@@ -77,14 +85,11 @@ data class MessageRequest(
       this.stopSequences += stopSequences.toList()
     }
 
-    var system: String?
-      get() = if (systemTexts.isEmpty()) null else systemTexts[0].text
-      set(value) {
-        systemTexts.clear()
-        if (value != null) {
-          systemTexts.add(Text(text = value))
-        }
-      }
+    fun system(
+      text: String
+    ) {
+      system = listOf(System(text = text))
+    }
 
     fun build(): MessageRequest = MessageRequest(
       model = if (model != null) model!! else defaultApiModel,
@@ -93,7 +98,7 @@ data class MessageRequest(
       metadata = metadata,
       stopSequences = stopSequences.toNullIfEmpty(),
       stream = if (stream != null) stream else null,
-      system = systemTexts.toNullIfEmpty(),
+      system = system,
       temperature = temperature,
       toolChoice = toolChoice,
       tools = tools,
@@ -131,7 +136,14 @@ data class MessageResponse(
     @SerialName("message")
     MESSAGE
   }
+
+  fun asMessage() = Message {
+    role = Role.ASSISTANT
+    content += this.content
+  }
+
 }
+
 
 @Serializable
 data class ErrorResponse(
@@ -181,22 +193,28 @@ fun Message(block: Message.Builder.() -> Unit): Message {
 }
 
 @Serializable
+data class System(
+  @SerialName("cache_control")
+  val cacheControl: CacheControl? = null,
+  val type: Type = Type.TEXT,
+  val text: String? = null,
+) {
+
+  enum class Type {
+    @SerialName("text")
+    TEXT
+  }
+
+}
+
+@Serializable
 data class Tool(
   val name: String,
   val description: String,
   @SerialName("input_schema")
   val inputSchema: JsonSchema,
+  @SerialName("cache_control")
   val cacheControl: CacheControl?
-)
-
-inline fun <reified T> Tool(
-  description: String,
-  cacheControl: CacheControl? = null
-): Tool = Tool(
-  name = anthropicTypeOf<T>(),
-  description = description,
-  inputSchema = jsonSchemaOf<T>(),
-  cacheControl = cacheControl
 )
 
 @Serializable
@@ -204,6 +222,7 @@ inline fun <reified T> Tool(
 @OptIn(ExperimentalSerializationApi::class)
 sealed class Content {
 
+  @SerialName("cache_control")
   abstract val cacheControl: CacheControl?
 
 }
@@ -212,6 +231,7 @@ sealed class Content {
 @SerialName("text")
 data class Text(
   val text: String,
+  @SerialName("cache_control")
   override val cacheControl: CacheControl? = null,
 ) : Content()
 
@@ -219,6 +239,7 @@ data class Text(
 @SerialName("image")
 data class Image(
   val source: Source,
+  @SerialName("cache_control")
   override val cacheControl: CacheControl? = null
 ) : Content() {
 
@@ -250,38 +271,78 @@ data class Image(
 
 }
 
-@Serializable
 @SerialName("tool_use")
+@Serializable
 data class ToolUse(
+  @SerialName("cache_control")
   override val cacheControl: CacheControl? = null,
   val id: String,
   val name: String,
-  val input: JsonObject
+  val input: UsableTool
 ) : Content() {
 
-  inline fun <reified T> input(): T =
-    anthropicJson.decodeFromJsonElement<T>(input)
+//  inline fun <reified T> input(): T =
+//    anthropicJson.decodeFromJsonElement<T>(input)
+
+  fun use(
+    context: Anthropic.Context = Anthropic.EMPTY_CONTEXT
+  ): ToolResult = input.use(
+    toolUseId = id,
+    context
+  )
+
+}
+
+@JsonClassDiscriminator("type")
+@OptIn(ExperimentalSerializationApi::class)
+//@Serializable(with = UsableToolSerializer::class)
+interface UsableTool {
+
+  fun use(
+    toolUseId: String,
+    context: Anthropic.Context
+  ): ToolResult
+
+}
+
+interface SimpleUsableTool : UsableTool {
+
+  override fun use(
+    toolUseId: String,
+    context: Anthropic.Context
+  ): ToolResult = use(toolUseId)
+
+  fun use(toolUseId: String): ToolResult
 
 }
 
 @Serializable
 @SerialName("tool_result")
 data class ToolResult(
-  override val cacheControl: CacheControl? = null,
   @SerialName("tool_use_id")
   val toolUseId: String,
+  val content: List<Content>, // TODO only Text, Image allowed here, should be accessible in gthe builder
   @SerialName("is_error")
   val isError: Boolean = false,
-  val content: List<Content>
+  @SerialName("cache_control")
+  override val cacheControl: CacheControl? = null
 ) : Content()
+
+fun ToolResult(
+  toolUseId: String,
+  text: String
+): ToolResult = ToolResult(
+  toolUseId,
+  content = listOf(Text(text))
+)
 
 @Serializable
 data class CacheControl(
   val type: Type
 ) {
 
-  @SerialName("ephemeral")
   enum class Type {
+    @SerialName("ephemeral")
     EPHEMERAL
   }
 
@@ -330,3 +391,99 @@ data class Usage(
   @SerialName("output_tokens")
   val outputTokens: Int
 )
+
+
+interface CacheableBuilder {
+
+  var cacheControl: CacheControl?
+
+  var cache: Boolean
+    get() = cacheControl != null
+    set(value) {
+      if (value) {
+        cacheControl = CacheControl(type = CacheControl.Type.EPHEMERAL)
+      } else {
+        cacheControl = null
+      }
+    }
+
+}
+
+//class UsableToolSerializer : JsonContentPolymorphicSerializer2<UsableTool>(UsableTool::class) {
+//
+////  override val descriptor: SerialDescriptor = buildClassSerialDescriptor("UsableTool") {
+////    element<String>("type")
+////    element<JsonElement>("data")
+////  }
+////
+////  override fun serialize(
+////    encoder: Encoder,
+////    value: UsableTool
+////  ) {
+//////    val polymorphic: SerializationStrategy<String> = serializersModule.getPolymorphic(UsableTool::class, "foo")
+////    PolymorphicSerializer(UsableTool::class)
+//////    encoder.encodeString(value)
+//////    encoder.encodeString(value.name)
+//////    polymorphic.seri
+//////    encoder.encodeSerializableValue(polymorphic)
+////  }
+////
+////  override fun deserialize(decoder: Decoder): UsableTool {
+////    require(decoder is JsonDecoder) { "This serializer can be used only with Json format" }
+////    val name = decoder.decodeString()
+////    val polymorphic = decoder.serializersModule.getPolymorphic(UsableTool::class, name)
+////    val id = decoder.decodeString()
+////    return DummyUsableTool()
+////  }
+//
+//  override fun selectDeserializer(element: JsonElement): DeserializationStrategy<UsableTool> {
+//    println(element)
+//    TODO("dupa dupa Not yet implemented")
+//  }
+//
+//}
+
+
+//class UsableToolSerializer : JsonContentPolymorphicSerializer2<UsableTool>(
+//  UsableTool::class
+//)
+
+@OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
+open class JsonContentPolymorphicSerializer2<T : Any>(private val baseClass: KClass<T>) : KSerializer<T> {
+  /**
+   * A descriptor for this set of content-based serializers.
+   * By default, it uses the name composed of [baseClass] simple name,
+   * kind is set to [PolymorphicKind.SEALED] and contains 0 elements.
+   *
+   * However, this descriptor can be overridden to achieve better representation of custom transformed JSON shape
+   * for schema generating/introspection purposes.
+   */
+  override val descriptor: SerialDescriptor =
+    buildSerialDescriptor("JsonContentPolymorphicSerializer<${baseClass.simpleName}>", PolymorphicKind.SEALED)
+
+  final override fun serialize(encoder: Encoder, value: T) {
+    val actualSerializer =
+      encoder.serializersModule.getPolymorphic(baseClass, value)
+        ?: value::class.serializerOrNull()
+        ?: throw SerializationException("fiu fiu")
+    @Suppress("UNCHECKED_CAST")
+    (actualSerializer as KSerializer<T>).serialize(encoder, value)
+  }
+
+  final override fun deserialize(decoder: Decoder): T {
+    val input = decoder.asJsonDecoder()
+    input.json.serializersModule.getPolymorphic(UsableTool::class, "foo")
+    val tree = input.decodeJsonElement()
+
+    @Suppress("UNCHECKED_CAST")
+    val actualSerializer = String.serializer() as KSerializer<T>
+    return input.json.decodeFromJsonElement(actualSerializer, tree)
+  }
+
+}
+
+internal fun Decoder.asJsonDecoder(): JsonDecoder = this as? JsonDecoder
+  ?: throw IllegalStateException(
+    "This serializer can be used only with Json format." +
+        "Expected Decoder to be JsonDecoder, got ${this::class}"
+  )

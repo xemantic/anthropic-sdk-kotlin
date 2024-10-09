@@ -44,10 +44,22 @@ repositories {
 }
 
 kotlin {
+  //explicitApi() // check with serialization?
+  jvm {
+    testRuns["test"].executionTask.configure {
+      useJUnitPlatform()
+    }
+    // set up according to https://jakewharton.com/gradle-toolchains-are-rarely-a-good-idea/
+    compilerOptions {
+      apiVersion = kotlinTarget
+      languageVersion = kotlinTarget
+      jvmTarget = JvmTarget.fromTarget(javaTarget)
+      freeCompilerArgs.add("-Xjdk-release=$javaTarget")
+      progressiveMode = true
+    }
+  }
 
-  jvm {}
-
-  linuxX64()
+//  linuxX64()
 
   sourceSets {
 
@@ -70,6 +82,7 @@ kotlin {
 
     jvmTest {
       dependencies {
+        implementation(kotlin("test-junit5"))
         runtimeOnly(libs.log4j.slf4j2)
         runtimeOnly(libs.log4j.core)
         runtimeOnly(libs.jackson.databind)
@@ -78,26 +91,15 @@ kotlin {
       }
     }
 
-    nativeTest {
-      dependencies {
-        // on mac/ios it should be rather Darwin
-        implementation(libs.ktor.client.curl)
-      }
-    }
+//    nativeTest {
+//      dependencies {
+//        // on mac/ios it should be rather Darwin
+//        implementation(libs.ktor.client.curl)
+//      }
+//    }
 
   }
 
-}
-
-// set up according to https://jakewharton.com/gradle-toolchains-are-rarely-a-good-idea/
-tasks.withType<KotlinJvmCompile> {
-  compilerOptions {
-    apiVersion = kotlinTarget
-    languageVersion = kotlinTarget
-    jvmTarget = JvmTarget.fromTarget(javaTarget)
-    freeCompilerArgs.add("-Xjdk-release=$javaTarget")
-    progressiveMode = true
-  }
 }
 
 fun isNonStable(version: String): Boolean {
@@ -113,7 +115,7 @@ tasks.withType<DependencyUpdatesTask> {
   }
 }
 
-tasks.withType<Test>() {
+tasks.withType<Test> {
   testLogging {
     events(
       TestLogEvent.PASSED,
@@ -123,6 +125,7 @@ tasks.withType<Test>() {
     showStackTraces = true
     exceptionFormat = TestExceptionFormat.FULL
   }
+  enabled = true
 }
 
 @Suppress("OPT_IN_USAGE")
@@ -130,6 +133,7 @@ powerAssert {
   functions = listOf(
     "kotlin.assert",
     "kotlin.test.assertTrue",
+    "kotlin.test.assertFalse",
     "kotlin.test.assertEquals",
     "kotlin.test.assertNull"
   )

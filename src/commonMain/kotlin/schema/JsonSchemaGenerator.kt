@@ -3,9 +3,11 @@ package com.xemantic.anthropic.schema
 import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.*
 import kotlin.collections.set
+import kotlin.reflect.KClass
 
-inline fun <reified T> jsonSchemaOf(): JsonSchema = generateSchema(
-  serializer<T>().descriptor
+@OptIn(InternalSerializationApi::class)
+fun KClass<*>.toJsonSchema(): JsonSchema = generateSchema(
+  serializer().descriptor
 )
 
 @OptIn(ExperimentalSerializationApi::class)

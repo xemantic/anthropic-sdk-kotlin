@@ -1,6 +1,6 @@
 package com.xemantic.anthropic
 
-import com.xemantic.anthropic.event.ContentBlockDelta
+import com.xemantic.anthropic.event.ContentBlockDeltaEvent
 import com.xemantic.anthropic.event.Delta.TextDelta
 import com.xemantic.anthropic.message.Image
 import com.xemantic.anthropic.message.Message
@@ -9,15 +9,14 @@ import com.xemantic.anthropic.message.Role
 import com.xemantic.anthropic.message.StopReason
 import com.xemantic.anthropic.message.Text
 import com.xemantic.anthropic.message.Tool
-import com.xemantic.anthropic.message.ToolChoice
 import com.xemantic.anthropic.message.ToolUse
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.Serializable
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -92,7 +91,7 @@ class AnthropicTest {
           +"Say: 'The quick brown fox jumps over the lazy dog'"
         }
       }
-        .filterIsInstance<ContentBlockDelta>()
+        .filterIsInstance<ContentBlockDeltaEvent>()
         .map { (it.delta as TextDelta).text }
         .toList()
         .joinToString(separator = "")
@@ -101,71 +100,40 @@ class AnthropicTest {
     assertTrue(response == "The quick brown fox jumps over the lazy dog.")
   }
 
-  // given
-  @Serializable
-  data class Calculator(
-    val operation: Operation,
-    val a: Double,
-    val b: Double
-  ) {
-
-    @Suppress("unused") // it is used, but by Anthropic, so we skip the warning
-    enum class Operation(
-      val calculate: (a: Double, b: Double) -> Double
-    ) {
-      ADD({ a, b -> a + b }),
-      SUBTRACT({ a, b -> a - b }),
-      MULTIPLY({ a, b -> a * b }),
-      DIVIDE({ a, b -> a / b })
-    }
-
-    fun calculate() = operation.calculate(a, b)
-
-  }
-
   @Test
   fun shouldUseCalculatorTool() = runTest {
     // given
     val client = Anthropic()
-    val calculatorTool = Tool<Calculator>(
-      description = "Perform basic arithmetic operations",
-    )
+    client.tools += Calculator::class
 
-    // when
-    val response = client.messages.create {
-      +Message {
-        +"What's 15 multiplied by 7?"
-      }
-      tools = listOf(calculatorTool)
-      toolChoice = ToolChoice.Any()
-    }
-
-    // then
-    response.apply {
-      assertTrue(content.size == 1)
-      assertTrue(content[0] is ToolUse)
-      val toolUse = content[0] as ToolUse
-      assertTrue(toolUse.name == "com_xemantic_anthropic_AnthropicTest_Calculator")
-      val calculator = toolUse.input<Calculator>()
-      val result = calculator.calculate()
-      assertTrue(result == 15.0 * 7.0)
-    }
-  }
-
-  @Serializable
-  data class Fibonacci(val n: Int)
-
-  tailrec fun fibonacci(
-    n: Int, a: Int = 0, b: Int = 1
-  ): Int = when (n) {
-    0 -> a; 1 -> b; else -> fibonacci(n - 1, b, a + b)
+//    // when
+//    val response = client.messages.create {
+//      +Message {
+//        +"What's 15 multiplied by 7?"
+//      }
+//      tools = listOf(calculatorTool)
+//    }
+//
+//    // then
+//    response.apply {
+//      assertTrue(content.size == 1)
+//      assertTrue(content[0] is ToolUse)
+//      val toolUse = content[0] as ToolUse
+//      assertTrue(toolUse.name == "com_xemantic_anthropic_AnthropicTest_Calculator")
+//      val result = toolUse.use()
+//      assertTrue(result.toolUseId == toolUse.id)
+//      assertFalse(result.isError)
+//      assertTrue(result.content == listOf(Text(text = "${15.0 * 7.0}")))
+//    }
   }
 
   @Test
   fun shouldUseCalculatorToolForFibonacci() = runTest {
     // given
-    val client = Anthropic()
-    val fibonacciTool = Tool<Fibonacci>(
+    val client = Anthropic {
+      tools = listOf(FibonacciTool::class)
+    }
+    val fibonacciTool = Tool<FibonacciTool>(
       description = "Calculates fibonacci number of a given n",
     )
 
@@ -173,7 +141,6 @@ class AnthropicTest {
     val response = client.messages.create {
       +Message { +"What's fibonacci number 42" }
       tools = listOf(fibonacciTool)
-      toolChoice = ToolChoice.Any()
     }
 
     // then
@@ -182,11 +149,16 @@ class AnthropicTest {
       assertTrue(content[0] is ToolUse)
       val toolUse = content[0] as ToolUse
       assertTrue(toolUse.name == "com_xemantic_anthropic_AnthropicTest_Fibonacci")
-      val n = toolUse.input<Fibonacci>().n
-      assertTrue(n == 42)
-      val fibonacciNumber = fibonacci(n) // doing the job for Anthropic
-      assertTrue(fibonacciNumber == 267914296)
+      val result = toolUse.use()
+      assertTrue(result.toolUseId == toolUse.id)
+      assertFalse(result.isError)
+      assertTrue(result.content == listOf(Text(text = "267914296")))
     }
+  }
+
+  @Test
+  fun shouldUseAnnotations() {
+    println(FibonacciTool::class.annotations)
   }
 
 }

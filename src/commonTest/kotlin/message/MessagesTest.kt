@@ -1,6 +1,7 @@
 package com.xemantic.anthropic.message
 
 import com.xemantic.anthropic.anthropicJson
+import com.xemantic.anthropic.testToolsSerializersModule
 import io.kotest.assertions.json.shouldEqualJson
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToString
@@ -19,6 +20,7 @@ class MessagesTest {
     prettyPrint = true
     @OptIn(ExperimentalSerializationApi::class)
     prettyPrintIndent = "  "
+    serializersModule = testToolsSerializersModule
   }
 
   @Test
@@ -53,6 +55,38 @@ class MessagesTest {
         "max_tokens": 1024
       }
     """.trimIndent()
+  }
+
+  @Test
+  fun shouldDeserializeToolUseRequest() {
+    val request = """
+      {
+        "id": "msg_01PspkNzNG3nrf5upeTsmWLF",
+        "type": "message",
+        "role": "assistant",
+        "model": "claude-3-opus-20240229",
+        "content": [
+          {
+            "type": "tool_use",
+            "id": "toolu_01YHJK38TBKCRPn7zfjxcKHx",
+            "name": "com_xemantic_anthropic_AnthropicTest_Calculator",
+            "input": {
+              "operation": "MULTIPLY",
+              "a": 15,
+              "b": 7
+            }
+          }
+        ],
+        "stop_reason": "tool_use",
+        "stop_sequence": null,
+        "usage": {
+          "input_tokens": 419,
+          "output_tokens": 86
+        }
+      }
+    """.trimIndent()
+
+    val response = json.decodeFromString<MessageResponse>(request)
   }
 
 }

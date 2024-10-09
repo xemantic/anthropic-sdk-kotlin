@@ -7,6 +7,8 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonClassDiscriminator
 
+// reference https://docs.spring.io/spring-ai/reference/_images/anthropic-claude3-events-model.jpg
+
 @Serializable
 @JsonClassDiscriminator("type")
 @OptIn(ExperimentalSerializationApi::class)
@@ -14,14 +16,14 @@ sealed class Event
 
 @Serializable
 @SerialName("message_start")
-data class MessageStart(
+data class MessageStartEvent(
   val message: MessageResponse
 ) : Event()
 
 @Serializable
 @SerialName("message_delta")
-data class MessageDelta(
-  val delta: MessageDelta.Delta,
+data class MessageDeltaEvent(
+  val delta: Delta,
   val usage: Usage
 ) : Event() {
 
@@ -37,13 +39,15 @@ data class MessageDelta(
 
 @Serializable
 @SerialName("message_stop")
-class MessageStop : Event() {
+class MessageStopEvent : Event() {
   override fun toString(): String = "MessageStop"
 }
 
+// TODO error event is missing, should we rename all of these to events?
+
 @Serializable
 @SerialName("content_block_start")
-data class ContentBlockStart(
+data class ContentBlockStartEvent(
   val index: Int,
   @SerialName("content_block")
   val contentBlock: ContentBlock
@@ -51,7 +55,7 @@ data class ContentBlockStart(
 
 @Serializable
 @SerialName("content_block_stop")
-data class ContentBlockStop(
+data class ContentBlockStopEvent(
   val index: Int
 ) : Event()
 
@@ -66,17 +70,23 @@ sealed class ContentBlock {
     val text: String
   ) : ContentBlock()
 
+  @Serializable
+  @SerialName("tool_use")
+  class ToolUse(
+    val text: String // TODO tool_id
+  ) : ContentBlock()
+  // TODO missing tool_use
 }
 
 @Serializable
 @SerialName("ping")
-class Ping: Event() {
+class PingEvent: Event() {
   override fun toString(): String = "Ping"
 }
 
 @Serializable
 @SerialName("content_block_delta")
-data class ContentBlockDelta(
+data class ContentBlockDeltaEvent(
   val index: Int,
   val delta: Delta
 ) : Event()
