@@ -5,6 +5,8 @@ import com.xemantic.anthropic.message.Error
 import com.xemantic.anthropic.message.ErrorResponse
 import com.xemantic.anthropic.message.MessageRequest
 import com.xemantic.anthropic.message.MessageResponse
+import com.xemantic.anthropic.message.Tool
+import com.xemantic.anthropic.message.ToolUse
 import com.xemantic.anthropic.tool.UsableTool
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -27,7 +29,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
 import kotlin.reflect.KClass
 
 const val ANTHROPIC_API_BASE: String = "https://api.anthropic.com/"
@@ -67,9 +71,10 @@ fun Anthropic(
     anthropicBeta = config.anthropicBeta,
     apiBase = config.apiBase,
     defaultModel = defaultModel,
-    directBrowserAccess = config.directBrowserAccess,
+    directBrowserAccess = config.directBrowserAccess
+  ).apply {
     usableTools = config.usableTools
-  )
+  }
 }
 
 class Anthropic internal constructor(
@@ -78,8 +83,7 @@ class Anthropic internal constructor(
   val anthropicBeta: String?,
   val apiBase: String,
   val defaultModel: String,
-  val directBrowserAccess: Boolean,
-  val usableTools: MutableList<KClass<out UsableTool>> = mutableListOf()
+  val directBrowserAccess: Boolean
 ) {
 
   class Config {
@@ -89,7 +93,36 @@ class Anthropic internal constructor(
     var apiBase: String = ANTHROPIC_API_BASE
     var defaultModel: String? = null
     var directBrowserAccess: Boolean = false
-    var usableTools: MutableList<KClass<out UsableTool>> = mutableListOf()
+    var usableTools: List<KClass<out UsableTool>> = emptyList()
+
+    inline fun <reified T : UsableTool> tool(
+      block: T.() -> Unit = {}
+    ) {
+      usableTools += T::class
+    }
+  }
+
+  private class ToolEntry(
+    val tool: Tool,
+  )
+
+  private var toolSerializerMap = mapOf<String, KSerializer<out UsableTool>>()
+
+  var usableTools: List<KClass<out UsableTool>> = emptyList()
+    get() = field
+    set(value) {
+      value.validate()
+      field = value
+    }
+
+  inline fun <reified T : UsableTool> tool() {
+    usableTools += T::class
+  }
+
+  fun List<KClass<out UsableTool>>.validate() {
+    forEach { tool ->
+      //tool.serializer()
+    }
   }
 
   private val client = HttpClient {
@@ -126,7 +159,10 @@ class Anthropic internal constructor(
         setBody(request)
       }
       if (response.status.isSuccess()) {
-        return response.body<MessageResponse>()
+        return response.body<MessageResponse>().apply {
+          content.filterIsInstance<ToolUse>()
+            .forEach { it.toolSerializerMap = toolSerializerMap }
+        }
       } else {
         throw AnthropicException(
           error = response.body<ErrorResponse>().error,

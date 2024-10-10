@@ -1,14 +1,14 @@
 package com.xemantic.anthropic
 
 import com.xemantic.anthropic.message.ToolResult
-import com.xemantic.anthropic.tool.Description
+import com.xemantic.anthropic.tool.SerializableTool
 import com.xemantic.anthropic.tool.UsableTool
 import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 
-@Serializable
-@SerialName("fibonacci")
-@Description("Calculate Fibonacci number n")
+@SerializableTool(
+  name = "FibonacciTool",
+  description = "Calculate Fibonacci number n"
+)
 data class FibonacciTool(val n: Int): UsableTool {
 
   tailrec fun fibonacci(
@@ -23,9 +23,10 @@ data class FibonacciTool(val n: Int): UsableTool {
 
 }
 
-@Serializable
-@SerialName("calculator")
-@Description("Calculates the arithmetic outcome of an operation when given the arguments a and b")
+@SerializableTool(
+  name = "Calculator",
+  description = "Calculates the arithmetic outcome of an operation when given the arguments a and b"
+)
 data class Calculator(
   val operation: Operation,
   val a: Double,
@@ -45,6 +46,39 @@ data class Calculator(
   override fun use(toolUseId: String) = ToolResult(
     toolUseId,
     operation.calculate(a, b).toString()
+  )
+
+}
+
+interface Database {
+  fun execute(query: String): List<String>
+}
+
+class TestDatabase : Database {
+  var executedQuery: String? = null
+  override fun execute(
+    query: String
+  ): List<String> {
+    executedQuery = query
+    return listOf("foo", "bar", "buzz")
+  }
+}
+
+@SerializableTool(
+  name = "DatabaseQuery",
+  description = "Executes database query"
+)
+data class DatabaseQuery(
+  val query: String
+) : UsableTool {
+
+  lateinit var database: Database
+
+  override fun use(
+    toolUseId: String
+  ) = ToolResult(
+    toolUseId,
+    text  = database.execute(query).joinToString()
   )
 
 }

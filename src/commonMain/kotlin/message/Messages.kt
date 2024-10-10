@@ -1,5 +1,6 @@
 package com.xemantic.anthropic.message
 
+import com.xemantic.anthropic.anthropicJson
 import com.xemantic.anthropic.schema.JsonSchema
 import com.xemantic.anthropic.tool.UsableTool
 import kotlinx.serialization.*
@@ -63,6 +64,10 @@ data class MessageRequest(
     var tools: List<Tool>? = null
     val topK: Int? = null
     val topP: Int? = null
+
+    fun useTools() {
+      //too
+    }
 
     fun tools(vararg classes: KClass<out UsableTool>) {
       // TODO it needs access to Anthropic, therefore either needs a constructor parameter, or needs to be inner class
@@ -278,7 +283,18 @@ data class ToolUse(
   val id: String,
   val name: String,
   val input: JsonObject
-) : Content()
+) : Content() {
+
+  @Transient
+  internal lateinit var toolSerializerMap: Map<String, KSerializer<out UsableTool>>
+
+  fun use(): ToolResult {
+    val serializer = toolSerializerMap[name]!!
+    val tool = anthropicJson.decodeFromJsonElement(serializer, input)
+    return tool.use(toolUseId = id)
+  }
+
+}
 
 @Serializable
 @SerialName("tool_result")

@@ -76,6 +76,7 @@ kotlin {
       dependencies {
         implementation(libs.kotlin.test)
         implementation(libs.kotlinx.coroutines.test)
+        implementation(libs.kotest.assertions.core)
         implementation(libs.kotest.assertions.json)
       }
     }
@@ -131,11 +132,7 @@ tasks.withType<Test> {
 @Suppress("OPT_IN_USAGE")
 powerAssert {
   functions = listOf(
-    "kotlin.assert",
-    "kotlin.test.assertTrue",
-    "kotlin.test.assertFalse",
-    "kotlin.test.assertEquals",
-    "kotlin.test.assertNull"
+    "com.xemantic.anthropic.test.shouldBe"
   )
   includedSourceSets = listOf("commonTest", "jvmTest", "nativeTest")
 }

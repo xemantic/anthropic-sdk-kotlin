@@ -9,7 +9,8 @@ import com.xemantic.anthropic.message.Role
 import com.xemantic.anthropic.message.StopReason
 import com.xemantic.anthropic.message.Text
 import com.xemantic.anthropic.message.ToolUse
-import com.xemantic.anthropic.tool.use
+import com.xemantic.anthropic.test.then
+import com.xemantic.anthropic.test.shouldBe
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
@@ -128,15 +129,16 @@ class AnthropicTest {
   }
 
   @Test
-  fun shouldUseCalculatorToolForFibonacci() = runTest {
+  fun shouldUseFibonacciTool() = runTest {
     // given
-    val client = Anthropic()
-    client.usableTools += FibonacciTool::class
+    val client = Anthropic {
+      tool<FibonacciTool>()
+    }
 
     // when
     val response = client.messages.create {
       +Message { +"What's fibonacci number 42" }
-      tools(FibonacciTool::class)
+      useTools()
     }
 
     // then
@@ -153,8 +155,116 @@ class AnthropicTest {
   }
 
   @Test
-  fun shouldUseAnnotations() {
-    println(FibonacciTool::class.annotations)
+  fun shouldUse2ToolsInSequence() = runTest {
+    // given
+    val client = Anthropic {
+      tool<FibonacciTool>()
+      tool<Calculator>()
+    }
+
+    // when
+    val conversation = mutableListOf<Message>()
+    conversation += Message {
+      +"Calculate Fibonacci number 42 and then divide it by 42"
+    }
+    val response1 = client.messages.create {
+      messages = conversation
+      useTools()
+    }
+
+    // then
+    val fibonacciResult = with(response1) {
+      assertTrue(content.size == 1)
+      assertTrue(content[0] is ToolUse)
+      val toolUse = content[0] as ToolUse
+      assertTrue(toolUse.name == "fibonacci")
+      val result = toolUse.use()
+      assertTrue(result.toolUseId == toolUse.id)
+      assertFalse(result.isError)
+      assertTrue(result.content == listOf(Text(text = "267914296")))
+      result
+    }
+
+    // when
+    conversation += Message {
+      +fibonacciResult
+    }
+    val response2 = client.messages.create {
+      messages = conversation
+      useTools()
+    }
+    // then
+    val calculatorResult = with(response2) {
+      assertTrue(content.size == 1)
+      assertTrue(content[0] is ToolUse)
+      val toolUse = content[0] as ToolUse
+      assertTrue(toolUse.name == "calculator")
+      val result = toolUse.use()
+      assertTrue(result.toolUseId == toolUse.id)
+      assertFalse(result.isError)
+      assertTrue(result.content == listOf(Text(text = "267914296")))
+      result
+    }
+
+    // when
+    conversation += Message { +calculatorResult }
+    val response3 = client.messages.create {
+      messages = conversation
+      useTools()
+    }
+    with(response3) {
+      assertTrue(content.size == 1)
+      assertTrue(content[0] is Text)
+      val text = content[0] as Text
+      assertTrue(text.text.contains("6378911.8"))
+    }
+  }
+
+  @Test
+  fun shouldUseToolWithDependencies() = runTest {
+    // given
+    val testDb = TestDatabase()
+    val client = Anthropic {
+      tool<DatabaseQuery> {
+        database = testDb
+      }
+    }
+
+    // when
+    val conversation = mutableListOf<Message>()
+    conversation += Message { +"List data in CUSTOMER table" }
+    val response1 = client.messages.create {
+      messages = conversation
+      useTools() // TODO it should be a single tool
+    }
+
+    then(response1) {
+      stopReason shouldBe StopReason.TOOL_USE
+      content.size shouldBe 1
+      content[0] shouldBe ToolUse
+      val toolUse = content[0] as ToolUse
+      assertTrue(toolUse.name == "fibonacci")
+    }
+    val toolUse = response1.content[0] as ToolUse
+    val result = toolUse.use()
+    then(result) {
+      toolUseId shouldBe toolUse
+      isError shouldBe false
+      content shouldBe listOf(Text(text = "267914296"))
+    }
+
+    // when
+    conversation += Message { +result }
+    val response2 = client.messages.create {
+      messages = conversation
+    }
+
+    then(response2) {
+      content.size shouldBe 1
+      content[0] is Text
+      val text = content[0] as Text
+      text.text.contains("6378911.8")
+    }
   }
 
 }
