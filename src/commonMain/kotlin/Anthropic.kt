@@ -8,6 +8,7 @@ import com.xemantic.anthropic.message.MessageResponse
 import com.xemantic.anthropic.message.Tool
 import com.xemantic.anthropic.message.ToolUse
 import com.xemantic.anthropic.tool.UsableTool
+import com.xemantic.anthropic.tool.toolOf
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -73,9 +74,9 @@ fun Anthropic(
     defaultModel = defaultModel,
     directBrowserAccess = config.directBrowserAccess
   ).apply {
-    usableTools = config.usableTools
+    toolEntryMap = (config.usableTools as List<Anthropic.ToolEntry<UsableTool>>).associateBy { it.tool.name }
   }
-}
+} // TODO this can be a second constructor, then toolMap can be private
 
 class Anthropic internal constructor(
   val apiKey: String,
@@ -93,36 +94,35 @@ class Anthropic internal constructor(
     var apiBase: String = ANTHROPIC_API_BASE
     var defaultModel: String? = null
     var directBrowserAccess: Boolean = false
-    var usableTools: List<KClass<out UsableTool>> = emptyList()
+    @PublishedApi
+    internal var usableTools: List<ToolEntry<out UsableTool>> = emptyList()
 
     inline fun <reified T : UsableTool> tool(
-      block: T.() -> Unit = {}
+      noinline block: T.() -> Unit = {}
     ) {
-      usableTools += T::class
+      val entry = ToolEntry(toolOf<T>(), serializer<T>(), block)
+      usableTools += entry
     }
+
   }
 
-  private class ToolEntry(
-    val tool: Tool,
+  @PublishedApi
+  internal class ToolEntry<T : UsableTool>(
+    val tool: Tool, // TODO, no cache control
+    val serializer: KSerializer<T>,
+    val initializer: T.() -> Unit = {}
   )
 
-  private var toolSerializerMap = mapOf<String, KSerializer<out UsableTool>>()
+  internal var toolEntryMap = mapOf<String, ToolEntry<UsableTool>>()
 
-  var usableTools: List<KClass<out UsableTool>> = emptyList()
-    get() = field
-    set(value) {
-      value.validate()
-      field = value
-    }
+//  var usableTools: List<KClass<out Tool>> = emptyList()
+//    set(value) {
+//      toolMap += mapOf(value)
+//      field = value
+//    }
 
   inline fun <reified T : UsableTool> tool() {
-    usableTools += T::class
-  }
-
-  fun List<KClass<out UsableTool>>.validate() {
-    forEach { tool ->
-      //tool.serializer()
-    }
+    //usableTools += T::class
   }
 
   private val client = HttpClient {
@@ -146,14 +146,17 @@ class Anthropic internal constructor(
     }
   }
 
-  inner class Messages() {
+  inner class Messages {
 
     suspend fun create(
       block: MessageRequest.Builder.() -> Unit
     ): MessageResponse {
+
       val request = MessageRequest.Builder(
-        defaultModel
+        defaultModel,
+        toolEntryMap = toolEntryMap
       ).apply(block).build()
+
       val response = client.post("/v1/messages") {
         contentType(ContentType.Application.Json)
         setBody(request)
@@ -161,7 +164,10 @@ class Anthropic internal constructor(
       if (response.status.isSuccess()) {
         return response.body<MessageResponse>().apply {
           content.filterIsInstance<ToolUse>()
-            .forEach { it.toolSerializerMap = toolSerializerMap }
+            .forEach { toolUse ->
+              val entry = toolEntryMap[toolUse.name]!!
+              toolUse.toolEntry = entry
+            }
         }
       } else {
         throw AnthropicException(
@@ -175,7 +181,10 @@ class Anthropic internal constructor(
       block: MessageRequest.Builder.() -> Unit
     ): Flow<Event> = flow {
 
-      val request = MessageRequest.Builder(defaultModel).apply {
+      val request = MessageRequest.Builder(
+        defaultModel,
+        toolEntryMap = toolEntryMap
+      ).apply {
         block(this)
         stream = true
       }.build()

@@ -1,9 +1,10 @@
 package com.xemantic.anthropic.message
 
-import com.xemantic.anthropic.Calculator
 import com.xemantic.anthropic.anthropicJson
-import com.xemantic.anthropic.tool.toSerializersModule
+import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.json.shouldEqualJson
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.instanceOf
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -21,7 +22,14 @@ class MessagesTest {
     prettyPrint = true
     @OptIn(ExperimentalSerializationApi::class)
     prettyPrintIndent = "  "
-    //serializersModule = testToolsSerializersModule
+  }
+
+  @Test
+  fun defaultMessageShouldHaveRoleUser() {
+    // given
+    val message = Message {}
+    // then
+    message.role shouldBe Role.USER
   }
 
   @Test
@@ -59,11 +67,8 @@ class MessagesTest {
   }
 
   @Test
-  fun shouldDeserializeToolUseRequest() {
-    val json = Json(from = json) {
-      serializersModule = listOf(Calculator::class).toSerializersModule()
-    }
-    val request = """
+  fun shouldDeserializeToolUseMessageResponseAndUseTool() {
+    val jsonResponse = """
       {
         "id": "msg_01PspkNzNG3nrf5upeTsmWLF",
         "type": "message",
@@ -73,7 +78,7 @@ class MessagesTest {
           {
             "type": "tool_use",
             "id": "toolu_01YHJK38TBKCRPn7zfjxcKHx",
-            "name": "com_xemantic_anthropic_AnthropicTest_Calculator",
+            "name": "Calculator",
             "input": {
               "operation": "MULTIPLY",
               "a": 15,
@@ -90,7 +95,25 @@ class MessagesTest {
       }
     """.trimIndent()
 
-    val response = json.decodeFromString<MessageResponse>(request)
+    val response = json.decodeFromString<MessageResponse>(jsonResponse)
+    assertSoftly(response) {
+      content.size shouldBe 1
+      content[0] shouldBe instanceOf<ToolUse>()
+    }
+//    val toolUse = response.content[0] as ToolUse
+//    toolUse.toolEntry = Anthropic.ToolEntry(
+//      tool = toolOf<Calculator>(),
+//
+//    )toolSerializerMap = mapOf("Calculator" to serializer<Calculator>())
+//    val toolResult = toolUse.use()
+//    assertSoftly(toolResult) {
+//      toolUseId shouldBe "toolu_01YHJK38TBKCRPn7zfjxcKHx"
+//      isError shouldBe false
+//      cacheControl shouldBe null
+//      content.size shouldBe 1
+//      content[0] shouldBe instanceOf<Text>()
+//      (content[0] as Text).text shouldBe "105.0"
+//    }
   }
 
 }

@@ -6,7 +6,6 @@ import com.xemantic.anthropic.message.Tool
 import com.xemantic.anthropic.message.ToolResult
 import com.xemantic.anthropic.message.ToolUse
 import com.xemantic.anthropic.schema.jsonSchemaOf
-import com.xemantic.anthropic.schema.toJsonSchema
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -17,6 +16,15 @@ import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.serializer
 import kotlin.reflect.KClass
 
+/**
+ * Annotation used to mark a class extending the [UsableTool].
+ *
+ * This annotation provides metadata for tools that can be serialized and used in the context
+ * of the Anthropic API. It includes a name and description for the tool.
+ *
+ * @property name The name of the tool. This name is used during serialization and should be a unique identifier for the tool.
+ * @property description A comprehensive description of what the tool does and how it should be used.
+ */
 @OptIn(ExperimentalSerializationApi::class)
 @MetaSerializable
 @Target(AnnotationTarget.CLASS)
@@ -25,9 +33,21 @@ annotation class SerializableTool(
   val description: String
 )
 
-@OptIn(ExperimentalSerializationApi::class)
+/**
+ * Interface for tools that can be used in the context of the Anthropic API.
+ *
+ * Classes implementing this interface represent tools that can be executed
+ * with a given tool use ID. The implementation of the [use] method should
+ * contain the logic for executing the tool and returning the [ToolResult].
+ */
 interface UsableTool {
 
+  /**
+   * Executes the tool and returns the result.
+   *
+   * @param toolUseId A unique identifier for this particular use of the tool.
+   * @return A [ToolResult] containing the outcome of executing the tool.
+   */
   fun use(
     toolUseId: String
   ): ToolResult
@@ -44,80 +64,30 @@ fun Tool.cacheControl(
 )
 
 @OptIn(ExperimentalSerializationApi::class)
-inline fun <reified T : UsableTool> toolOf(): Tool {
+inline fun <reified T : UsableTool> toolOf(
+  cacheControl: CacheControl? = null // TODO should it be here?
+): Tool {
+
   val serializer = try {
     serializer<T>()
   } catch (e :SerializationException) {
-    throw SerializationException("The class ${T::class.qualifiedName} must be annotated with @SerializableTool", e)
+    throw SerializationException(
+      "The class ${T::class.qualifiedName} must be annotated with @SerializableTool", e
+    )
   }
-  val description = checkNotNull(
-    serializer
-      .descriptor
-      .annotations
-      .filterIsInstance<SerializableTool>()
-      .firstOrNull()
-  ) {
-    "No @Description annotation found for ${T::class.qualifiedName}"
-  }
+
+  val serializableTool = serializer
+    .descriptor
+    .annotations
+    .filterIsInstance<SerializableTool>()
+    .firstOrNull() ?: throw SerializationException(
+      "The class ${T::class.qualifiedName} must be annotated with @SerializableTool",
+    )
+
   return Tool(
-    name = description.name,
-    description = description.description,
+    name = serializableTool.name,
+    description = serializableTool.description,
     inputSchema = jsonSchemaOf<T>(),
-    cacheControl = null
+    cacheControl = cacheControl
   )
-}
-
-//@OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
-//fun <T : UsableTool> KClass<T>.verify() {
-//  // TODO how to get class serializer correctly?
-//  checkNotNull(serializer()) {
-//    "Invalid tool definition, not serializer for class ${this@verify}"
-//  }
-//  checkNotNull(serializer().descriptor.annotations.filterIsInstance<Description>().firstOrNull()) {
-//    "Not @Description annotation specified for the tool"
-//  }
-//}
-
-//@OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
-//fun <T : UsableTool> KClass<T>.instance(
-//  cacheControl: CacheControl? = null
-//): Tool {
-//  val descriptor = serializer().descriptor
-//  val description = descriptor.annotations.filterIsInstance<Description>().firstOrNull()!!.value
-//  return Tool(
-//    name = descriptor.serialName,
-//    description = description,
-//    inputSchema = toJsonSchema(),
-//    cacheControl = cacheControl
-//  )
-//}
-
-//inline fun <reified T> anthropicTypeOf(): String =
-//  T::class.qualifiedName!!.replace('.', '_')
-
-
-@OptIn(InternalSerializationApi::class)
-fun <T : UsableTool> List<KClass<T>>.toSerializersModule(): SerializersModule = SerializersModule {
-  polymorphic(UsableTool::class) {
-    forEach { subclass(it, it.serializer())  }
-  }
-}
-
-//inline fun <reified T : UsableTool> Tool(
-//  description: String,
-//  cacheControl: CacheControl? = null
-//): Tool = Tool(
-//  name = anthropicTypeOf<T>(),
-//  description = description,
-//  inputSchema = jsonSchemaOf<T>(),
-//  cacheControl = cacheControl
-//)
-
-
-fun <T : UsableTool> ToolUse.use(
-  map: Map<String, KSerializer<T>>
-): ToolResult {
-  val serializer = map[name]!!
-  val tool = anthropicJson.decodeFromJsonElement(serializer, input)
-  return tool.use(toolUseId = id)
 }

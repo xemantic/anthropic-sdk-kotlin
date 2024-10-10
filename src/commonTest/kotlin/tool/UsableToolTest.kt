@@ -1,14 +1,15 @@
 package com.xemantic.anthropic.tool
 
+import com.xemantic.anthropic.message.CacheControl
 import com.xemantic.anthropic.message.ToolResult
 import com.xemantic.anthropic.schema.JsonSchema
 import com.xemantic.anthropic.schema.JsonSchemaProperty
-import com.xemantic.anthropic.test.then
-import com.xemantic.anthropic.test.shouldBe
+import io.kotest.assertions.assertSoftly
+import io.kotest.assertions.throwables.shouldThrowWithMessage
+import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlin.test.Test
-import kotlin.test.assertFailsWith
 
 class UsableToolTest {
 
@@ -27,7 +28,7 @@ class UsableToolTest {
     // when
     val tool = toolOf<TestTool>()
 
-    then(tool) {
+    assertSoftly(tool) {
       name shouldBe "TestTool"
       description shouldBe "Test tool receiving a message and outputting it back"
       inputSchema shouldBe JsonSchema(
@@ -38,19 +39,34 @@ class UsableToolTest {
     }
   }
 
+  @Test
+  fun shouldCreateToolWithCacheControlFromUsableTool() {
+    // when
+    val tool = toolOf<TestTool>(
+      cacheControl = CacheControl(type = CacheControl.Type.EPHEMERAL)
+    )
+
+    assertSoftly(tool) {
+      name shouldBe "TestTool"
+      description shouldBe "Test tool receiving a message and outputting it back"
+      inputSchema shouldBe JsonSchema(
+        properties = mapOf("message" to JsonSchemaProperty.STRING),
+        required = listOf("message")
+      )
+      cacheControl shouldBe CacheControl(type = CacheControl.Type.EPHEMERAL)
+    }
+  }
+
   class NoAnnotationTool : UsableTool {
     override fun use(toolUseId: String) = ToolResult(toolUseId, "nothing")
   }
 
   @Test
   fun shouldFailToCreateToolWithoutSerializableToolAnnotation() {
-    assertFailsWith<SerializationException> {
+    shouldThrowWithMessage<SerializationException>(
+      "The class com.xemantic.anthropic.tool.UsableToolTest.NoAnnotationTool must be annotated with @SerializableTool"
+    ) {
       toolOf<NoAnnotationTool>()
-    }
-    try {
-      toolOf<NoAnnotationTool>()
-    } catch (e: SerializationException) {
-      e.message shouldBe "The class com.xemantic.anthropic.tool.UsableToolTest.NoAnnotationTool must be annotated with @SerializableTool"
     }
   }
 
@@ -61,13 +77,10 @@ class UsableToolTest {
 
   @Test
   fun shouldFailToCreateToolWithOnlySerializableToolAnnotation() {
-    assertFailsWith<SerializationException> {
+    shouldThrowWithMessage<SerializationException>(
+      "The class com.xemantic.anthropic.tool.UsableToolTest.OnlySerializableAnnotationTool must be annotated with @SerializableTool"
+    ) {
       toolOf<OnlySerializableAnnotationTool>()
-    }
-    try {
-      toolOf<OnlySerializableAnnotationTool>()
-    } catch (e: SerializationException) {
-      e.message shouldBe "The class com.xemantic.anthropic.tool.UsableToolTest.NoAnnotationTool must be annotated with @SerializableTool"
     }
   }
 

@@ -1,5 +1,6 @@
 package com.xemantic.anthropic.message
 
+import com.xemantic.anthropic.Anthropic
 import com.xemantic.anthropic.anthropicJson
 import com.xemantic.anthropic.schema.JsonSchema
 import com.xemantic.anthropic.tool.UsableTool
@@ -48,8 +49,9 @@ data class MessageRequest(
   val topP: Int?
 ) {
 
-  class Builder(
-    val defaultApiModel: String
+  class Builder internal constructor(
+    private val defaultModel: String,
+    private val toolEntryMap: Map<String, Anthropic.ToolEntry<out UsableTool>>
   ) {
     var model: String? = null
     var maxTokens = 1024
@@ -66,11 +68,7 @@ data class MessageRequest(
     val topP: Int? = null
 
     fun useTools() {
-      //too
-    }
-
-    fun tools(vararg classes: KClass<out UsableTool>) {
-      // TODO it needs access to Anthropic, therefore either needs a constructor parameter, or needs to be inner class
+      tools = toolEntryMap.values.map { it.tool }
     }
 
     fun messages(vararg messages: Message) {
@@ -96,7 +94,7 @@ data class MessageRequest(
     }
 
     fun build(): MessageRequest = MessageRequest(
-      model = if (model != null) model!! else defaultApiModel,
+      model = if (model != null) model!! else defaultModel,
       maxTokens = maxTokens,
       messages = messages,
       metadata = metadata,
@@ -117,7 +115,9 @@ fun MessageRequest(
   defaultModel: String,
   block: MessageRequest.Builder.() -> Unit
 ): MessageRequest {
-  val builder = MessageRequest.Builder(defaultModel)
+  val builder = MessageRequest.Builder(
+    defaultModel, emptyMap()
+  )
   block(builder)
   return builder.build()
 }
@@ -286,11 +286,14 @@ data class ToolUse(
 ) : Content() {
 
   @Transient
-  internal lateinit var toolSerializerMap: Map<String, KSerializer<out UsableTool>>
+  internal lateinit var toolEntry: Anthropic.ToolEntry<UsableTool>
 
   fun use(): ToolResult {
-    val serializer = toolSerializerMap[name]!!
-    val tool = anthropicJson.decodeFromJsonElement(serializer, input)
+    val tool = anthropicJson.decodeFromJsonElement(
+      deserializer = toolEntry.serializer,
+      element = input
+    )
+    toolEntry.initializer(tool)
     return tool.use(toolUseId = id)
   }
 

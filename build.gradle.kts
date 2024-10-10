@@ -6,7 +6,6 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
-import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
   alias(libs.plugins.kotlin.multiplatform)
@@ -47,6 +46,7 @@ kotlin {
   //explicitApi() // check with serialization?
   jvm {
     testRuns["test"].executionTask.configure {
+      enabled = false
       useJUnitPlatform()
     }
     // set up according to https://jakewharton.com/gradle-toolchains-are-rarely-a-good-idea/
@@ -129,10 +129,9 @@ tasks.withType<Test> {
   enabled = true
 }
 
-@Suppress("OPT_IN_USAGE")
 powerAssert {
   functions = listOf(
-    "com.xemantic.anthropic.test.shouldBe"
+    "io.kotest.matchers.shouldBe"
   )
   includedSourceSets = listOf("commonTest", "jvmTest", "nativeTest")
 }

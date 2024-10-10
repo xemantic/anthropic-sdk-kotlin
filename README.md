@@ -96,14 +96,17 @@ fun main() {
 It can also use tools:
 
 ```kotlin
-@Serializable
+@SerializableTool(
+  name = "Calculator",
+  description = "Calculates the arithmetic outcome of an operation when given the arguments a and b"
+)
 data class Calculator(
   val operation: Operation,
   val a: Double,
   val b: Double
-) {
+): UsableTool {
 
-  @Suppress("unused") // will be used by Anthropic :)
+  @Suppress("unused") // it is used, but by Anthropic, so we skip the warning
   enum class Operation(
     val calculate: (a: Double, b: Double) -> Double
   ) {
@@ -113,31 +116,39 @@ data class Calculator(
     DIVIDE({ a, b -> a / b })
   }
 
-  fun calculate() = operation.calculate(a, b)
+  override fun use(toolUseId: String) = ToolResult(
+    toolUseId,
+    operation.calculate(a, b).toString()
+  )
 
 }
 
-fun main() {
-  val client = Anthropic()
+fun main() = runBlocking {
 
-  val calculatorTool = Tool<Calculator>(
-    description = "Perform basic arithmetic operations"
-  )
-
-  val response = runBlocking {
-    client.messages.create {
-      +Message {
-        +"What's 15 multiplied by 7?"
-      }
-      tools = listOf(calculatorTool)
-      toolChoice = ToolChoice.Any()
-    }
+  val client = Anthropic {
+    tool<FibonacciTool>()
   }
 
-  val toolUse = response.content[0] as ToolUse
-  val calculator = toolUse.input<Calculator>()
-  val result = calculator.calculate() // we are doing the job for LLM here
-  println(result)
+  val conversation = mutableListOf<Message>()
+  conversation += Message { +"What's 15 multiplied by 7?" }
+
+  val response1 = client.messages.create {
+    messages = conversation
+    useTools()
+  }
+  conversation += response1.asMessage()
+
+  println((response1.content[0] as Text).text)
+  val toolUse = response1.content[1] as ToolUse
+  val result = toolUse.use() // we are doing the calculation job for Claude here
+
+  conversation += Message { +result }
+
+  val response2 = client.messages.create {
+    messages = conversation
+    useTools()
+  }
+  println((response2.content[0] as Text).text)
 }
 ```
 
