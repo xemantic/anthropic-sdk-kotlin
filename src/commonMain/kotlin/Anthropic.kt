@@ -11,8 +11,8 @@ import com.xemantic.anthropic.tool.UsableTool
 import com.xemantic.anthropic.tool.toolOf
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.sse.SSE
@@ -33,12 +33,20 @@ import kotlinx.coroutines.flow.map
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
-import kotlin.reflect.KClass
 
+/**
+ * The default Anthropic API base.
+ */
 const val ANTHROPIC_API_BASE: String = "https://api.anthropic.com/"
 
+/**
+ * The default version to be passed to the `anthropic-version` HTTP header of each API request.
+ */
 const val DEFAULT_ANTHROPIC_VERSION: String = "2023-06-01"
 
+/**
+ * An exception thrown when API requests returns error.
+ */
 class AnthropicException(
   error: Error,
   httpStatusCode: HttpStatusCode
@@ -48,17 +56,20 @@ expect val envApiKey: String?
 
 expect val missingApiKeyMessage: String
 
+/**
+ * A JSON format suitable for communication with Anthropic API.
+ */
 val anthropicJson: Json = Json {
   allowSpecialFloatingPointValues = true
   explicitNulls = false
   encodeDefaults = true
-//  serializersModule = SerializersModule {
-//    //contextual(UsableTool::class, UsableToolSerializer::class)
-////    polymorphic(UsableTool::class) {
-////    }
-//  }
 }
 
+/**
+ * The public constructor function which for the Anthropic API client.
+ *
+ * @param block the config block to set up the API access.
+ */
 fun Anthropic(
   block: Anthropic.Config.() -> Unit = {}
 ): Anthropic {
@@ -110,20 +121,10 @@ class Anthropic internal constructor(
   internal class ToolEntry<T : UsableTool>(
     val tool: Tool, // TODO, no cache control
     val serializer: KSerializer<T>,
-    val initializer: T.() -> Unit = {}
+    val initialize: T.() -> Unit = {}
   )
 
   internal var toolEntryMap = mapOf<String, ToolEntry<UsableTool>>()
-
-//  var usableTools: List<KClass<out Tool>> = emptyList()
-//    set(value) {
-//      toolMap += mapOf(value)
-//      field = value
-//    }
-
-  inline fun <reified T : UsableTool> tool() {
-    //usableTools += T::class
-  }
 
   private val client = HttpClient {
     install(ContentNegotiation) {
@@ -132,6 +133,14 @@ class Anthropic internal constructor(
     install(SSE)
     install(Logging) {
       level = LogLevel.BODY
+    }
+    install(HttpRequestRetry) {
+      retryOnServerErrors(maxRetries = 5)
+      exponentialDelay()
+      maxRetries = 5
+      retryIf { _, response ->
+        response.status == HttpStatusCode.TooManyRequests
+      }
     }
     defaultRequest {
       url(apiBase)

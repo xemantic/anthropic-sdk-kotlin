@@ -4,18 +4,11 @@ import com.xemantic.anthropic.Anthropic
 import com.xemantic.anthropic.anthropicJson
 import com.xemantic.anthropic.schema.JsonSchema
 import com.xemantic.anthropic.tool.UsableTool
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.*
-import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.descriptors.PolymorphicKind
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.buildSerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonClassDiscriminator
-import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonObject
 import kotlin.collections.mutableListOf
-import kotlin.reflect.KClass
 
 enum class Role {
   @SerialName("user")
@@ -45,7 +38,9 @@ data class MessageRequest(
   @SerialName("tool_choice")
   val toolChoice: ToolChoice?,
   val tools: List<Tool>?,
+  @SerialName("top_k")
   val topK: Int?,
+  @SerialName("top_p")
   val topP: Int?
 ) {
 
@@ -285,6 +280,8 @@ data class ToolUse(
   val input: JsonObject
 ) : Content() {
 
+  private val logger = KotlinLogging.logger {}
+
   @Transient
   internal lateinit var toolEntry: Anthropic.ToolEntry<UsableTool>
 
@@ -293,8 +290,23 @@ data class ToolUse(
       deserializer = toolEntry.serializer,
       element = input
     )
-    toolEntry.initializer(tool)
-    return tool.use(toolUseId = id)
+    val result = try {
+      toolEntry.initialize(tool)
+      logger.debug { "[$name:$id] Using tool" }
+      tool.use(toolUseId = id)
+    } catch (e: Exception) {
+      logger.error(e) { "[$name:$id] Tool use error: ${e.message}" }
+      ToolResult(
+        toolUseId = id,
+        isError = true,
+        content = listOf(
+          Text(
+            text = e.message ?: "Unknown error occurred"
+          )
+        )
+      )
+    }
+    return result
   }
 
 }
@@ -374,99 +386,3 @@ data class Usage(
   @SerialName("output_tokens")
   val outputTokens: Int
 )
-
-
-interface CacheableBuilder {
-
-  var cacheControl: CacheControl?
-
-  var cache: Boolean
-    get() = cacheControl != null
-    set(value) {
-      if (value) {
-        cacheControl = CacheControl(type = CacheControl.Type.EPHEMERAL)
-      } else {
-        cacheControl = null
-      }
-    }
-
-}
-
-//class UsableToolSerializer : JsonContentPolymorphicSerializer2<UsableTool>(UsableTool::class) {
-//
-////  override val descriptor: SerialDescriptor = buildClassSerialDescriptor("UsableTool") {
-////    element<String>("type")
-////    element<JsonElement>("data")
-////  }
-////
-////  override fun serialize(
-////    encoder: Encoder,
-////    value: UsableTool
-////  ) {
-//////    val polymorphic: SerializationStrategy<String> = serializersModule.getPolymorphic(UsableTool::class, "foo")
-////    PolymorphicSerializer(UsableTool::class)
-//////    encoder.encodeString(value)
-//////    encoder.encodeString(value.name)
-//////    polymorphic.seri
-//////    encoder.encodeSerializableValue(polymorphic)
-////  }
-////
-////  override fun deserialize(decoder: Decoder): UsableTool {
-////    require(decoder is JsonDecoder) { "This serializer can be used only with Json format" }
-////    val name = decoder.decodeString()
-////    val polymorphic = decoder.serializersModule.getPolymorphic(UsableTool::class, name)
-////    val id = decoder.decodeString()
-////    return DummyUsableTool()
-////  }
-//
-//  override fun selectDeserializer(element: JsonElement): DeserializationStrategy<UsableTool> {
-//    println(element)
-//    TODO("dupa dupa Not yet implemented")
-//  }
-//
-//}
-
-
-//class UsableToolSerializer : JsonContentPolymorphicSerializer2<UsableTool>(
-//  UsableTool::class
-//)
-
-@OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
-open class JsonContentPolymorphicSerializer2<T : Any>(private val baseClass: KClass<T>) : KSerializer<T> {
-  /**
-   * A descriptor for this set of content-based serializers.
-   * By default, it uses the name composed of [baseClass] simple name,
-   * kind is set to [PolymorphicKind.SEALED] and contains 0 elements.
-   *
-   * However, this descriptor can be overridden to achieve better representation of custom transformed JSON shape
-   * for schema generating/introspection purposes.
-   */
-  override val descriptor: SerialDescriptor =
-    buildSerialDescriptor("JsonContentPolymorphicSerializer<${baseClass.simpleName}>", PolymorphicKind.SEALED)
-
-  final override fun serialize(encoder: Encoder, value: T) {
-    val actualSerializer =
-      encoder.serializersModule.getPolymorphic(baseClass, value)
-        ?: value::class.serializerOrNull()
-        ?: throw SerializationException("fiu fiu")
-    @Suppress("UNCHECKED_CAST")
-    (actualSerializer as KSerializer<T>).serialize(encoder, value)
-  }
-
-  final override fun deserialize(decoder: Decoder): T {
-    val input = decoder.asJsonDecoder()
-    input.json.serializersModule.getPolymorphic(UsableTool::class, "foo")
-    val tree = input.decodeJsonElement()
-
-    @Suppress("UNCHECKED_CAST")
-    val actualSerializer = String.serializer() as KSerializer<T>
-    return input.json.decodeFromJsonElement(actualSerializer, tree)
-  }
-
-}
-
-internal fun Decoder.asJsonDecoder(): JsonDecoder = this as? JsonDecoder
-  ?: throw IllegalStateException(
-    "This serializer can be used only with Json format." +
-        "Expected Decoder to be JsonDecoder, got ${this::class}"
-  )
