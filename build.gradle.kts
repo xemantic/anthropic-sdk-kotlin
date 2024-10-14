@@ -32,7 +32,9 @@ val signingPassword: String? by project
 val sonatypeUser: String? by project
 val sonatypePassword: String? by project
 
-val skipTests = false
+// we don't want to risk that a flaky test will crash the release build
+// and everything should be tested anyway after merging to the main branch
+val skipTests = isReleaseBuild
 
 println("""
   Project: ${project.name}
@@ -86,8 +88,6 @@ kotlin {
 
     jvmTest {
       dependencies {
-        // TODO do we need junit5?
-        implementation(kotlin("test-junit5"))
         runtimeOnly(libs.log4j.slf4j2)
         runtimeOnly(libs.log4j.core)
         runtimeOnly(libs.jackson.databind)
