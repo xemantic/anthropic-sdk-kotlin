@@ -72,6 +72,8 @@ fun main() {
 }
 ```
 
+### Response streaming
+
 Streaming is also possible:
 
 ```kotlin
@@ -88,7 +90,9 @@ fun main() {
 }
 ```
 
-But if you want to write AI agents, you need tools, and this is where this library shines:
+### Using tools
+
+If you want to write AI agents, you need tools, and this is where this library shines:
 
 ```kotlin
 @AnthropicTool(
@@ -146,7 +150,58 @@ Anthropic SDKs:
 None of them is taking the advantage of automatic schema generation, which becomes crucial
 for maintaining agents expecting more complex and structured input from the LLM.
 
-More sophisticated code examples targeting various platforms can be found in the
+### Injecting dependencies to tools
+
+Tools can be provided with dependencies, for example singleton
+services providing some facilities, like HTTP client to connect to the
+internet or DB connection pool to access the database. 
+
+```kotlin
+@AnthropicTool(
+  name = "query_database",
+  description = "Executes SQL on the database"
+)
+data class DatabaseQueryTool(val sql: String): UsableTool {
+
+  internal lateinit var connection: Connection
+
+  override fun use(
+    toolUseId: String
+  ) = ToolResult(
+    toolUseId,
+    text = connection.prepareStatement(sql).use { statement ->
+      statement.resultSet.use { resultSet ->
+        resultSet.toString()
+      }
+    }
+  )
+
+}
+
+fun main() = runBlocking {
+
+  val client = Anthropic {
+    tool<DatabaseQueryTool> {
+      connection = DriverManager.getConnection("jdbc:...")
+    }
+  }
+
+  val response = client.messages.create {
+    +Message { +"Select all the users who never logged in to the the system" }
+    useTools()
+  }
+
+  val tool = response.content.filterIsInstance<ToolUse>().first()
+  val toolResult = tool.use()
+  println(toolResult)
+}
+```
+
+After the `DatabaseQueryTool` is decoded from the API response, it can be processed
+by the lambda function passed to the tool definition. In case of the example above,
+the lambda will inject a JDBC connection to the tool.
+
+More sophisticated code examples targeting various Kotlin platforms can be found in the
 [anthropic-sdk-kotlin-demo](https://github.com/xemantic/anthropic-sdk-kotlin-demo)
 project.
 
