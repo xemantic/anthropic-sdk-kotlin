@@ -3,15 +3,9 @@ package com.xemantic.anthropic.schema
 import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.*
 import kotlin.collections.set
-import kotlin.reflect.KClass
 
 inline fun <reified T> jsonSchemaOf(): JsonSchema = generateSchema(
   serializer<T>().descriptor
-)
-
-@OptIn(InternalSerializationApi::class)
-fun KClass<*>.toJsonSchema(): JsonSchema = generateSchema(
-  serializer().descriptor
 )
 
 @OptIn(ExperimentalSerializationApi::class)
@@ -58,9 +52,12 @@ private fun generateSchemaProperty(
     )
     StructureKind.MAP -> JsonSchemaProperty("object")
     StructureKind.CLASS -> {
+      // dots are not allowed in JSON Schema name, if the @SerialName was not
+      // specified, then fully qualified class name will be used, and we need
+      // to translate it
       val refName = descriptor.serialName.replace('.', '_').trimEnd('?')
       definitions[refName] = generateSchema(descriptor)
-      JsonSchemaProperty("\$ref", ref = "#/definitions/$refName")
+      JsonSchemaProperty(ref = "#/definitions/$refName")
     }
     else -> JsonSchemaProperty("object") // Default case
   }

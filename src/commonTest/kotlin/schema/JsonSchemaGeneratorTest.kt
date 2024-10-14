@@ -3,12 +3,14 @@ package com.xemantic.anthropic.schema
 import com.xemantic.anthropic.anthropicJson
 import io.kotest.assertions.json.shouldEqualJson
 import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 
 @Serializable
+@SerialName("address")
 data class Address(
   val street: String? = null,
   val city: String? = null,
@@ -35,7 +37,6 @@ class JsonSchemaGeneratorTest {
 
   @Test
   fun generateJsonSchemaForAddress() {
-
     // when
     val schema = jsonSchemaOf<Address>()
     val schemaJson = json.encodeToString(schema)
@@ -77,7 +78,7 @@ class JsonSchemaGeneratorTest {
     {
       "type": "object",
       "definitions": {
-        "com_xemantic_anthropic_schema_Address": {
+        "address": {
           "type": "object",
           "properties": {
             "street": {
@@ -116,8 +117,7 @@ class JsonSchemaGeneratorTest {
           }
         },
         "address": {
-          "type": "${'$'}ref",
-          "ref": "#/definitions/com_xemantic_anthropic_schema_Address"
+          "${'$'}ref": "#/definitions/address"
         }
       },
       "required": [
