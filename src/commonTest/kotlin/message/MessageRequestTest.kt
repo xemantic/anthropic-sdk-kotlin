@@ -23,7 +23,7 @@ class MessageRequestTest {
   fun shouldCreateTheSimplestMessageRequest() {
     // given
     val request = MessageRequest(
-      defaultModel = "claude-3-opus-20240229"
+      defaultModel = "claude-3-5-sonnet-20240620"
     ) {
       +Message {
         +"Hey Claude!?"
@@ -36,7 +36,7 @@ class MessageRequestTest {
     // then
     json shouldEqualJson """
       {
-        "model": "claude-3-opus-20240229",
+        "model": "claude-3-5-sonnet-20240620",
         "messages": [
           {
             "role": "user",

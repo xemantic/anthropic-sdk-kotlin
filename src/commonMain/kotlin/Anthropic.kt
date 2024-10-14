@@ -33,6 +33,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
+import kotlin.reflect.KType
+import kotlin.reflect.typeOf
 
 /**
  * The default Anthropic API base.
@@ -111,7 +113,7 @@ class Anthropic internal constructor(
     inline fun <reified T : UsableTool> tool(
       noinline block: T.() -> Unit = {}
     ) {
-      val entry = ToolEntry(toolOf<T>(), serializer<T>(), block)
+      val entry = ToolEntry(typeOf<T>(), toolOf<T>(), serializer<T>(), block)
       usableTools += entry
     }
 
@@ -119,6 +121,7 @@ class Anthropic internal constructor(
 
   @PublishedApi
   internal class ToolEntry<T : UsableTool>(
+    val type: KType,
     val tool: Tool, // TODO, no cache control
     val serializer: KSerializer<T>,
     val initialize: T.() -> Unit = {}

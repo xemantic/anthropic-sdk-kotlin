@@ -8,6 +8,7 @@ import kotlinx.serialization.*
 import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.json.JsonObject
 import kotlin.collections.mutableListOf
+import kotlin.reflect.typeOf
 
 enum class Role {
   @SerialName("user")
@@ -45,7 +46,8 @@ data class MessageRequest(
 
   class Builder internal constructor(
     private val defaultModel: String,
-    private val toolEntryMap: Map<String, Anthropic.ToolEntry<out UsableTool>>
+    @PublishedApi
+    internal val toolEntryMap: Map<String, Anthropic.ToolEntry<out UsableTool>>
   ) {
     var model: String? = null
     var maxTokens = 1024
@@ -63,6 +65,20 @@ data class MessageRequest(
 
     fun useTools() {
       tools = toolEntryMap.values.map { it.tool }
+    }
+
+    /**
+     * Sets both, the [tools] list and the [toolChoice] with
+     * just one tool to use, forcing the API to respond with the [ToolUse].
+     */
+    inline fun <reified T : UsableTool> useTool() {
+      val type = typeOf<T>()
+      val toolEntry = toolEntryMap.values.find { it.type == type }
+      requireNotNull(toolEntry) {
+        "No such tool defined in Anthropic client: ${T::class.qualifiedName}"
+      }
+      tools = listOf(toolEntry.tool)
+      toolChoice = ToolChoice.Tool(name = toolEntry.tool.name)
     }
 
     fun messages(vararg messages: Message) {
@@ -135,9 +151,9 @@ data class MessageResponse(
     MESSAGE
   }
 
-  fun asMessage() = Message {
+  fun asMessage(): Message = Message {
     role = Role.ASSISTANT
-    content += this.content
+    content += this@MessageResponse.content
   }
 
 }

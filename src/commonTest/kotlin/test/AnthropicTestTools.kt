@@ -3,6 +3,7 @@ package com.xemantic.anthropic.test
 import com.xemantic.anthropic.message.ToolResult
 import com.xemantic.anthropic.tool.AnthropicTool
 import com.xemantic.anthropic.tool.UsableTool
+import kotlinx.serialization.Transient
 
 @AnthropicTool(
   name = "FibonacciTool",
@@ -71,6 +72,7 @@ data class DatabaseQueryTool(
   val query: String
 ) : UsableTool {
 
+  @Transient
   lateinit var database: Database
 
   override fun use(
