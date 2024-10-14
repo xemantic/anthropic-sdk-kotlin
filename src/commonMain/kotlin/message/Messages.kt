@@ -4,7 +4,6 @@ import com.xemantic.anthropic.Anthropic
 import com.xemantic.anthropic.anthropicJson
 import com.xemantic.anthropic.schema.JsonSchema
 import com.xemantic.anthropic.tool.UsableTool
-import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.*
 import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.json.JsonObject
@@ -280,8 +279,6 @@ data class ToolUse(
   val input: JsonObject
 ) : Content() {
 
-  private val logger = KotlinLogging.logger {}
-
   @Transient
   internal lateinit var toolEntry: Anthropic.ToolEntry<UsableTool>
 
@@ -292,10 +289,8 @@ data class ToolUse(
     )
     val result = try {
       toolEntry.initialize(tool)
-      logger.debug { "[$name:$id] Using tool" }
       tool.use(toolUseId = id)
     } catch (e: Exception) {
-      logger.error(e) { "[$name:$id] Tool use error: ${e.message}" }
       ToolResult(
         toolUseId = id,
         isError = true,
@@ -380,9 +375,9 @@ data class Usage(
   @SerialName("input_tokens")
   val inputTokens: Int,
   @SerialName("cache_creation_input_tokens")
-  val cacheCreationInputTokens: Int?,
+  val cacheCreationInputTokens: Int? = null,
   @SerialName("cache_read_input_tokens")
-  val cacheReadInputTokens: Int?,
+  val cacheReadInputTokens: Int? = null,
   @SerialName("output_tokens")
   val outputTokens: Int
 )

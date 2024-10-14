@@ -7,7 +7,8 @@ kotlinxCoroutines = "1.9.0"
 ktor = "3.0.0"
 kotest = "6.0.0.M1"
 
-kotlinLogging = "7.0.0"
+# logging is not used at the moment, might be enabled later
+#kotlinLogging = "7.0.0"
 log4j = "2.24.1"
 jackson = "2.18.0"
 
@@ -20,7 +21,7 @@ kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotl
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
 
 # logging libs
-kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "kotlinLogging" }
+#kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "kotlinLogging" }
 log4j-slf4j2 = { module = "org.apache.logging.log4j:log4j-slf4j2-impl", version.ref = "log4j" }
 log4j-core = { module = "org.apache.logging.log4j:log4j-core", version.ref = "log4j" }
 jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
