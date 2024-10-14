@@ -18,6 +18,7 @@ data class JsonSchemaProperty(
   val type: String? = null,
   val items: JsonSchemaProperty? = null,
   val enum: List<String>? = null,
+  @SerialName("\$ref")
   val ref: String? = null
 ) {
 
