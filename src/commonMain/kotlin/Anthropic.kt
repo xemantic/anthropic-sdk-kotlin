@@ -76,7 +76,7 @@ fun Anthropic(
   val config = Anthropic.Config().apply(block)
   val apiKey = if (config.apiKey != null) config.apiKey else envApiKey
   requireNotNull(apiKey) { missingApiKeyMessage }
-  val defaultModel = if (config.defaultModel != null) config.defaultModel!! else "claude-3-opus-20240229"
+  val defaultModel = if (config.defaultModel != null) config.defaultModel!! else "claude-3-5-sonnet-20240620"
   return Anthropic(
     apiKey = apiKey,
     anthropicVersion = config.anthropicVersion,
