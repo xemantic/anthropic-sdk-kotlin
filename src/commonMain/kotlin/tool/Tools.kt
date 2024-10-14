@@ -1,20 +1,13 @@
 package com.xemantic.anthropic.tool
 
-import com.xemantic.anthropic.anthropicJson
 import com.xemantic.anthropic.message.CacheControl
 import com.xemantic.anthropic.message.Tool
 import com.xemantic.anthropic.message.ToolResult
-import com.xemantic.anthropic.message.ToolUse
 import com.xemantic.anthropic.schema.jsonSchemaOf
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.InternalSerializationApi
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.MetaSerializable
 import kotlinx.serialization.SerializationException
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.serializer
-import kotlin.reflect.KClass
 
 /**
  * Annotation used to mark a class extending the [UsableTool].
@@ -28,7 +21,7 @@ import kotlin.reflect.KClass
 @OptIn(ExperimentalSerializationApi::class)
 @MetaSerializable
 @Target(AnnotationTarget.CLASS)
-annotation class SerializableTool(
+annotation class AnthropicTool(
   val name: String,
   val description: String
 )
@@ -76,17 +69,17 @@ inline fun <reified T : UsableTool> toolOf(
     )
   }
 
-  val serializableTool = serializer
+  val anthropicTool = serializer
     .descriptor
     .annotations
-    .filterIsInstance<SerializableTool>()
+    .filterIsInstance<AnthropicTool>()
     .firstOrNull() ?: throw SerializationException(
       "The class ${T::class.qualifiedName} must be annotated with @SerializableTool",
     )
 
   return Tool(
-    name = serializableTool.name,
-    description = serializableTool.description,
+    name = anthropicTool.name,
+    description = anthropicTool.description,
     inputSchema = jsonSchemaOf<T>(),
     cacheControl = cacheControl
   )
