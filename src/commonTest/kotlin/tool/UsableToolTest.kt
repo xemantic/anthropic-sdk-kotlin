@@ -13,7 +13,7 @@ import kotlin.test.Test
 
 class UsableToolTest {
 
-  @SerializableTool(
+  @AnthropicTool(
     name = "TestTool",
     description = "Test tool receiving a message and outputting it back"
   )
@@ -24,7 +24,7 @@ class UsableToolTest {
   }
 
   @Test
-  fun shouldCreateToolFromUsableTool() {
+  fun shouldCreateToolFromUsableToolAnnotatedWithAnthropicTool() {
     // when
     val tool = toolOf<TestTool>()
 
@@ -62,7 +62,7 @@ class UsableToolTest {
   }
 
   @Test
-  fun shouldFailToCreateToolWithoutSerializableToolAnnotation() {
+  fun shouldFailToCreateToolWithoutAnthropicToolAnnotation() {
     shouldThrowWithMessage<SerializationException>(
       "The class com.xemantic.anthropic.tool.UsableToolTest.NoAnnotationTool must be annotated with @SerializableTool"
     ) {
@@ -76,7 +76,7 @@ class UsableToolTest {
   }
 
   @Test
-  fun shouldFailToCreateToolWithOnlySerializableToolAnnotation() {
+  fun shouldFailToCreateToolWithOnlySerializableAnnotation() {
     shouldThrowWithMessage<SerializationException>(
       "The class com.xemantic.anthropic.tool.UsableToolTest.OnlySerializableAnnotationTool must be annotated with @SerializableTool"
     ) {

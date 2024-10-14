@@ -1,11 +1,10 @@
-package com.xemantic.anthropic
+package com.xemantic.anthropic.test
 
 import com.xemantic.anthropic.message.ToolResult
-import com.xemantic.anthropic.tool.SerializableTool
+import com.xemantic.anthropic.tool.AnthropicTool
 import com.xemantic.anthropic.tool.UsableTool
-import kotlinx.serialization.SerialName
 
-@SerializableTool(
+@AnthropicTool(
   name = "FibonacciTool",
   description = "Calculate Fibonacci number n"
 )
@@ -23,7 +22,7 @@ data class FibonacciTool(val n: Int): UsableTool {
 
 }
 
-@SerializableTool(
+@AnthropicTool(
   name = "Calculator",
   description = "Calculates the arithmetic outcome of an operation when given the arguments a and b"
 )
@@ -64,11 +63,11 @@ class TestDatabase : Database {
   }
 }
 
-@SerializableTool(
+@AnthropicTool(
   name = "DatabaseQuery",
   description = "Executes database query"
 )
-data class DatabaseQuery(
+data class DatabaseQueryTool(
   val query: String
 ) : UsableTool {
 
