@@ -6,6 +6,7 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
+import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
 
 plugins {
   alias(libs.plugins.kotlin.multiplatform)
@@ -31,6 +32,8 @@ val signingPassword: String? by project
 val sonatypeUser: String? by project
 val sonatypePassword: String? by project
 
+val skipTests = false
+
 println("""
   Project: ${project.name}
   Version: ${project.version}
@@ -39,14 +42,14 @@ println("""
 )
 
 repositories {
-    mavenCentral()
+  mavenCentral()
 }
 
 kotlin {
+
   //explicitApi() // check with serialization?
   jvm {
     testRuns["test"].executionTask.configure {
-      enabled = false
       useJUnitPlatform()
     }
     // set up according to https://jakewharton.com/gradle-toolchains-are-rarely-a-good-idea/
@@ -59,7 +62,7 @@ kotlin {
     }
   }
 
-//  linuxX64()
+  linuxX64()
 
   sourceSets {
 
@@ -84,6 +87,7 @@ kotlin {
 
     jvmTest {
       dependencies {
+        // TODO do we need junit5?
         implementation(kotlin("test-junit5"))
         runtimeOnly(libs.log4j.slf4j2)
         runtimeOnly(libs.log4j.core)
@@ -93,12 +97,12 @@ kotlin {
       }
     }
 
-//    nativeTest {
-//      dependencies {
-//        // on mac/ios it should be rather Darwin
-//        implementation(libs.ktor.client.curl)
-//      }
-//    }
+    nativeTest {
+      dependencies {
+        // on mac/ios it should be rather Darwin
+        implementation(libs.ktor.client.curl)
+      }
+    }
 
   }
 
@@ -127,7 +131,11 @@ tasks.withType<Test> {
     showStackTraces = true
     exceptionFormat = TestExceptionFormat.FULL
   }
-  enabled = true
+  enabled = !skipTests
+}
+
+tasks.withType<KotlinNativeTest> {
+  enabled = !skipTests
 }
 
 powerAssert {
