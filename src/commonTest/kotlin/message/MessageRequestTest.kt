@@ -1,31 +1,29 @@
 package com.xemantic.anthropic.message
 
-import com.xemantic.anthropic.anthropicJson
+import com.xemantic.anthropic.test.testJson
 import io.kotest.assertions.json.shouldEqualJson
-import kotlinx.serialization.ExperimentalSerializationApi
+import io.kotest.matchers.shouldBe
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import kotlin.test.Test
 
 /**
- * Tests the JSON serialization format of created Anthropic API messages.
+ * Tests the JSON serialization format of created Anthropic API message requests.
  */
-class MessagesTest {
+class MessageRequestTest {
 
-  /**
-   * A pretty JSON printing for testing.
-   */
-  private val json = Json(from = anthropicJson) {
-    prettyPrint = true
-    @OptIn(ExperimentalSerializationApi::class)
-    prettyPrintIndent = "  "
+  @Test
+  fun defaultMessageShouldHaveRoleUser() {
+    // given
+    val message = Message {}
+    // then
+    message.role shouldBe Role.USER
   }
 
   @Test
   fun shouldCreateTheSimplestMessageRequest() {
     // given
     val request = MessageRequest(
-      defaultModel = "claude-3-opus-20240229"
+      defaultModel = "claude-3-5-sonnet-20240620"
     ) {
       +Message {
         +"Hey Claude!?"
@@ -33,12 +31,12 @@ class MessagesTest {
     }
 
     // when
-    val json = json.encodeToString(request)
+    val json = testJson.encodeToString(request)
 
     // then
     json shouldEqualJson """
       {
-        "model": "claude-3-opus-20240229",
+        "model": "claude-3-5-sonnet-20240620",
         "messages": [
           {
             "role": "user",

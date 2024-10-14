@@ -52,9 +52,12 @@ private fun generateSchemaProperty(
     )
     StructureKind.MAP -> JsonSchemaProperty("object")
     StructureKind.CLASS -> {
+      // dots are not allowed in JSON Schema name, if the @SerialName was not
+      // specified, then fully qualified class name will be used, and we need
+      // to translate it
       val refName = descriptor.serialName.replace('.', '_').trimEnd('?')
       definitions[refName] = generateSchema(descriptor)
-      JsonSchemaProperty("\$ref", ref = "#/definitions/$refName")
+      JsonSchemaProperty(ref = "#/definitions/$refName")
     }
     else -> JsonSchemaProperty("object") // Default case
   }

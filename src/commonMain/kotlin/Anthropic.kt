@@ -5,10 +5,14 @@ import com.xemantic.anthropic.message.Error
 import com.xemantic.anthropic.message.ErrorResponse
 import com.xemantic.anthropic.message.MessageRequest
 import com.xemantic.anthropic.message.MessageResponse
+import com.xemantic.anthropic.message.Tool
+import com.xemantic.anthropic.message.ToolUse
+import com.xemantic.anthropic.tool.UsableTool
+import com.xemantic.anthropic.tool.toolOf
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.sse.SSE
@@ -26,12 +30,25 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
+import kotlin.reflect.KType
+import kotlin.reflect.typeOf
 
+/**
+ * The default Anthropic API base.
+ */
 const val ANTHROPIC_API_BASE: String = "https://api.anthropic.com/"
 
+/**
+ * The default version to be passed to the `anthropic-version` HTTP header of each API request.
+ */
 const val DEFAULT_ANTHROPIC_VERSION: String = "2023-06-01"
 
+/**
+ * An exception thrown when API requests returns error.
+ */
 class AnthropicException(
   error: Error,
   httpStatusCode: HttpStatusCode
@@ -41,19 +58,27 @@ expect val envApiKey: String?
 
 expect val missingApiKeyMessage: String
 
+/**
+ * A JSON format suitable for communication with Anthropic API.
+ */
 val anthropicJson: Json = Json {
   allowSpecialFloatingPointValues = true
   explicitNulls = false
   encodeDefaults = true
 }
 
+/**
+ * The public constructor function which for the Anthropic API client.
+ *
+ * @param block the config block to set up the API access.
+ */
 fun Anthropic(
   block: Anthropic.Config.() -> Unit = {}
 ): Anthropic {
   val config = Anthropic.Config().apply(block)
   val apiKey = if (config.apiKey != null) config.apiKey else envApiKey
   requireNotNull(apiKey) { missingApiKeyMessage }
-  val defaultModel = if (config.defaultModel != null) config.defaultModel!! else "claude-3-opus-20240229"
+  val defaultModel = if (config.defaultModel != null) config.defaultModel!! else "claude-3-5-sonnet-20240620"
   return Anthropic(
     apiKey = apiKey,
     anthropicVersion = config.anthropicVersion,
@@ -61,8 +86,10 @@ fun Anthropic(
     apiBase = config.apiBase,
     defaultModel = defaultModel,
     directBrowserAccess = config.directBrowserAccess
-  )
-}
+  ).apply {
+    toolEntryMap = (config.usableTools as List<Anthropic.ToolEntry<UsableTool>>).associateBy { it.tool.name }
+  }
+} // TODO this can be a second constructor, then toolMap can be private
 
 class Anthropic internal constructor(
   val apiKey: String,
@@ -80,7 +107,27 @@ class Anthropic internal constructor(
     var apiBase: String = ANTHROPIC_API_BASE
     var defaultModel: String? = null
     var directBrowserAccess: Boolean = false
+    @PublishedApi
+    internal var usableTools: List<ToolEntry<out UsableTool>> = emptyList()
+
+    inline fun <reified T : UsableTool> tool(
+      noinline block: T.() -> Unit = {}
+    ) {
+      val entry = ToolEntry(typeOf<T>(), toolOf<T>(), serializer<T>(), block)
+      usableTools += entry
+    }
+
   }
+
+  @PublishedApi
+  internal class ToolEntry<T : UsableTool>(
+    val type: KType,
+    val tool: Tool, // TODO, no cache control
+    val serializer: KSerializer<T>,
+    val initialize: T.() -> Unit = {}
+  )
+
+  internal var toolEntryMap = mapOf<String, ToolEntry<UsableTool>>()
 
   private val client = HttpClient {
     install(ContentNegotiation) {
@@ -89,6 +136,14 @@ class Anthropic internal constructor(
     install(SSE)
     install(Logging) {
       level = LogLevel.BODY
+    }
+    install(HttpRequestRetry) {
+      retryOnServerErrors(maxRetries = 5)
+      exponentialDelay()
+      maxRetries = 5
+      retryIf { _, response ->
+        response.status == HttpStatusCode.TooManyRequests
+      }
     }
     defaultRequest {
       url(apiBase)
@@ -103,20 +158,29 @@ class Anthropic internal constructor(
     }
   }
 
-  inner class Messages() {
+  inner class Messages {
 
     suspend fun create(
       block: MessageRequest.Builder.() -> Unit
     ): MessageResponse {
+
       val request = MessageRequest.Builder(
-        defaultModel
+        defaultModel,
+        toolEntryMap = toolEntryMap
       ).apply(block).build()
+
       val response = client.post("/v1/messages") {
         contentType(ContentType.Application.Json)
         setBody(request)
       }
       if (response.status.isSuccess()) {
-        return response.body<MessageResponse>()
+        return response.body<MessageResponse>().apply {
+          content.filterIsInstance<ToolUse>()
+            .forEach { toolUse ->
+              val entry = toolEntryMap[toolUse.name]!!
+              toolUse.toolEntry = entry
+            }
+        }
       } else {
         throw AnthropicException(
           error = response.body<ErrorResponse>().error,
@@ -129,7 +193,10 @@ class Anthropic internal constructor(
       block: MessageRequest.Builder.() -> Unit
     ): Flow<Event> = flow {
 
-      val request = MessageRequest.Builder(defaultModel).apply {
+      val request = MessageRequest.Builder(
+        defaultModel,
+        toolEntryMap = toolEntryMap
+      ).apply {
         block(this)
         stream = true
       }.build()
@@ -157,5 +224,3 @@ class Anthropic internal constructor(
 
 }
 
-inline fun <reified T> anthropicTypeOf(): String =
-  T::class.qualifiedName!!.replace('.', '_')

@@ -6,7 +6,7 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
-import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
+import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
 
 plugins {
   alias(libs.plugins.kotlin.multiplatform)
@@ -32,6 +32,10 @@ val signingPassword: String? by project
 val sonatypeUser: String? by project
 val sonatypePassword: String? by project
 
+// we don't want to risk that a flaky test will crash the release build
+// and everything should be tested anyway after merging to the main branch
+val skipTests = isReleaseBuild
+
 println("""
   Project: ${project.name}
   Version: ${project.version}
@@ -40,12 +44,25 @@ println("""
 )
 
 repositories {
-    mavenCentral()
+  mavenCentral()
 }
 
 kotlin {
 
-  jvm {}
+  //explicitApi() // check with serialization?
+  jvm {
+    testRuns["test"].executionTask.configure {
+      useJUnitPlatform()
+    }
+    // set up according to https://jakewharton.com/gradle-toolchains-are-rarely-a-good-idea/
+    compilerOptions {
+      apiVersion = kotlinTarget
+      languageVersion = kotlinTarget
+      jvmTarget = JvmTarget.fromTarget(javaTarget)
+      freeCompilerArgs.add("-Xjdk-release=$javaTarget")
+      progressiveMode = true
+    }
+  }
 
   linuxX64()
 
@@ -64,6 +81,7 @@ kotlin {
       dependencies {
         implementation(libs.kotlin.test)
         implementation(libs.kotlinx.coroutines.test)
+        implementation(libs.kotest.assertions.core)
         implementation(libs.kotest.assertions.json)
       }
     }
@@ -89,17 +107,6 @@ kotlin {
 
 }
 
-// set up according to https://jakewharton.com/gradle-toolchains-are-rarely-a-good-idea/
-tasks.withType<KotlinJvmCompile> {
-  compilerOptions {
-    apiVersion = kotlinTarget
-    languageVersion = kotlinTarget
-    jvmTarget = JvmTarget.fromTarget(javaTarget)
-    freeCompilerArgs.add("-Xjdk-release=$javaTarget")
-    progressiveMode = true
-  }
-}
-
 fun isNonStable(version: String): Boolean {
   val stableKeyword = listOf("RELEASE", "FINAL", "GA").any { version.uppercase().contains(it) }
   val regex = "^[0-9,.v-]+(-r)?$".toRegex()
@@ -113,7 +120,7 @@ tasks.withType<DependencyUpdatesTask> {
   }
 }
 
-tasks.withType<Test>() {
+tasks.withType<Test> {
   testLogging {
     events(
       TestLogEvent.PASSED,
@@ -123,15 +130,16 @@ tasks.withType<Test>() {
     showStackTraces = true
     exceptionFormat = TestExceptionFormat.FULL
   }
+  enabled = !skipTests
 }
 
-@Suppress("OPT_IN_USAGE")
+tasks.withType<KotlinNativeTest> {
+  enabled = !skipTests
+}
+
 powerAssert {
   functions = listOf(
-    "kotlin.assert",
-    "kotlin.test.assertTrue",
-    "kotlin.test.assertEquals",
-    "kotlin.test.assertNull"
+    "io.kotest.matchers.shouldBe"
   )
   includedSourceSets = listOf("commonTest", "jvmTest", "nativeTest")
 }

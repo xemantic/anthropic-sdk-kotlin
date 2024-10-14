@@ -1,6 +1,6 @@
 package com.xemantic.anthropic
 
-import com.xemantic.anthropic.event.ContentBlockDelta
+import com.xemantic.anthropic.event.ContentBlockDeltaEvent
 import com.xemantic.anthropic.event.Delta.TextDelta
 import com.xemantic.anthropic.message.Image
 import com.xemantic.anthropic.message.Message
@@ -8,18 +8,23 @@ import com.xemantic.anthropic.message.MessageResponse
 import com.xemantic.anthropic.message.Role
 import com.xemantic.anthropic.message.StopReason
 import com.xemantic.anthropic.message.Text
-import com.xemantic.anthropic.message.Tool
-import com.xemantic.anthropic.message.ToolChoice
 import com.xemantic.anthropic.message.ToolUse
+import com.xemantic.anthropic.test.Calculator
+import com.xemantic.anthropic.test.DatabaseQueryTool
+import com.xemantic.anthropic.test.FibonacciTool
+import com.xemantic.anthropic.test.TestDatabase
+import io.kotest.assertions.assertSoftly
+import io.kotest.matchers.ints.shouldBeGreaterThan
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldStartWith
+import io.kotest.matchers.types.instanceOf
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.Serializable
 import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 class AnthropicTest {
 
@@ -33,23 +38,22 @@ class AnthropicTest {
       +Message {
         +"Hello World! What's your name?"
       }
-      model = "claude-3-opus-20240229"
       maxTokens = 1024
     }
 
     // then
-    response.apply {
-      assertTrue(type == MessageResponse.Type.MESSAGE)
-      assertTrue(role == Role.ASSISTANT)
-      assertTrue(model == "claude-3-opus-20240229")
-      assertTrue(content.size == 1)
-      assertTrue(content[0] is Text)
+    assertSoftly(response) {
+      type shouldBe MessageResponse.Type.MESSAGE
+      role shouldBe  Role.ASSISTANT
+      model shouldBe "claude-3-5-sonnet-20240620"
+      stopReason shouldBe StopReason.END_TURN
+      content.size shouldBe 1
+      content[0] shouldBe instanceOf<Text>()
       val text = content[0] as Text
-      assertTrue(text.text.contains("Claude"))
-      assertTrue(stopReason == StopReason.END_TURN)
-      assertNull(stopSequence)
-      assertEquals(usage.inputTokens, 15)
-      assertTrue(usage.outputTokens > 0)
+      text.text shouldContain "Claude"
+      stopSequence shouldBe null
+      usage.inputTokens shouldBe 15
+      usage.outputTokens shouldBeGreaterThan 0
     }
   }
 
@@ -72,11 +76,12 @@ class AnthropicTest {
     }
 
     // then
-    response.apply {
-      assertTrue(1 == content.size)
-      assertTrue(content[0] is Text)
+    assertSoftly(response) {
+      stopReason shouldBe StopReason.END_TURN
+      content.size shouldBe 1
+      content[0] shouldBe instanceOf<Text>()
       val text = content[0] as Text
-      assertTrue(text.text.lowercase().contains("foo"))
+      text.text.uppercase() shouldContain "FOO"
     }
   }
 
@@ -87,106 +92,152 @@ class AnthropicTest {
 
     // when
     val response = client.messages.stream {
-        +Message {
-          role = Role.USER
-          +"Say: 'The quick brown fox jumps over the lazy dog'"
-        }
+        +Message { +"Say: 'The sun slowly dipped below the horizon, painting the sky in a breathtaking array of oranges, pinks, and purples.'" }
       }
-        .filterIsInstance<ContentBlockDelta>()
+        .filterIsInstance<ContentBlockDeltaEvent>()
         .map { (it.delta as TextDelta).text }
         .toList()
         .joinToString(separator = "")
 
     // then
-    assertTrue(response == "The quick brown fox jumps over the lazy dog.")
-  }
-
-  // given
-  @Serializable
-  data class Calculator(
-    val operation: Operation,
-    val a: Double,
-    val b: Double
-  ) {
-
-    @Suppress("unused") // it is used, but by Anthropic, so we skip the warning
-    enum class Operation(
-      val calculate: (a: Double, b: Double) -> Double
-    ) {
-      ADD({ a, b -> a + b }),
-      SUBTRACT({ a, b -> a - b }),
-      MULTIPLY({ a, b -> a * b }),
-      DIVIDE({ a, b -> a / b })
-    }
-
-    fun calculate() = operation.calculate(a, b)
-
+    response shouldBe "The sun slowly dipped below the horizon, painting the sky in a breathtaking array of oranges, pinks, and purples."
   }
 
   @Test
   fun shouldUseCalculatorTool() = runTest {
     // given
-    val client = Anthropic()
-    val calculatorTool = Tool<Calculator>(
-      description = "Perform basic arithmetic operations",
-    )
+    val client = Anthropic {
+      tool<Calculator>()
+    }
+    val conversation = mutableListOf<Message>()
+    conversation += Message { +"What's 15 multiplied by 7?" }
 
     // when
-    val response = client.messages.create {
-      +Message {
-        +"What's 15 multiplied by 7?"
-      }
-      tools = listOf(calculatorTool)
-      toolChoice = ToolChoice.Any()
+    val initialResponse = client.messages.create {
+      messages = conversation
+      useTools()
+    }
+    conversation += initialResponse.asMessage()
+
+    // then
+    assertSoftly(initialResponse) {
+      stopReason shouldBe StopReason.TOOL_USE
+      content.size shouldBe 2
+      content[0] shouldBe instanceOf<Text>()
+      content[1] shouldBe instanceOf<ToolUse>()
+      (content[1] as ToolUse).name shouldBe "Calculator"
+    }
+
+    val toolUse = initialResponse.content[1] as ToolUse
+    val result = toolUse.use() // here we execute the tool
+
+    conversation += Message { +result }
+
+    // when
+    val resultResponse = client.messages.create {
+      messages = conversation
+      useTools()
     }
 
     // then
-    response.apply {
-      assertTrue(content.size == 1)
-      assertTrue(content[0] is ToolUse)
-      val toolUse = content[0] as ToolUse
-      assertTrue(toolUse.name == "com_xemantic_anthropic_AnthropicTest_Calculator")
-      val calculator = toolUse.input<Calculator>()
-      val result = calculator.calculate()
-      assertTrue(result == 15.0 * 7.0)
+    assertSoftly(resultResponse) {
+      stopReason shouldBe StopReason.END_TURN
+      content.size shouldBe 1
+      content[0] shouldBe instanceOf<Text>()
+      (content[0] as Text).text shouldContain "105"
     }
   }
 
-  @Serializable
-  data class Fibonacci(val n: Int)
-
-  tailrec fun fibonacci(
-    n: Int, a: Int = 0, b: Int = 1
-  ): Int = when (n) {
-    0 -> a; 1 -> b; else -> fibonacci(n - 1, b, a + b)
-  }
-
   @Test
-  fun shouldUseCalculatorToolForFibonacci() = runTest {
+  fun shouldUseFibonacciTool() = runTest {
     // given
-    val client = Anthropic()
-    val fibonacciTool = Tool<Fibonacci>(
-      description = "Calculates fibonacci number of a given n",
-    )
+    val client = Anthropic {
+      tool<FibonacciTool>()
+    }
 
     // when
     val response = client.messages.create {
       +Message { +"What's fibonacci number 42" }
-      tools = listOf(fibonacciTool)
-      toolChoice = ToolChoice.Any()
+      useTools()
     }
 
     // then
-    response.apply {
-      assertTrue(content.size == 1)
-      assertTrue(content[0] is ToolUse)
-      val toolUse = content[0] as ToolUse
-      assertTrue(toolUse.name == "com_xemantic_anthropic_AnthropicTest_Fibonacci")
-      val n = toolUse.input<Fibonacci>().n
-      assertTrue(n == 42)
-      val fibonacciNumber = fibonacci(n) // doing the job for Anthropic
-      assertTrue(fibonacciNumber == 267914296)
+    val toolUse = response.content.filterIsInstance<ToolUse>().first()
+    toolUse.name shouldBe "FibonacciTool"
+
+    val result = toolUse.use()
+    assertSoftly(result) {
+      toolUseId shouldBe toolUse.id
+      isError shouldBe false
+      content shouldBe listOf(Text(text = "267914296"))
     }
+  }
+
+  @Test
+  fun shouldUse2ToolsInSequence() = runTest {
+    // given
+    val client = Anthropic {
+      tool<FibonacciTool>()
+      tool<Calculator>()
+    }
+
+    // when
+    val conversation = mutableListOf<Message>()
+    conversation += Message { +"Calculate Fibonacci number 42 and then divide it by 42" }
+
+    val fibonacciResponse = client.messages.create {
+      messages = conversation
+      useTools()
+    }
+    conversation += fibonacciResponse.asMessage()
+
+    val fibonacciToolUse = fibonacciResponse.content.filterIsInstance<ToolUse>().first()
+    fibonacciToolUse.name shouldBe "FibonacciTool"
+    val fibonacciResult = fibonacciToolUse.use()
+    conversation += Message { +fibonacciResult }
+
+    val calculatorResponse = client.messages.create {
+      messages = conversation
+      useTools()
+    }
+    conversation += calculatorResponse.asMessage()
+
+    val calculatorToolUse = calculatorResponse.content.filterIsInstance<ToolUse>().first()
+    calculatorToolUse.name shouldBe "Calculator"
+    val calculatorResult = calculatorToolUse.use()
+    conversation += Message { +calculatorResult }
+
+    val finalResponse = client.messages.create {
+      messages = conversation
+      useTools()
+    }
+
+    finalResponse.content[0] shouldBe instanceOf<Text>()
+    (finalResponse.content[0] as Text).text shouldContain "6,378,911.8"
+  }
+
+  @Test
+  fun shouldUseToolWithDependencies() = runTest {
+    // given
+    val testDatabase = TestDatabase()
+    val client = Anthropic {
+      tool<DatabaseQueryTool> {
+        database = testDatabase
+      }
+    }
+
+    // when
+    val response = client.messages.create {
+      +Message { +"List data in CUSTOMER table" }
+      useTool<DatabaseQueryTool>()
+    }
+    val toolUse = response.content.filterIsInstance<ToolUse>().first()
+    toolUse.use()
+
+    // then
+    testDatabase.executedQuery shouldNotBe null
+    testDatabase.executedQuery!!.uppercase() shouldStartWith "SELECT * FROM CUSTOMER"
+    // depending on the response the statement might end up with semicolon, which we discard
   }
 
 }

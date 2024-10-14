@@ -3,42 +3,44 @@
 Unofficial Kotlin multiplatform variant of the
 [Antropic SDK](https://docs.anthropic.com/en/api/client-sdks).
 
-[<img alt="Maven Central Version" src="https://img.shields.io/maven-central/v/com.xemantic.anthropic/anthropic-sdk-kotlin?style=for-the-badge">](https://central.sonatype.com/namespace/com.xemantic.anthropic)
-[<img alt="GitHub Release Date" src="https://img.shields.io/github/release-date/xemantic/anthropic-sdk-kotlin?style=for-the-badge">](https://github.com/xemantic/anthropic-sdk-kotlin/releases)
-[<img alt="license" src="https://img.shields.io/github/license/xemantic/anthropic-sdk-kotlin?color=blue&style=for-the-badge">](https://github.com/xemantic/anthropic-sdk-kotlin/blob/main/LICENSE)
+[<img alt="Maven Central Version" src="https://img.shields.io/maven-central/v/com.xemantic.anthropic/anthropic-sdk-kotlin">](https://central.sonatype.com/namespace/com.xemantic.anthropic)
+[<img alt="GitHub Release Date" src="https://img.shields.io/github/release-date/xemantic/anthropic-sdk-kotlin">](https://github.com/xemantic/anthropic-sdk-kotlin/releases)
+[<img alt="license" src="https://img.shields.io/github/license/xemantic/anthropic-sdk-kotlin?color=blue">](https://github.com/xemantic/anthropic-sdk-kotlin/blob/main/LICENSE)
 
-[<img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/xemantic/anthropic-sdk-kotlin/build-main.yml?style=for-the-badge">](https://github.com/xemantic/anthropic-sdk-kotlin/actions/workflows/build-main.yml)
-[<img alt="GitHub branch check runs" src="https://img.shields.io/github/check-runs/xemantic/anthropic-sdk-kotlin/main?style=for-the-badge">](https://github.com/xemantic/anthropic-sdk-kotlin/actions/workflows/build-main.yml)
-[<img alt="GitHub commits since latest release" src="https://img.shields.io/github/commits-since/xemantic/anthropic-sdk-kotlin/latest?style=for-the-badge">](https://github.com/xemantic/anthropic-sdk-kotlin/commits/main/)
-[<img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/xemantic/anthropic-sdk-kotlin?style=for-the-badge">](https://github.com/xemantic/anthropic-sdk-kotlin/commits/main/)
+[<img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/xemantic/anthropic-sdk-kotlin/build-main.yml">](https://github.com/xemantic/anthropic-sdk-kotlin/actions/workflows/build-main.yml)
+[<img alt="GitHub branch check runs" src="https://img.shields.io/github/check-runs/xemantic/anthropic-sdk-kotlin/main">](https://github.com/xemantic/anthropic-sdk-kotlin/actions/workflows/build-main.yml)
+[<img alt="GitHub commits since latest release" src="https://img.shields.io/github/commits-since/xemantic/anthropic-sdk-kotlin/latest">](https://github.com/xemantic/anthropic-sdk-kotlin/commits/main/)
+[<img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/xemantic/anthropic-sdk-kotlin">](https://github.com/xemantic/anthropic-sdk-kotlin/commits/main/)
 
-[<img alt="GitHub contributors" src="https://img.shields.io/github/contributors/xemantic/anthropic-sdk-kotlin?style=for-the-badge">](https://github.com/xemantic/anthropic-sdk-kotlin/graphs/contributors)
-[<img alt="GitHub commit activity" src="https://img.shields.io/github/commit-activity/t/xemantic/anthropic-sdk-kotlin?style=for-the-badge">](https://github.com/xemantic/anthropic-sdk-kotlin/commits/main/)
-[<img alt="GitHub code size in bytes" src="https://img.shields.io/github/languages/code-size/xemantic/anthropic-sdk-kotlin?style=for-the-badge">]()
-[<img alt="GitHub Created At" src="https://img.shields.io/github/created-at/xemantic/anthropic-sdk-kotlin?style=for-the-badge">](https://github.com/xemantic/anthropic-sdk-kotlin/commit/39c1fa4c138d4c671868c973e2ad37b262ae03c2)
-[<img alt="kotlin version" src="https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2Fxemantic%2Fanthropic-sdk-kotlin%2Fmain%2Fgradle%2Flibs.versions.toml&query=versions.kotlin&style=for-the-badge&label=kotlin">](https://kotlinlang.org/docs/releases.html)
-[<img alt="ktor version" src="https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2Fxemantic%2Fanthropic-sdk-kotlin%2Fmain%2Fgradle%2Flibs.versions.toml&query=versions.ktor&style=for-the-badge&label=ktor">](https://ktor.io/)
+[<img alt="GitHub contributors" src="https://img.shields.io/github/contributors/xemantic/anthropic-sdk-kotlin">](https://github.com/xemantic/anthropic-sdk-kotlin/graphs/contributors)
+[<img alt="GitHub commit activity" src="https://img.shields.io/github/commit-activity/t/xemantic/anthropic-sdk-kotlin">](https://github.com/xemantic/anthropic-sdk-kotlin/commits/main/)
+[<img alt="GitHub code size in bytes" src="https://img.shields.io/github/languages/code-size/xemantic/anthropic-sdk-kotlin">]()
+[<img alt="GitHub Created At" src="https://img.shields.io/github/created-at/xemantic/anthropic-sdk-kotlin">](https://github.com/xemantic/anthropic-sdk-kotlin/commit/39c1fa4c138d4c671868c973e2ad37b262ae03c2)
+[<img alt="kotlin version" src="https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2Fxemantic%2Fanthropic-sdk-kotlin%2Fmain%2Fgradle%2Flibs.versions.toml&query=versions.kotlin&label=kotlin">](https://kotlinlang.org/docs/releases.html)
+[<img alt="ktor version" src="https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2Fxemantic%2Fanthropic-sdk-kotlin%2Fmain%2Fgradle%2Flibs.versions.toml&query=versions.ktor&label=ktor">](https://ktor.io/)
 
-[<img alt="discord server" src="https://dcbadge.limes.pink/api/server/https://discord.gg/vQktqqN2Vn">](https://discord.gg/vQktqqN2Vn)
-[<img alt="discord users online" src="https://img.shields.io/discord/811561179280965673?style=for-the-badge">](https://discord.gg/vQktqqN2Vn)
-[<img alt="X (formerly Twitter) Follow" src="https://img.shields.io/twitter/follow/KazikPogoda?style=for-the-badge">](https://x.com/KazikPogoda)
+[<img alt="discord server" src="https://dcbadge.limes.pink/api/server/https://discord.gg/vQktqqN2Vn?style=flat">](https://discord.gg/vQktqqN2Vn)
+[<img alt="discord users online" src="https://img.shields.io/discord/811561179280965673">](https://discord.gg/vQktqqN2Vn)
+[<img alt="X (formerly Twitter) Follow" src="https://img.shields.io/twitter/follow/KazikPogoda">](https://x.com/KazikPogoda)
 
 ## Why?
 
-I like Kotlin. I like even more the multiplatform aspect of pure Kotlin - that a library code written once
-can be utilized as a:
+Because I believe that coding Agentic AI should be as easy as possible. I am coming from the
+[creative coding community](https://creativecode.berlin/), where
+we are teaching artists, without prior programming experience, how to express their creations through
+code as a medium. I want to give creators of all kinds this extremely powerful tool, so that
+**you can turn your own machine into an outside window, through which, the AI system can perceive
+your world and your needs, and act upon this information.**
 
-* regular Java library to be used on backend, desktop, Android, etc.
-* Kotlin library to be used on backend, desktop, Android.
-* executable native binary (e.g. a command line tool)
-* Kotlin app transpiled to JavaScript
-* Kotlin app compiled to WebAssembly
-* JavaScript library
-* TypeScript library
-* native library, working also with Swift/iOS
-
-Having Kotlin multiplatform library for the Anthropic APIs allows
-me to write AI code once, and target all the platforms automatically.
+There is no official Anthropic SDK for Kotlin, a de facto standard for Android development. The one for Java
+is also lacking. Even if they will appear one day, we can expect them to be autogenerated by the
+[Stainless API bot](https://www.stainlessapi.com/), which is used by both, Anthropic and OpenAI, to automate
+their SDK development based on evolving API. While such an approach seem to work with dynamically typed languages,
+it might fail short with statically typed languages like Kotlin, sacrificing typical language idioms in favor
+of [over-verbose constructs](https://github.com/anthropics/anthropic-sdk-go/blob/main/examples/tools/main.go).
+This library is a [Kotlin multiplatform](https://kotlinlang.org/docs/multiplatform.html)
+therefore your AI agents developed with it can be seamlessly used in Android, JVM, JavaScript, iOS, WebAssembly,
+and many other environments.
 
 ## Usage
 
@@ -50,9 +52,7 @@ Add to your `build.gradle.kts`:
 ```kotlin
 dependencies {
   implementation("com.xemantic.anthropic:anthropic-sdk-kotlin:.0.2.2")
-  // for a JVM project, the client engine will differ per platform
-  // check ktor doucmentation for details
-  implementation("io.ktor:ktor-client-java:3.0.0-rc-1")
+  implementation("io.ktor:ktor-client-java:3.0.0") // or the latest ktor version
 } 
 ```
 
@@ -60,11 +60,11 @@ The simplest code look like:
 
 ```kotlin
 fun main() {
-  val client = Anthropic()
+  val anthropic = Anthropic()
   val response = runBlocking {
-    client.messages.create {
+    anthropic.messages.create {
       +Message {
-        +"Hello World!"
+        +"Hello, Claude"
       }
     }
   }
@@ -72,77 +72,136 @@ fun main() {
 }
 ```
 
+### Response streaming
+
 Streaming is also possible:
 
 ```kotlin
 fun main() {
   val client = Anthropic()
-  val pong = runBlocking {
+  runBlocking {
     client.messages.stream {
-      +Message {
-        role = Role.USER
-        +"ping!"
-      }
+      +Message { +"Write me a poem." }
     }
-      .filterIsInstance<ContentBlockDelta>()
-      .map { (it.delta as TextDelta).text }
-      .toList()
-      .joinToString(separator = "")
+      .filterIsInstance<ContentBlockDeltaEvent>()
+      .map { (it.delta as Delta.TextDelta).text }
+      .collect { delta -> println(delta) }
   }
-  println(pong)
 }
 ```
 
-It can also use tools:
+### Using tools
+
+If you want to write AI agents, you need tools, and this is where this library shines:
 
 ```kotlin
-@Serializable
-data class Calculator(
-  val operation: Operation,
-  val a: Double,
-  val b: Double
-) {
-
-  @Suppress("unused") // will be used by Anthropic :)
-  enum class Operation(
-    val calculate: (a: Double, b: Double) -> Double
-  ) {
-    ADD({ a, b -> a + b }),
-    SUBTRACT({ a, b -> a - b }),
-    MULTIPLY({ a, b -> a * b }),
-    DIVIDE({ a, b -> a / b })
-  }
-
-  fun calculate() = operation.calculate(a, b)
-
+@AnthropicTool(
+  name = "get_weather",
+  description = "Get the weather for a specific location"
+)
+data class WeatherTool(val location: String): UsableTool {
+  override fun use(
+    toolUseId: String
+  ) = ToolResult(
+    toolUseId,
+    "The weather is 73f" // it should use some external service
+  )
 }
 
-fun main() {
-  val client = Anthropic()
+fun main() = runBlocking {
 
-  val calculatorTool = Tool<Calculator>(
-    description = "Perform basic arithmetic operations"
-  )
-
-  val response = runBlocking {
-    client.messages.create {
-      +Message {
-        +"What's 15 multiplied by 7?"
-      }
-      tools = listOf(calculatorTool)
-      toolChoice = ToolChoice.Any()
-    }
+  val client = Anthropic {
+    tool<WeatherTool>()
   }
 
-  val toolUse = response.content[0] as ToolUse
-  val calculator = toolUse.input<Calculator>()
-  val result = calculator.calculate() // we are doing the job for LLM here
-  println(result)
+  val conversation = mutableListOf<Message>()
+  conversation += Message { +"What is the weather in SF?" }
+
+  val initialResponse = client.messages.create {
+    messages = conversation
+    useTools()
+  }
+  println("Initial response:")
+  println(initialResponse)
+
+  conversation += initialResponse.asMessage()
+  val tool = initialResponse.content.filterIsInstance<ToolUse>().first()
+  val toolResult = tool.use()
+  conversation += Message { +toolResult }
+
+  val finalResponse = client.messages.create {
+    messages = conversation
+    useTools()
+  }
+  println("Final response:")
+  println(finalResponse)
 }
 ```
 
-More sophisticated code examples targeting various
-platforms will follow in the
+The advantage comes no only from reduced verbosity, but also the class annotated with
+the `@AnthropicTool` will have its JSON schema automatically sent to the Anthropic API when
+defining the tool to use. For the reference check equivalent examples in the official
+Anthropic SDKs:
+
+* [TypeScript](https://github.com/anthropics/anthropic-sdk-typescript/blob/main/examples/tools.ts)
+* [Python](https://github.com/anthropics/anthropic-sdk-python/blob/main/examples/tools.py)
+* [Go](https://github.com/anthropics/anthropic-sdk-go/blob/main/examples/tools/main.go)
+
+None of them is taking the advantage of automatic schema generation, which becomes crucial
+for maintaining agents expecting more complex and structured input from the LLM.
+
+### Injecting dependencies to tools
+
+Tools can be provided with dependencies, for example singleton
+services providing some facilities, like HTTP client to connect to the
+internet or DB connection pool to access the database. 
+
+```kotlin
+@AnthropicTool(
+  name = "query_database",
+  description = "Executes SQL on the database"
+)
+data class DatabaseQueryTool(val sql: String): UsableTool {
+
+  internal lateinit var connection: Connection
+
+  override fun use(
+    toolUseId: String
+  ) = ToolResult(
+    toolUseId,
+    text = connection.prepareStatement(sql).use { statement ->
+      statement.resultSet.use { resultSet ->
+        resultSet.toString()
+      }
+    }
+  )
+
+}
+
+fun main() = runBlocking {
+
+  val client = Anthropic {
+    tool<DatabaseQueryTool> {
+      connection = DriverManager.getConnection("jdbc:...")
+    }
+  }
+
+  val response = client.messages.create {
+    +Message { +"Select all the users who never logged in to the the system" }
+    useTools()
+  }
+
+  val tool = response.content.filterIsInstance<ToolUse>().first()
+  val toolResult = tool.use()
+  println(toolResult)
+}
+```
+
+After the `DatabaseQueryTool` is decoded from the API response, it can be processed
+by the lambda function passed to the tool definition. In case of the example above,
+the lambda will inject a JDBC connection to the tool.
+
+More sophisticated code examples targeting various Kotlin platforms can be found in the
 [anthropic-sdk-kotlin-demo](https://github.com/xemantic/anthropic-sdk-kotlin-demo)
 project.
 
