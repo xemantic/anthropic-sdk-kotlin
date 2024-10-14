@@ -163,6 +163,7 @@ internet or DB connection pool to access the database.
 )
 data class DatabaseQueryTool(val sql: String): UsableTool {
 
+  @Transient
   internal lateinit var connection: Connection
 
   override fun use(
