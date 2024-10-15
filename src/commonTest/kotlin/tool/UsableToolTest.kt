@@ -20,7 +20,9 @@ class UsableToolTest {
   class TestTool(
     val message: String
   ) : UsableTool {
-    override fun use(toolUseId: String) = ToolResult(toolUseId, message)
+    override suspend fun use(
+      toolUseId: String
+    ) = ToolResult(toolUseId, message)
   }
 
   @Test
@@ -58,7 +60,9 @@ class UsableToolTest {
   }
 
   class NoAnnotationTool : UsableTool {
-    override fun use(toolUseId: String) = ToolResult(toolUseId, "nothing")
+    override suspend fun use(
+      toolUseId: String
+    ) = ToolResult(toolUseId, "nothing")
   }
 
   @Test
@@ -72,7 +76,9 @@ class UsableToolTest {
 
   @Serializable
   class OnlySerializableAnnotationTool : UsableTool {
-    override fun use(toolUseId: String) = ToolResult(toolUseId, "nothing")
+    override suspend fun use(
+      toolUseId: String
+    ) = ToolResult(toolUseId, "nothing")
   }
 
   @Test

@@ -302,9 +302,15 @@ data class ToolUse(
 ) : Content() {
 
   @Transient
+  @PublishedApi
   internal lateinit var toolEntry: Anthropic.ToolEntry<UsableTool>
 
-  fun use(): ToolResult {
+  inline fun <reified T> input(): T = anthropicJson.decodeFromJsonElement(
+    deserializer = toolEntry.serializer as KSerializer<T>,
+    element = input
+  )
+
+  suspend fun use(): ToolResult {
     val tool = anthropicJson.decodeFromJsonElement(
       deserializer = toolEntry.serializer,
       element = input
