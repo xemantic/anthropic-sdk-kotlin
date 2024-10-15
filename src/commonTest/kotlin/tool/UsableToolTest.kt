@@ -68,7 +68,8 @@ class UsableToolTest {
   @Test
   fun shouldFailToCreateToolWithoutAnthropicToolAnnotation() {
     shouldThrowWithMessage<SerializationException>(
-      "The class com.xemantic.anthropic.tool.UsableToolTest.NoAnnotationTool must be annotated with @AnthropicTool"
+      "Cannot find serializer for class com.xemantic.anthropic.tool.UsableToolTest.NoAnnotationTool, " +
+          "make sure that it is annotated with @AnthropicTool and kotlin.serialization plugin is enabled for the project"
     ) {
       toolOf<NoAnnotationTool>()
     }

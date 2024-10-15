@@ -63,7 +63,10 @@ inline fun <reified T : UsableTool> toolOf(
     serializer<T>()
   } catch (e: SerializationException) {
     throw SerializationException(
-      nonAnnotatedToolMessage<T>(), e
+      "Cannot find serializer for class ${T::class.qualifiedName}, " +
+          "make sure that it is annotated with @AnthropicTool and " +
+          "kotlin.serialization plugin is enabled for the project",
+      e
     )
   }
 
@@ -72,7 +75,7 @@ inline fun <reified T : UsableTool> toolOf(
     .annotations
     .filterIsInstance<AnthropicTool>()
     .firstOrNull() ?: throw SerializationException(
-      nonAnnotatedToolMessage<T>()
+      "The class ${T::class.qualifiedName} must be annotated with @AnthropicTool"
     )
 
   return Tool(
@@ -82,7 +85,3 @@ inline fun <reified T : UsableTool> toolOf(
     cacheControl = cacheControl
   )
 }
-
-@PublishedApi
-internal inline fun <reified T> nonAnnotatedToolMessage() =
-  "The class ${T::class.qualifiedName} must be annotated with @AnthropicTool"
