@@ -158,6 +158,7 @@ class Anthropic internal constructor(
       maxRetries = 5
       retryIf { _, response ->
         response.status == HttpStatusCode.TooManyRequests
+            || response.status.value == 529 // Overloaded
       }
     }
 
