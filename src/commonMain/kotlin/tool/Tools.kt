@@ -61,9 +61,9 @@ inline fun <reified T : UsableTool> toolOf(
 
   val serializer = try {
     serializer<T>()
-  } catch (e :SerializationException) {
+  } catch (e: SerializationException) {
     throw SerializationException(
-      "The class ${T::class.qualifiedName} must be annotated with @SerializableTool", e
+      nonAnnotatedToolMessage<T>(), e
     )
   }
 
@@ -72,7 +72,7 @@ inline fun <reified T : UsableTool> toolOf(
     .annotations
     .filterIsInstance<AnthropicTool>()
     .firstOrNull() ?: throw SerializationException(
-      "The class ${T::class.qualifiedName} must be annotated with @SerializableTool",
+      nonAnnotatedToolMessage<T>()
     )
 
   return Tool(
@@ -82,3 +82,7 @@ inline fun <reified T : UsableTool> toolOf(
     cacheControl = cacheControl
   )
 }
+
+@PublishedApi
+internal inline fun <reified T> nonAnnotatedToolMessage() =
+  "The class ${T::class.qualifiedName} must be annotated with @AnthropicTool"

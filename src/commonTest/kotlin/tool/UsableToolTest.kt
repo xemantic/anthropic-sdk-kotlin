@@ -68,7 +68,7 @@ class UsableToolTest {
   @Test
   fun shouldFailToCreateToolWithoutAnthropicToolAnnotation() {
     shouldThrowWithMessage<SerializationException>(
-      "The class com.xemantic.anthropic.tool.UsableToolTest.NoAnnotationTool must be annotated with @SerializableTool"
+      "The class com.xemantic.anthropic.tool.UsableToolTest.NoAnnotationTool must be annotated with @AnthropicTool"
     ) {
       toolOf<NoAnnotationTool>()
     }
@@ -84,7 +84,7 @@ class UsableToolTest {
   @Test
   fun shouldFailToCreateToolWithOnlySerializableAnnotation() {
     shouldThrowWithMessage<SerializationException>(
-      "The class com.xemantic.anthropic.tool.UsableToolTest.OnlySerializableAnnotationTool must be annotated with @SerializableTool"
+      "The class com.xemantic.anthropic.tool.UsableToolTest.OnlySerializableAnnotationTool must be annotated with @AnthropicTool"
     ) {
       toolOf<OnlySerializableAnnotationTool>()
     }
