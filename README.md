@@ -52,8 +52,28 @@ Add to your `build.gradle.kts`:
 ```kotlin
 dependencies {
   implementation("com.xemantic.anthropic:anthropic-sdk-kotlin:.0.3.1")
-  implementation("io.ktor:ktor-client-java:3.0.0") // or the latest ktor version
 } 
+```
+
+And in case of JVM:
+
+```kotlin
+dependencies {
+  implementation("io.ktor:ktor-client-java:3.0.0") // or the latest ktor version
+}
+```
+
+If you are planning to use tools, you will also need:
+
+```kotlin
+plugins {
+  // ... other plugins like kotlin jvm or multiplatform
+  kotlin("plugin.serialization") version "2.0.21"
+}
+
+dependencies {
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.7.3")
+}
 ```
 
 The simplest code look like:
@@ -85,7 +105,7 @@ fun main() {
     }
       .filterIsInstance<ContentBlockDeltaEvent>()
       .map { (it.delta as Delta.TextDelta).text }
-      .collect { delta -> println(delta) }
+      .collect { delta -> print(delta) }
   }
 }
 ```
@@ -205,6 +225,13 @@ the lambda will inject a JDBC connection to the tool.
 More sophisticated code examples targeting various Kotlin platforms can be found in the
 [anthropic-sdk-kotlin-demo](https://github.com/xemantic/anthropic-sdk-kotlin-demo)
 project.
+
+## Projects using anthropic-sdk-kotlin
+
+* [anthropic-sdk-kotlin-demo](https://github.com/xemantic/anthropic-sdk-kotlin-demo): more complex examples
+  and use cases
+* [claudine](https://github.com/xemantic/claudine): Claudine, the only AI assistant you will ever need, the actual
+  reason why `anthropic-sdk-kotlin` came to being, to allow me building Claudine and other AI agents.
 
 ## Building the project
 
