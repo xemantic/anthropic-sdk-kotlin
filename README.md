@@ -51,7 +51,7 @@ Add to your `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-  implementation("com.xemantic.anthropic:anthropic-sdk-kotlin:.0.2.2")
+  implementation("com.xemantic.anthropic:anthropic-sdk-kotlin:.0.3.1")
   implementation("io.ktor:ktor-client-java:3.0.0") // or the latest ktor version
 } 
 ```

@@ -98,7 +98,7 @@ kotlin {
 
     nativeTest {
       dependencies {
-        // on mac/ios it should be rather Darwin
+        // on Mac/iOS it should be rather Darwin
         implementation(libs.ktor.client.curl)
       }
     }
