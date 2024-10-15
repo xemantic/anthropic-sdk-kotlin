@@ -10,11 +10,17 @@ import kotlinx.serialization.json.JsonObject
 import kotlin.collections.mutableListOf
 import kotlin.reflect.typeOf
 
+/**
+ * The roles that can be taken by entities in a conversation.
+ */
 enum class Role {
+
   @SerialName("user")
   USER,
+
   @SerialName("assistant")
   ASSISTANT
+
 }
 
 @Serializable
