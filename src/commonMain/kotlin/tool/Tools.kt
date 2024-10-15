@@ -41,9 +41,7 @@ interface UsableTool {
    * @param toolUseId A unique identifier for this particular use of the tool.
    * @return A [ToolResult] containing the outcome of executing the tool.
    */
-  fun use(
-    toolUseId: String
-  ): ToolResult
+  suspend fun use(toolUseId: String): ToolResult
 
 }
 

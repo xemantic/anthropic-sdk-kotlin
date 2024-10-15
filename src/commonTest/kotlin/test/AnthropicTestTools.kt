@@ -17,7 +17,7 @@ data class FibonacciTool(val n: Int): UsableTool {
     0 -> a; 1 -> b; else -> fibonacci(n - 1, b, a + b)
   }
 
-  override fun use(
+  override suspend fun use(
     toolUseId: String,
   ) = ToolResult(toolUseId, "${fibonacci(n)}")
 
@@ -43,7 +43,7 @@ data class Calculator(
     DIVIDE({ a, b -> a / b })
   }
 
-  override fun use(toolUseId: String) = ToolResult(
+  override suspend fun use(toolUseId: String) = ToolResult(
     toolUseId,
     operation.calculate(a, b).toString()
   )
@@ -51,12 +51,12 @@ data class Calculator(
 }
 
 interface Database {
-  fun execute(query: String): List<String>
+  suspend fun execute(query: String): List<String>
 }
 
 class TestDatabase : Database {
   var executedQuery: String? = null
-  override fun execute(
+  override suspend fun execute(
     query: String
   ): List<String> {
     executedQuery = query
@@ -75,7 +75,7 @@ data class DatabaseQueryTool(
   @Transient
   lateinit var database: Database
 
-  override fun use(
+  override suspend fun use(
     toolUseId: String
   ) = ToolResult(
     toolUseId,
