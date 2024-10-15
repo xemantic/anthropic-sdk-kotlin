@@ -47,6 +47,11 @@ const val ANTHROPIC_API_BASE: String = "https://api.anthropic.com/"
 const val DEFAULT_ANTHROPIC_VERSION: String = "2023-06-01"
 
 /**
+ * The default model to be used if no model is specified.
+ */
+const val DEFAULT_MODEL = "claude-3-5-sonnet-20240620"
+
+/**
  * An exception thrown when API requests returns error.
  */
 class AnthropicException(
@@ -78,14 +83,15 @@ fun Anthropic(
   val config = Anthropic.Config().apply(block)
   val apiKey = if (config.apiKey != null) config.apiKey else envApiKey
   requireNotNull(apiKey) { missingApiKeyMessage }
-  val defaultModel = if (config.defaultModel != null) config.defaultModel!! else "claude-3-5-sonnet-20240620"
+  val defaultModel = if (config.defaultModel != null) config.defaultModel!! else DEFAULT_MODEL
   return Anthropic(
     apiKey = apiKey,
     anthropicVersion = config.anthropicVersion,
     anthropicBeta = config.anthropicBeta,
     apiBase = config.apiBase,
     defaultModel = defaultModel,
-    directBrowserAccess = config.directBrowserAccess
+    directBrowserAccess = config.directBrowserAccess,
+    logLevel = if (config.logHttp) LogLevel.ALL else LogLevel.NONE
   ).apply {
     toolEntryMap = (config.usableTools as List<Anthropic.ToolEntry<UsableTool>>).associateBy { it.tool.name }
   }
@@ -97,7 +103,8 @@ class Anthropic internal constructor(
   val anthropicBeta: String?,
   val apiBase: String,
   val defaultModel: String,
-  val directBrowserAccess: Boolean
+  val directBrowserAccess: Boolean,
+  val logLevel: LogLevel
 ) {
 
   class Config {
@@ -107,6 +114,8 @@ class Anthropic internal constructor(
     var apiBase: String = ANTHROPIC_API_BASE
     var defaultModel: String? = null
     var directBrowserAccess: Boolean = false
+    var logHttp: Boolean = false
+
     @PublishedApi
     internal var usableTools: List<ToolEntry<out UsableTool>> = emptyList()
 
@@ -130,13 +139,19 @@ class Anthropic internal constructor(
   internal var toolEntryMap = mapOf<String, ToolEntry<UsableTool>>()
 
   private val client = HttpClient {
+
     install(ContentNegotiation) {
       json(anthropicJson)
     }
+
     install(SSE)
-    install(Logging) {
-      level = LogLevel.BODY
+
+    if (logLevel != LogLevel.NONE) {
+      install(Logging) {
+        level = logLevel
+      }
     }
+
     install(HttpRequestRetry) {
       retryOnServerErrors(maxRetries = 5)
       exponentialDelay()
@@ -145,6 +160,7 @@ class Anthropic internal constructor(
         response.status == HttpStatusCode.TooManyRequests
       }
     }
+
     defaultRequest {
       url(apiBase)
       header("x-api-key", apiKey)
@@ -156,6 +172,7 @@ class Anthropic internal constructor(
         header("anthropic-dangerous-direct-browser-access", true)
       }
     }
+
   }
 
   inner class Messages {
