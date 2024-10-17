@@ -9,6 +9,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
+import kotlin.test.Ignore
 import kotlin.test.Test
 
 /**
@@ -50,6 +51,7 @@ data class Asset(
 class StructuredOutputTest {
 
   @Test
+  @Ignore // to be moved to anthropic-sdk-kotlin-demo soon
   fun shouldDecodeStructuredOutputFromReportImage() = runTest {
     val client = Anthropic {
       tool<DisclosureReport>()

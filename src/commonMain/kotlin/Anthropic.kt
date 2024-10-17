@@ -1,10 +1,7 @@
 package com.xemantic.anthropic
 
 import com.xemantic.anthropic.event.Event
-import com.xemantic.anthropic.message.Error
-import com.xemantic.anthropic.message.ErrorResponse
 import com.xemantic.anthropic.message.MessageRequest
-import com.xemantic.anthropic.message.MessageResponse
 import com.xemantic.anthropic.message.Tool
 import com.xemantic.anthropic.message.ToolUse
 import com.xemantic.anthropic.tool.UsableTool
@@ -24,7 +21,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
@@ -187,24 +183,26 @@ class Anthropic internal constructor(
         toolEntryMap = toolEntryMap
       ).apply(block).build()
 
-      val response = client.post("/v1/messages") {
+      val apiResponse = client.post("/v1/messages") {
         contentType(ContentType.Application.Json)
         setBody(request)
       }
-      if (response.status.isSuccess()) {
-        return response.body<MessageResponse>().apply {
+      val response = apiResponse.body<Response>()
+      when (response) {
+        is MessageResponse -> response.apply {
           content.filterIsInstance<ToolUse>()
             .forEach { toolUse ->
               val entry = toolEntryMap[toolUse.name]!!
               toolUse.toolEntry = entry
             }
         }
-      } else {
-        throw AnthropicException(
-          error = response.body<ErrorResponse>().error,
-          httpStatusCode = response.status
+        is ErrorResponse -> throw AnthropicException(
+          error = response.error,
+          httpStatusCode = apiResponse.status
         )
+        else -> throw RuntimeException("Unsupported response: $response") // should never happen
       }
+      return response
     }
 
     fun stream(

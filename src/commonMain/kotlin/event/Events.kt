@@ -1,6 +1,6 @@
 package com.xemantic.anthropic.event
 
-import com.xemantic.anthropic.message.MessageResponse
+import com.xemantic.anthropic.MessageResponse
 import com.xemantic.anthropic.message.StopReason
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
