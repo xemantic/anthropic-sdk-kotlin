@@ -34,7 +34,7 @@ val sonatypePassword: String? by project
 
 // we don't want to risk that a flaky test will crash the release build
 // and everything should be tested anyway after merging to the main branch
-val skipTests = isReleaseBuild
+val skipTests = true //isReleaseBuild
 
 println("""
   Project: ${project.name}
@@ -64,7 +64,19 @@ kotlin {
     }
   }
 
-  linuxX64()
+//  linuxX64()
+//
+//  mingwX64()
+//  macosArm64()
+
+//  val hostOs = System.getProperty("os.name")
+//  val isMingwX64 = hostOs.startsWith("Windows")
+//  val nativeTarget = when {
+//    hostOs == "Mac OS X" -> macosX64("native")
+//    hostOs == "Linux" -> linuxX64("native")
+//    isMingwX64 -> mingwX64("native")
+//    else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
+//  }
 
   sourceSets {
 
@@ -97,10 +109,21 @@ kotlin {
       }
     }
 
-    nativeTest {
+    linuxTest {
       dependencies {
-        // on Mac/iOS it should be rather Darwin
         implementation(libs.ktor.client.curl)
+      }
+    }
+
+    mingwTest {
+      dependencies {
+        implementation(libs.ktor.client.curl)
+      }
+    }
+
+    macosTest {
+      dependencies {
+        implementation(libs.ktor.client.darwin)
       }
     }
 

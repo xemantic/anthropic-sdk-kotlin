@@ -1,6 +1,7 @@
 package com.xemantic.anthropic.message
 
 import com.xemantic.anthropic.Anthropic
+import com.xemantic.anthropic.MessageResponse
 import com.xemantic.anthropic.anthropicJson
 import com.xemantic.anthropic.schema.JsonSchema
 import com.xemantic.anthropic.tool.UsableTool
