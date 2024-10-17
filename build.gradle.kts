@@ -34,7 +34,7 @@ val sonatypePassword: String? by project
 
 // we don't want to risk that a flaky test will crash the release build
 // and everything should be tested anyway after merging to the main branch
-val skipTests = true //isReleaseBuild
+val skipTests = isReleaseBuild
 
 println("""
   Project: ${project.name}
