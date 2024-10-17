@@ -44,26 +44,35 @@ and many other environments.
 
 ## Usage
 
-_:warning: This SDK is in the early stage of development, but at the same time it is completely functional and passing
+_:warning: This SDK is in the early stage of development, so still a subject to API changes,
+however at the same time it is completely functional and passing all the 
 [test cases](src/commonTest/kotlin)._
 
-Add to your `build.gradle.kts`:
+The easiest way to use this project is to start with 
+[anthropic-sdk-kotlin-jvm-template](https://github.com/xemantic/anthropic-sdk-kotlin-jvm-template)
+as a template repository. There are also many ready examples and use cases in the
+[anthropic-sdk-kotlin-demo](https://github.com/xemantic/anthropic-sdk-kotlin-jvm-demo) repo.
+
+Otherwise, you need to add to your `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-  implementation("com.xemantic.anthropic:anthropic-sdk-kotlin:.0.3.1")
+  implementation("com.xemantic.anthropic:anthropic-sdk-kotlin:.0.4.0")
 } 
 ```
 
-And in case of JVM:
+, and in case of JVM:
 
 ```kotlin
 dependencies {
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")  
   implementation("io.ktor:ktor-client-java:3.0.0") // or the latest ktor version
+  // and if you don't care about configuring logging
+  implementation("org.slf4j:slf4j-simple:2.0.16")
 }
 ```
 
-If you are planning to use tools, you will also need:
+, ff you are planning to use tools, you will also need:
 
 ```kotlin
 plugins {
