@@ -51,7 +51,7 @@ however at the same time it is completely functional and passing all the
 The easiest way to use this project is to start with 
 [anthropic-sdk-kotlin-jvm-template](https://github.com/xemantic/anthropic-sdk-kotlin-jvm-template)
 as a template repository. There are also many ready examples and use cases in the
-[anthropic-sdk-kotlin-demo](https://github.com/xemantic/anthropic-sdk-kotlin-jvm-demo) repo.
+[anthropic-sdk-kotlin-demo](https://github.com/xemantic/anthropic-sdk-kotlin-demo) repo.
 
 Otherwise, you need to add to your `build.gradle.kts`:
 
