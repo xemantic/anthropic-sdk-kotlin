@@ -20,6 +20,7 @@ data class Address(
 
 @Serializable
 data class Person(
+  @Description("The official name")
   val name: String,
   val age: Int,
   val email: String?,
@@ -102,7 +103,8 @@ class JsonSchemaGeneratorTest {
       },
       "properties": {
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "The official name"
         },
         "age": {
           "type": "integer"

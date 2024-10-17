@@ -144,7 +144,7 @@ fun main() = runBlocking {
   println("Initial response:")
   println(initialResponse)
 
-  conversation += initialResponse.asMessage()
+  conversation += initialResponse
   val tool = initialResponse.content.filterIsInstance<ToolUse>().first()
   val toolResult = tool.use()
   conversation += Message { +toolResult }

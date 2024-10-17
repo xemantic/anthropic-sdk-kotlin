@@ -2,6 +2,7 @@ package com.xemantic.anthropic.tool
 
 import com.xemantic.anthropic.message.CacheControl
 import com.xemantic.anthropic.message.ToolResult
+import com.xemantic.anthropic.schema.Description
 import com.xemantic.anthropic.schema.JsonSchema
 import com.xemantic.anthropic.schema.JsonSchemaProperty
 import io.kotest.assertions.assertSoftly
@@ -18,6 +19,7 @@ class UsableToolTest {
     description = "Test tool receiving a message and outputting it back"
   )
   class TestTool(
+    @Description("the message")
     val message: String
   ) : UsableTool {
     override suspend fun use(
@@ -34,15 +36,19 @@ class UsableToolTest {
       name shouldBe "TestTool"
       description shouldBe "Test tool receiving a message and outputting it back"
       inputSchema shouldBe JsonSchema(
-        properties = mapOf("message" to JsonSchemaProperty.STRING),
+        properties = mapOf("message" to JsonSchemaProperty(
+          type = "string",
+          description = "the message"
+        )),
         required = listOf("message")
       )
       cacheControl shouldBe null
     }
   }
 
+  // TODO maybe we need a builder here?
   @Test
-  fun shouldCreateToolWithCacheControlFromUsableTool() {
+  fun shouldCreateToolWithCacheControlFromUsableToolSuppliedWithCacheControl() {
     // when
     val tool = toolOf<TestTool>(
       cacheControl = CacheControl(type = CacheControl.Type.EPHEMERAL)
@@ -52,7 +58,10 @@ class UsableToolTest {
       name shouldBe "TestTool"
       description shouldBe "Test tool receiving a message and outputting it back"
       inputSchema shouldBe JsonSchema(
-        properties = mapOf("message" to JsonSchemaProperty.STRING),
+        properties = mapOf("message" to JsonSchemaProperty(
+          type = "string",
+          description = "the message"
+        )),
         required = listOf("message")
       )
       cacheControl shouldBe CacheControl(type = CacheControl.Type.EPHEMERAL)
