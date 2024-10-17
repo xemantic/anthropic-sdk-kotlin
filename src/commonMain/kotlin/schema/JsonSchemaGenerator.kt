@@ -17,7 +17,15 @@ fun generateSchema(descriptor: SerialDescriptor): JsonSchema {
   for (i in 0 until descriptor.elementsCount) {
     val name = descriptor.getElementName(i)
     val elementDescriptor = descriptor.getElementDescriptor(i)
-    val property = generateSchemaProperty(elementDescriptor, definitions)
+    val elementAnnotations = descriptor.getElementAnnotations(i)
+    val property = generateSchemaProperty(
+      elementDescriptor,
+      description = elementAnnotations
+        .filterIsInstance<Description>()
+        .firstOrNull()
+        ?.value,
+      definitions
+    )
     properties[name] = property
     if (!descriptor.isElementOptional(i)) {
       required.add(name)
@@ -35,38 +43,45 @@ fun generateSchema(descriptor: SerialDescriptor): JsonSchema {
 @OptIn(ExperimentalSerializationApi::class)
 private fun generateSchemaProperty(
   descriptor: SerialDescriptor,
+  description: String?,
   definitions: MutableMap<String, JsonSchema>
 ): JsonSchemaProperty {
   return when (descriptor.kind) {
-    PrimitiveKind.STRING -> JsonSchemaProperty.STRING
-    PrimitiveKind.INT, PrimitiveKind.LONG -> JsonSchemaProperty.INTEGER
-    PrimitiveKind.FLOAT, PrimitiveKind.DOUBLE -> JsonSchemaProperty.NUMBER
-    PrimitiveKind.BOOLEAN -> JsonSchemaProperty.BOOLEAN
-    SerialKind.ENUM -> enumProperty(descriptor)
+    PrimitiveKind.STRING -> JsonSchemaProperty("string", description)
+    PrimitiveKind.INT, PrimitiveKind.LONG -> JsonSchemaProperty("integer", description)
+    PrimitiveKind.FLOAT, PrimitiveKind.DOUBLE -> JsonSchemaProperty("number", description)
+    PrimitiveKind.BOOLEAN -> JsonSchemaProperty("boolean", description)
+    SerialKind.ENUM -> enumProperty(descriptor, description)
     StructureKind.LIST -> JsonSchemaProperty(
       type = "array",
       items = generateSchemaProperty(
         descriptor.getElementDescriptor(0),
+        description,
         definitions
       )
     )
-    StructureKind.MAP -> JsonSchemaProperty("object")
+    StructureKind.MAP -> JsonSchemaProperty("object", description)
     StructureKind.CLASS -> {
       // dots are not allowed in JSON Schema name, if the @SerialName was not
       // specified, then fully qualified class name will be used, and we need
       // to translate it
       val refName = descriptor.serialName.replace('.', '_').trimEnd('?')
       definitions[refName] = generateSchema(descriptor)
-      JsonSchemaProperty(ref = "#/definitions/$refName")
+      JsonSchemaProperty(
+        ref = "#/definitions/$refName",
+        description = description
+      )
     }
-    else -> JsonSchemaProperty("object") // Default case
+    else -> JsonSchemaProperty("object", description) // Default case
   }
 }
 
 private fun enumProperty(
-  descriptor: SerialDescriptor
-) = JsonSchemaProperty(
-  enum = descriptor.elementNames()
+  descriptor: SerialDescriptor,
+  description: String?
+) = JsonSchemaProperty( // TODO should it return type enum?
+  enum = descriptor.elementNames(),
+  description = description,
 )
 
 @OptIn(ExperimentalSerializationApi::class)

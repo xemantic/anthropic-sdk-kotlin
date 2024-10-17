@@ -9,6 +9,7 @@ import com.xemantic.anthropic.message.Role
 import com.xemantic.anthropic.message.StopReason
 import com.xemantic.anthropic.message.Text
 import com.xemantic.anthropic.message.ToolUse
+import com.xemantic.anthropic.message.plusAssign
 import com.xemantic.anthropic.test.Calculator
 import com.xemantic.anthropic.test.DatabaseQueryTool
 import com.xemantic.anthropic.test.FibonacciTool
@@ -117,7 +118,7 @@ class AnthropicTest {
       messages = conversation
       useTools()
     }
-    conversation += initialResponse.asMessage()
+    conversation += initialResponse
 
     // then
     assertSoftly(initialResponse) {
@@ -189,7 +190,7 @@ class AnthropicTest {
       messages = conversation
       useTools()
     }
-    conversation += fibonacciResponse.asMessage()
+    conversation += fibonacciResponse
 
     val fibonacciToolUse = fibonacciResponse.content.filterIsInstance<ToolUse>().first()
     fibonacciToolUse.name shouldBe "FibonacciTool"
@@ -200,7 +201,7 @@ class AnthropicTest {
       messages = conversation
       useTools()
     }
-    conversation += calculatorResponse.asMessage()
+    conversation += calculatorResponse
 
     val calculatorToolUse = calculatorResponse.content.filterIsInstance<ToolUse>().first()
     calculatorToolUse.name shouldBe "Calculator"

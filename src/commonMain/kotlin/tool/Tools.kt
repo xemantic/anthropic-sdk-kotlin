@@ -23,7 +23,7 @@ import kotlinx.serialization.serializer
 @Target(AnnotationTarget.CLASS)
 annotation class AnthropicTool(
   val name: String,
-  val description: String
+  val description: String = ""
 )
 
 /**
@@ -80,7 +80,8 @@ inline fun <reified T : UsableTool> toolOf(
 
   return Tool(
     name = anthropicTool.name,
-    description = anthropicTool.description,
+    // annotation description cannot be null, so we allow empty and detect it here
+    description = if (anthropicTool.description.isNotBlank()) anthropicTool.description else null,
     inputSchema = jsonSchemaOf<T>(),
     cacheControl = cacheControl
   )

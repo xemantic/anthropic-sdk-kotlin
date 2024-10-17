@@ -230,7 +230,7 @@ data class System(
 @Serializable
 data class Tool(
   val name: String,
-  val description: String,
+  val description: String?,
   @SerialName("input_schema")
   val inputSchema: JsonSchema,
   @SerialName("cache_control")
@@ -354,6 +354,21 @@ fun ToolResult(
   content = listOf(Text(text))
 )
 
+inline fun <reified T> ToolResult(
+  toolUseId: String,
+  value: T
+): ToolResult = ToolResult(
+  toolUseId,
+  content = listOf(
+    Text(
+      anthropicJson.encodeToString(
+        serializer = serializer<T>(),
+        value = value
+      )
+    )
+  )
+)
+
 @Serializable
 data class CacheControl(
   val type: Type
@@ -409,3 +424,9 @@ data class Usage(
   @SerialName("output_tokens")
   val outputTokens: Int
 )
+
+operator fun MutableCollection<in Message>.plusAssign(
+  response: MessageResponse
+) {
+  this += response.asMessage()
+}
