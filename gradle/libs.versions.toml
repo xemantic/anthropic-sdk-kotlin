@@ -4,6 +4,7 @@ javaTarget = "17"
 
 kotlin = "2.0.21"
 kotlinxCoroutines = "1.9.0"
+kotlinxDatetime = "0.6.1"
 ktor = "3.0.0"
 kotest = "6.0.0.M1"
 
@@ -19,6 +20,7 @@ publishPlugin = "2.0.0"
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
 
 # logging libs
 #kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "kotlinLogging" }

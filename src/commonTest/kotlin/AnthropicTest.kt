@@ -4,7 +4,6 @@ import com.xemantic.anthropic.event.ContentBlockDeltaEvent
 import com.xemantic.anthropic.event.Delta.TextDelta
 import com.xemantic.anthropic.message.Image
 import com.xemantic.anthropic.message.Message
-import com.xemantic.anthropic.message.MessageResponse
 import com.xemantic.anthropic.message.Role
 import com.xemantic.anthropic.message.StopReason
 import com.xemantic.anthropic.message.Text
@@ -44,7 +43,7 @@ class AnthropicTest {
 
     // then
     assertSoftly(response) {
-      type shouldBe MessageResponse.Type.MESSAGE
+      type shouldBe "message"
       role shouldBe  Role.ASSISTANT
       model shouldBe "claude-3-5-sonnet-20240620"
       stopReason shouldBe StopReason.END_TURN

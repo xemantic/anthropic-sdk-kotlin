@@ -1,5 +1,6 @@
 package com.xemantic.anthropic.message
 
+import com.xemantic.anthropic.MessageResponse
 import com.xemantic.anthropic.test.testJson
 import io.kotest.assertions.assertSoftly
 import io.kotest.matchers.shouldBe
@@ -44,7 +45,7 @@ class MessageResponseTest {
     val response = testJson.decodeFromString<MessageResponse>(jsonResponse)
     assertSoftly(response) {
       id shouldBe "msg_01PspkNzNG3nrf5upeTsmWLF"
-      type shouldBe MessageResponse.Type.MESSAGE
+      type shouldBe "message"
       role shouldBe Role.ASSISTANT
       model shouldBe "claude-3-5-sonnet-20240620"
       content.size shouldBe 1

@@ -139,44 +139,6 @@ fun MessageRequest(
 }
 
 @Serializable
-data class MessageResponse(
-  val id: String,
-  val type: Type,
-  val role: Role,
-  val content: List<Content>, // limited to Text and ToolUse
-  val model: String,
-  @SerialName("stop_reason")
-  val stopReason: StopReason?,
-  @SerialName("stop_sequence")
-  val stopSequence: String?,
-  val usage: Usage
-) {
-
-  enum class Type {
-    @SerialName("message")
-    MESSAGE
-  }
-
-  fun asMessage(): Message = Message {
-    role = Role.ASSISTANT
-    content += this@MessageResponse.content
-  }
-
-}
-
-
-@Serializable
-data class ErrorResponse(
-  val type: String,
-  val error: Error
-)
-
-@Serializable
-data class Error(
-  val type: String, val message: String
-)
-
-@Serializable
 data class Message(
   val role: Role,
   val content: List<Content>
@@ -384,7 +346,10 @@ data class CacheControl(
 @Serializable
 @JsonClassDiscriminator("type")
 @OptIn(ExperimentalSerializationApi::class)
-sealed class ToolChoice {
+sealed class ToolChoice(
+  @SerialName("disable_parallel_tool_use")
+  val disableParallelToolUse: Boolean = false
+) {
 
   @Serializable
   @SerialName("auto")
