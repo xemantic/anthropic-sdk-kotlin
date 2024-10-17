@@ -213,7 +213,8 @@ class AnthropicTest {
     }
 
     finalResponse.content[0] shouldBe instanceOf<Text>()
-    (finalResponse.content[0] as Text).text shouldContain "6,378,911.8"
+    // the result might be in the format: 6,378,911.8....
+    (finalResponse.content[0] as Text).text.replace(",", "") shouldContain "6378911.8"
   }
 
   @Test
