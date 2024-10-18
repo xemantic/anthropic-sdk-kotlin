@@ -1,14 +1,13 @@
 package com.xemantic.anthropic.test
 
 import com.xemantic.anthropic.message.ToolResult
+import com.xemantic.anthropic.schema.Description
 import com.xemantic.anthropic.tool.AnthropicTool
 import com.xemantic.anthropic.tool.UsableTool
 import kotlinx.serialization.Transient
 
-@AnthropicTool(
-  name = "FibonacciTool",
-  description = "Calculate Fibonacci number n"
-)
+@AnthropicTool("FibonacciTool")
+@Description("Calculate Fibonacci number n")
 data class FibonacciTool(val n: Int): UsableTool {
 
   tailrec fun fibonacci(
@@ -23,10 +22,8 @@ data class FibonacciTool(val n: Int): UsableTool {
 
 }
 
-@AnthropicTool(
-  name = "Calculator",
-  description = "Calculates the arithmetic outcome of an operation when given the arguments a and b"
-)
+@AnthropicTool("Calculator")
+@Description("Calculates the arithmetic outcome of an operation when given the arguments a and b")
 data class Calculator(
   val operation: Operation,
   val a: Double,
@@ -64,10 +61,8 @@ class TestDatabase : Database {
   }
 }
 
-@AnthropicTool(
-  name = "DatabaseQuery",
-  description = "Executes database query"
-)
+@AnthropicTool("DatabaseQuery")
+@Description("Executes database query")
 data class DatabaseQueryTool(
   val query: String
 ) : UsableTool {

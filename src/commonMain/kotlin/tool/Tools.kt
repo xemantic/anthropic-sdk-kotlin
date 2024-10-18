@@ -3,6 +3,7 @@ package com.xemantic.anthropic.tool
 import com.xemantic.anthropic.message.CacheControl
 import com.xemantic.anthropic.message.Tool
 import com.xemantic.anthropic.message.ToolResult
+import com.xemantic.anthropic.schema.Description
 import com.xemantic.anthropic.schema.jsonSchemaOf
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.MetaSerializable
@@ -16,14 +17,12 @@ import kotlinx.serialization.serializer
  * of the Anthropic API. It includes a name and description for the tool.
  *
  * @property name The name of the tool. This name is used during serialization and should be a unique identifier for the tool.
- * @property description A comprehensive description of what the tool does and how it should be used.
  */
 @OptIn(ExperimentalSerializationApi::class)
 @MetaSerializable
 @Target(AnnotationTarget.CLASS)
 annotation class AnthropicTool(
-  val name: String,
-  val description: String = ""
+  val name: String
 )
 
 /**
@@ -44,15 +43,6 @@ interface UsableTool {
   suspend fun use(toolUseId: String): ToolResult
 
 }
-
-fun Tool.cacheControl(
-  cacheControl: CacheControl? = null
-): Tool = if (cacheControl == null) this else Tool(
-  name,
-  description,
-  inputSchema,
-  cacheControl
-)
 
 @OptIn(ExperimentalSerializationApi::class)
 inline fun <reified T : UsableTool> toolOf(
@@ -78,10 +68,17 @@ inline fun <reified T : UsableTool> toolOf(
       "The class ${T::class.qualifiedName} must be annotated with @AnthropicTool"
     )
 
+  val description = serializer
+    .descriptor
+    .annotations
+    .filterIsInstance<Description>()
+    .firstOrNull()
+    ?.value
+
   return Tool(
     name = anthropicTool.name,
     // annotation description cannot be null, so we allow empty and detect it here
-    description = if (anthropicTool.description.isNotBlank()) anthropicTool.description else null,
+    description = description,
     inputSchema = jsonSchemaOf<T>(),
     cacheControl = cacheControl
   )

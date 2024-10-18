@@ -125,10 +125,8 @@ fun main() {
 If you want to write AI agents, you need tools, and this is where this library shines:
 
 ```kotlin
-@AnthropicTool(
-  name = "get_weather",
-  description = "Get the weather for a specific location"
-)
+@AnthropicTool("get_weather")
+@Description("Get the weather for a specific location")
 data class WeatherTool(val location: String): UsableTool {
   override fun use(
     toolUseId: String
@@ -187,10 +185,8 @@ services providing some facilities, like HTTP client to connect to the
 internet or DB connection pool to access the database. 
 
 ```kotlin
-@AnthropicTool(
-  name = "query_database",
-  description = "Executes SQL on the database"
-)
+@AnthropicTool("query_database")
+@Description("Executes SQL on the database")
 data class DatabaseQueryTool(val sql: String): UsableTool {
 
   @Transient

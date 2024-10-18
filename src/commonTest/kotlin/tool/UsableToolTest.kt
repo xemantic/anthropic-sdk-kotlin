@@ -14,10 +14,8 @@ import kotlin.test.Test
 
 class UsableToolTest {
 
-  @AnthropicTool(
-    name = "TestTool",
-    description = "Test tool receiving a message and outputting it back"
-  )
+  @AnthropicTool("TestTool")
+  @Description("Test tool receiving a message and outputting it back")
   class TestTool(
     @Description("the message")
     val message: String
