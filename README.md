@@ -23,6 +23,10 @@ Unofficial Kotlin multiplatform variant of the
 [<img alt="discord users online" src="https://img.shields.io/discord/811561179280965673">](https://discord.gg/vQktqqN2Vn)
 [<img alt="X (formerly Twitter) Follow" src="https://img.shields.io/twitter/follow/KazikPogoda">](https://x.com/KazikPogoda)
 
+> [!IMPORTANT]
+> I am teaching how to use Anthropic API with this SDK and Claudine, in Berlin.
+> [Check out the workshop page](https://xemantic.com/workshops/2024/agentic-ai-for-artists-2024-10-26/).
+
 ## Why?
 
 Because I believe that coding AI agents should be as easy as possible. I am coming from the
@@ -45,9 +49,10 @@ and many other environments.
 
 ## Usage
 
-_:warning: This SDK is in the early stage of development, so still a subject to API changes,
-however at the same time it is completely functional and passing all the 
-[test cases](src/commonTest/kotlin)._
+[!CAUTION]
+> This SDK is in the early stage of development, so still a subject to API changes,
+> however at the same time it is completely functional and passing all the
+> [test cases](src/commonTest/kotlin).
 
 The easiest way to use this project is to start with 
 [anthropic-sdk-kotlin-jvm-template](https://github.com/xemantic/anthropic-sdk-kotlin-jvm-template)
