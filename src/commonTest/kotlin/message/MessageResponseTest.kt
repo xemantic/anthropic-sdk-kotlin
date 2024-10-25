@@ -20,7 +20,7 @@ class MessageResponseTest {
         "id": "msg_01PspkNzNG3nrf5upeTsmWLF",
         "type": "message",
         "role": "assistant",
-        "model": "claude-3-5-sonnet-20240620",
+        "model": "claude-3-5-sonnet-20241022",
         "content": [
           {
             "type": "tool_use",
@@ -47,7 +47,7 @@ class MessageResponseTest {
       id shouldBe "msg_01PspkNzNG3nrf5upeTsmWLF"
       type shouldBe "message"
       role shouldBe Role.ASSISTANT
-      model shouldBe "claude-3-5-sonnet-20240620"
+      model shouldBe "claude-3-5-sonnet-20241022"
       content.size shouldBe 1
       content[0] shouldBe instanceOf<ToolUse>()
       stopReason shouldBe StopReason.TOOL_USE

@@ -45,7 +45,7 @@ class AnthropicTest {
     assertSoftly(response) {
       type shouldBe "message"
       role shouldBe  Role.ASSISTANT
-      model shouldBe "claude-3-5-sonnet-20240620"
+      model shouldBe "claude-3-5-sonnet-20241022"
       stopReason shouldBe StopReason.END_TURN
       content.size shouldBe 1
       content[0] shouldBe instanceOf<Text>()
