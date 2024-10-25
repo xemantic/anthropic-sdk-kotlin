@@ -2,6 +2,7 @@ package com.xemantic.anthropic.message
 
 import com.xemantic.anthropic.Anthropic
 import com.xemantic.anthropic.MessageResponse
+import com.xemantic.anthropic.Model
 import com.xemantic.anthropic.anthropicJson
 import com.xemantic.anthropic.schema.JsonSchema
 import com.xemantic.anthropic.tool.UsableTool
@@ -53,14 +54,15 @@ data class MessageRequest(
 
   class Builder internal constructor(
     private val defaultModel: String,
+    private val defaultMaxTokens: Int,
     @PublishedApi
     internal val toolEntryMap: Map<String, Anthropic.ToolEntry<out UsableTool>>
   ) {
     var model: String? = null
-    var maxTokens = 1024
-    var messages: List<Message> = mutableListOf<Message>()
+    var maxTokens: Int = defaultMaxTokens
+    var messages: List<Message> = emptyList()
     var metadata = null
-    val stopSequences = mutableListOf<String>()
+    var stopSequences: List<String> = emptyList()
     var stream: Boolean? = null
       internal set
     var system: List<System>? = null
@@ -128,12 +130,17 @@ data class MessageRequest(
 
 }
 
+/**
+ * Used only in tests. Maybe should be internal?
+ */
 fun MessageRequest(
-  defaultModel: String,
+  model: Model = Model.DEFAULT,
   block: MessageRequest.Builder.() -> Unit
 ): MessageRequest {
   val builder = MessageRequest.Builder(
-    defaultModel, emptyMap()
+    defaultModel = model.id,
+    defaultMaxTokens = model.maxOutput,
+    toolEntryMap = emptyMap()
   )
   block(builder)
   return builder.build()
