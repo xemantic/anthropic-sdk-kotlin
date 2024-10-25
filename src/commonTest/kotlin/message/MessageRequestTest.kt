@@ -22,9 +22,7 @@ class MessageRequestTest {
   @Test
   fun shouldCreateTheSimplestMessageRequest() {
     // given
-    val request = MessageRequest(
-      defaultModel = "claude-3-5-sonnet-20240620"
-    ) {
+    val request = MessageRequest {
       +Message {
         +"Hey Claude!?"
       }
@@ -36,7 +34,7 @@ class MessageRequestTest {
     // then
     json shouldEqualJson """
       {
-        "model": "claude-3-5-sonnet-20240620",
+        "model": "claude-3-5-sonnet-latest",
         "messages": [
           {
             "role": "user",
@@ -48,7 +46,7 @@ class MessageRequestTest {
             ]
           }
         ],
-        "max_tokens": 1024
+        "max_tokens": 8182
       }
     """.trimIndent()
   }

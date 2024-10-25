@@ -43,11 +43,6 @@ const val ANTHROPIC_API_BASE: String = "https://api.anthropic.com/"
 const val DEFAULT_ANTHROPIC_VERSION: String = "2023-06-01"
 
 /**
- * The default model to be used if no model is specified.
- */
-const val DEFAULT_MODEL = "claude-3-5-sonnet-20240620"
-
-/**
  * An exception thrown when API requests returns error.
  */
 class AnthropicException(
@@ -79,13 +74,13 @@ fun Anthropic(
   val config = Anthropic.Config().apply(block)
   val apiKey = if (config.apiKey != null) config.apiKey else envApiKey
   requireNotNull(apiKey) { missingApiKeyMessage }
-  val defaultModel = if (config.defaultModel != null) config.defaultModel!! else DEFAULT_MODEL
   return Anthropic(
     apiKey = apiKey,
     anthropicVersion = config.anthropicVersion,
     anthropicBeta = config.anthropicBeta,
     apiBase = config.apiBase,
-    defaultModel = defaultModel,
+    defaultModel = config.defaultModel.id,
+    defaultMaxTokens = config.defaultMaxTokens,
     directBrowserAccess = config.directBrowserAccess,
     logLevel = if (config.logHttp) LogLevel.ALL else LogLevel.NONE
   ).apply {
@@ -99,6 +94,7 @@ class Anthropic internal constructor(
   val anthropicBeta: String?,
   val apiBase: String,
   val defaultModel: String,
+  val defaultMaxTokens: Int,
   val directBrowserAccess: Boolean,
   val logLevel: LogLevel
 ) {
@@ -108,7 +104,9 @@ class Anthropic internal constructor(
     var anthropicVersion: String = DEFAULT_ANTHROPIC_VERSION
     var anthropicBeta: String? = null
     var apiBase: String = ANTHROPIC_API_BASE
-    var defaultModel: String? = null
+    var defaultModel: Model = Model.DEFAULT
+    var defaultMaxTokens: Int = defaultModel.maxOutput
+
     var directBrowserAccess: Boolean = false
     var logHttp: Boolean = false
 
@@ -180,7 +178,8 @@ class Anthropic internal constructor(
 
       val request = MessageRequest.Builder(
         defaultModel,
-        toolEntryMap = toolEntryMap
+        defaultMaxTokens,
+        toolEntryMap
       ).apply(block).build()
 
       val apiResponse = client.post("/v1/messages") {
@@ -211,7 +210,8 @@ class Anthropic internal constructor(
 
       val request = MessageRequest.Builder(
         defaultModel,
-        toolEntryMap = toolEntryMap
+        defaultMaxTokens,
+        toolEntryMap
       ).apply {
         block(this)
         stream = true
