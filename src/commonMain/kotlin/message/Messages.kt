@@ -4,6 +4,7 @@ import com.xemantic.anthropic.Anthropic
 import com.xemantic.anthropic.MessageResponse
 import com.xemantic.anthropic.Model
 import com.xemantic.anthropic.anthropicJson
+import com.xemantic.anthropic.cost.Cost
 import com.xemantic.anthropic.schema.JsonSchema
 import com.xemantic.anthropic.tool.UsableTool
 import kotlinx.serialization.*
@@ -84,7 +85,7 @@ data class MessageRequest(
       val type = typeOf<T>()
       val toolEntry = toolEntryMap.values.find { it.type == type }
       requireNotNull(toolEntry) {
-        "No such tool defined in Anthropic client: ${T::class.qualifiedName}"
+        "No such tool defined in Anthropic client: ${T::class}"
       }
       tools = listOf(toolEntry.tool)
       toolChoice = ToolChoice.Tool(name = toolEntry.tool.name)
@@ -202,7 +203,7 @@ data class Tool(
   val name: String,
   val description: String?,
   @SerialName("input_schema")
-  val inputSchema: JsonSchema,
+  val inputSchema: JsonSchema?,
   @SerialName("cache_control")
   val cacheControl: CacheControl?
 )
@@ -390,12 +391,29 @@ enum class StopReason {
 data class Usage(
   @SerialName("input_tokens")
   val inputTokens: Int,
+  @SerialName("output_tokens")
+  val outputTokens: Int,
   @SerialName("cache_creation_input_tokens")
   val cacheCreationInputTokens: Int? = null,
   @SerialName("cache_read_input_tokens")
   val cacheReadInputTokens: Int? = null,
-  @SerialName("output_tokens")
-  val outputTokens: Int
+)
+
+fun Usage.add(usage: Usage): Usage = Usage(
+  inputTokens = inputTokens + usage.inputTokens,
+  outputTokens = outputTokens + usage.outputTokens,
+  cacheReadInputTokens = (cacheReadInputTokens ?: 0) + (usage.cacheReadInputTokens ?: 0),
+  cacheCreationInputTokens = (cacheCreationInputTokens ?: 0) + (usage.cacheCreationInputTokens ?: 0),
+)
+
+fun Usage.cost(
+  model: Model,
+  isBatch: Boolean = false
+): Cost = Cost(
+  inputTokens = inputTokens * model.cost.inputTokens / 1000000.0 * (if (isBatch) .5 else 1.0),
+  outputTokens = outputTokens * model.cost.outputTokens / 1000000.0 * (if (isBatch) .5 else 1.0),
+  cacheReadInputTokens = (cacheReadInputTokens ?: 0) * model.cost.inputTokens * .1 / 1000000.0 * (if (isBatch) .5 else 1.0),
+  cacheCreationInputTokens = (cacheCreationInputTokens ?: 0) * model.cost.inputTokens * .25 / 1000000.0 * (if (isBatch) .5 else 1.0)
 )
 
 operator fun MutableCollection<in Message>.plusAssign(
