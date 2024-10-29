@@ -6,6 +6,7 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
+import org.jetbrains.kotlin.gradle.targets.js.testing.KotlinJsTest
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
 
 plugins {
@@ -163,6 +164,11 @@ tasks.withType<Test> {
 
 tasks.withType<KotlinNativeTest> {
   enabled = !skipTests
+}
+
+tasks.withType<KotlinJsTest> {
+  // for now always skip JS tests, until we will find how to safely pass apiKey to them
+  enabled = false
 }
 
 powerAssert {
