@@ -49,7 +49,7 @@ and many other environments.
 
 ## Usage
 
-[!CAUTION]
+> [!CAUTION]
 > This SDK is in the early stage of development, so still a subject to API changes,
 > however at the same time it is completely functional and passing all the
 > [test cases](src/commonTest/kotlin).
@@ -78,7 +78,7 @@ dependencies {
 }
 ```
 
-, ff you are planning to use tools, you will also need:
+, if you are planning to use tools, you will also need:
 
 ```kotlin
 plugins {
@@ -132,7 +132,7 @@ If you want to write AI agents, you need tools, and this is where this library s
 ```kotlin
 @AnthropicTool("get_weather")
 @Description("Get the weather for a specific location")
-data class WeatherTool(val location: String): UsableTool {
+data class WeatherTool(val location: String): ToolInput {
   override fun use(
     toolUseId: String
   ) = ToolResult(
@@ -192,7 +192,7 @@ internet or DB connection pool to access the database.
 ```kotlin
 @AnthropicTool("query_database")
 @Description("Executes SQL on the database")
-data class DatabaseQueryTool(val sql: String): UsableTool {
+data class QueryDatabase(val sql: String): ToolInput {
 
   @Transient
   internal lateinit var connection: Connection
@@ -213,14 +213,14 @@ data class DatabaseQueryTool(val sql: String): UsableTool {
 fun main() = runBlocking {
 
   val client = Anthropic {
-    tool<DatabaseQueryTool> {
+    tool<QueryDatabase> {
       connection = DriverManager.getConnection("jdbc:...")
     }
   }
 
   val response = client.messages.create {
     +Message { +"Select all the users who never logged in to the the system" }
-    useTools()
+    useOneTool<QueryDatabase>()
   }
 
   val tool = response.content.filterIsInstance<ToolUse>().first()

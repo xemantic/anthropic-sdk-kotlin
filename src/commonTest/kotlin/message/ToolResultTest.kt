@@ -1,5 +1,7 @@
 package com.xemantic.anthropic.message
 
+import com.xemantic.anthropic.text.Text
+import com.xemantic.anthropic.tool.ToolResult
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Serializable
 import kotlin.test.Test

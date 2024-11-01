@@ -1,17 +1,17 @@
 package com.xemantic.anthropic.message
 
-import com.xemantic.anthropic.Anthropic
-import com.xemantic.anthropic.MessageResponse
 import com.xemantic.anthropic.Model
-import com.xemantic.anthropic.anthropicJson
-import com.xemantic.anthropic.cost.Cost
-import com.xemantic.anthropic.schema.JsonSchema
-import com.xemantic.anthropic.tool.UsableTool
+import com.xemantic.anthropic.Response
+import com.xemantic.anthropic.cache.CacheControl
+import com.xemantic.anthropic.text.Text
+import com.xemantic.anthropic.tool.Tool
+import com.xemantic.anthropic.tool.ToolChoice
+import com.xemantic.anthropic.tool.ToolInput
+import com.xemantic.anthropic.tool.toolName
+import com.xemantic.anthropic.usage.Usage
 import kotlinx.serialization.*
 import kotlinx.serialization.json.JsonClassDiscriminator
-import kotlinx.serialization.json.JsonObject
 import kotlin.collections.mutableListOf
-import kotlin.reflect.typeOf
 
 /**
  * The roles that can be taken by entities in a conversation.
@@ -54,12 +54,12 @@ data class MessageRequest(
 ) {
 
   class Builder internal constructor(
-    private val defaultModel: String,
-    private val defaultMaxTokens: Int,
+    defaultModel: String,
+    defaultMaxTokens: Int,
     @PublishedApi
-    internal val toolEntryMap: Map<String, Anthropic.ToolEntry<out UsableTool>>
+    internal val toolMap: Map<String, Tool>
   ) {
-    var model: String? = null
+    var model: String = defaultModel
     var maxTokens: Int = defaultMaxTokens
     var messages: List<Message> = emptyList()
     var metadata = null
@@ -69,26 +69,48 @@ data class MessageRequest(
     var system: List<System>? = null
     var temperature: Double? = null
     var toolChoice: ToolChoice? = null
-    var tools: List<Tool>? = null
+    var tools: List<Tool> = emptyList()
     val topK: Int? = null
     val topP: Int? = null
 
-    fun useTools() {
-      tools = toolEntryMap.values.map { it.tool }
+    /**
+     * Will fill [tools] with all the tools defined
+     * when creating this [com.xemantic.anthropic.Anthropic] client.
+     */
+    fun allTools() {
+      tools = toolMap.values.toList()
+    }
+
+    inline fun <reified T : ToolInput> tool() {
+      val name = toolName<T>()
+      tools += listOf(toolMap[name]!!)
     }
 
     /**
      * Sets both, the [tools] list and the [toolChoice] with
-     * just one tool to use, forcing the API to respond with the [ToolUse].
+     * just one tool to use, forcing the API to respond with the [com.xemantic.anthropic.tool.ToolUse].
      */
-    inline fun <reified T : UsableTool> useTool() {
-      val type = typeOf<T>()
-      val toolEntry = toolEntryMap.values.find { it.type == type }
-      requireNotNull(toolEntry) {
-        "No such tool defined in Anthropic client: ${T::class}"
+    inline fun <reified T : ToolInput> singleTool() {
+      val name = toolName<T>()
+      tools = listOf(toolMap[name]!!)
+      toolChoice = ToolChoice.Tool(name)
+    }
+
+//    inline fun <reified T : BuiltInTool<*>> useBuiltInTool() {
+//      this.name
+//    }
+
+    /**
+     * Sets both, the [tools] list and the [toolChoice] with
+     * just one tool to use, forcing the API to respond with the
+     * [com.xemantic.anthropic.tool.ToolUse] instance.
+     */
+    fun chooseTool(name: String) {
+      val tool = requireNotNull(toolMap[name]) {
+        "No tool with such name defined in Anthropic client: $name"
       }
-      tools = listOf(toolEntry.tool)
-      toolChoice = ToolChoice.Tool(name = toolEntry.tool.name)
+      tools = listOf(tool)
+      toolChoice = ToolChoice.Tool(name = tool.name)
     }
 
     fun messages(vararg messages: Message) {
@@ -114,16 +136,16 @@ data class MessageRequest(
     }
 
     fun build(): MessageRequest = MessageRequest(
-      model = if (model != null) model!! else defaultModel,
+      model = model,
       maxTokens = maxTokens,
       messages = messages,
       metadata = metadata,
       stopSequences = stopSequences.toNullIfEmpty(),
-      stream = if (stream != null) stream else null,
+      stream = if ((stream != null) && stream!!) true else null,
       system = system,
       temperature = temperature,
       toolChoice = toolChoice,
-      tools = tools,
+      tools = tools.toNullIfEmpty(),
       topK = topK,
       topP = topP
     )
@@ -132,16 +154,17 @@ data class MessageRequest(
 }
 
 /**
- * Used only in tests. Maybe should be internal?
+ * Used only in tests
  */
-fun MessageRequest(
+internal fun MessageRequest(
   model: Model = Model.DEFAULT,
+  toolMap: Map<String, Tool> = emptyMap(),
   block: MessageRequest.Builder.() -> Unit
 ): MessageRequest {
   val builder = MessageRequest.Builder(
     defaultModel = model.id,
     defaultMaxTokens = model.maxOutput,
-    toolEntryMap = emptyMap()
+    toolMap = toolMap
   )
   block(builder)
   return builder.build()
@@ -199,180 +222,12 @@ data class System(
 }
 
 @Serializable
-data class Tool(
-  val name: String,
-  val description: String?,
-  @SerialName("input_schema")
-  val inputSchema: JsonSchema?,
-  @SerialName("cache_control")
-  val cacheControl: CacheControl?
-)
-
-@Serializable
 @JsonClassDiscriminator("type")
 @OptIn(ExperimentalSerializationApi::class)
-sealed class Content {
+abstract class Content {
 
   @SerialName("cache_control")
   abstract val cacheControl: CacheControl?
-
-}
-
-@Serializable
-@SerialName("text")
-data class Text(
-  val text: String,
-  @SerialName("cache_control")
-  override val cacheControl: CacheControl? = null,
-) : Content()
-
-@Serializable
-@SerialName("image")
-data class Image(
-  val source: Source,
-  @SerialName("cache_control")
-  override val cacheControl: CacheControl? = null
-) : Content() {
-
-  enum class MediaType {
-    @SerialName("image/jpeg")
-    IMAGE_JPEG,
-    @SerialName("image/png")
-    IMAGE_PNG,
-    @SerialName("image/gif")
-    IMAGE_GIF,
-    @SerialName("image/webp")
-    IMAGE_WEBP
-  }
-
-  @Serializable
-  data class Source(
-    val type: Type = Type.BASE64,
-    @SerialName("media_type")
-    val mediaType: MediaType,
-    val data: String
-  ) {
-
-    enum class Type {
-      @SerialName("base64")
-      BASE64
-    }
-
-  }
-
-}
-
-@SerialName("tool_use")
-@Serializable
-data class ToolUse(
-  @SerialName("cache_control")
-  override val cacheControl: CacheControl? = null,
-  val id: String,
-  val name: String,
-  val input: JsonObject
-) : Content() {
-
-  @Transient
-  @PublishedApi
-  internal lateinit var toolEntry: Anthropic.ToolEntry<UsableTool>
-
-  inline fun <reified T> input(): T = anthropicJson.decodeFromJsonElement(
-    deserializer = toolEntry.serializer as KSerializer<T>,
-    element = input
-  )
-
-  suspend fun use(): ToolResult {
-    val tool = anthropicJson.decodeFromJsonElement(
-      deserializer = toolEntry.serializer,
-      element = input
-    )
-    val result = try {
-      toolEntry.initialize(tool)
-      tool.use(toolUseId = id)
-    } catch (e: Exception) {
-      ToolResult(
-        toolUseId = id,
-        isError = true,
-        content = listOf(
-          Text(
-            text = e.message ?: "Unknown error occurred"
-          )
-        )
-      )
-    }
-    return result
-  }
-
-}
-
-@Serializable
-@SerialName("tool_result")
-data class ToolResult(
-  @SerialName("tool_use_id")
-  val toolUseId: String,
-  val content: List<Content>, // TODO only Text, Image allowed here, should be accessible in gthe builder
-  @SerialName("is_error")
-  val isError: Boolean = false,
-  @SerialName("cache_control")
-  override val cacheControl: CacheControl? = null
-) : Content()
-
-fun ToolResult(
-  toolUseId: String,
-  text: String
-): ToolResult = ToolResult(
-  toolUseId,
-  content = listOf(Text(text))
-)
-
-inline fun <reified T> ToolResult(
-  toolUseId: String,
-  value: T
-): ToolResult = ToolResult(
-  toolUseId,
-  content = listOf(
-    Text(
-      anthropicJson.encodeToString(
-        serializer = serializer<T>(),
-        value = value
-      )
-    )
-  )
-)
-
-@Serializable
-data class CacheControl(
-  val type: Type
-) {
-
-  enum class Type {
-    @SerialName("ephemeral")
-    EPHEMERAL
-  }
-
-}
-
-@Serializable
-@JsonClassDiscriminator("type")
-@OptIn(ExperimentalSerializationApi::class)
-sealed class ToolChoice(
-  @SerialName("disable_parallel_tool_use")
-  val disableParallelToolUse: Boolean = false
-) {
-
-  @Serializable
-  @SerialName("auto")
-  class Auto : ToolChoice()
-
-  @Serializable
-  @SerialName("any")
-  class Any : ToolChoice()
-
-  @Serializable
-  @SerialName("tool")
-  class Tool(
-    val name: String
-  ) : ToolChoice()
 
 }
 
@@ -387,37 +242,29 @@ enum class StopReason {
   TOOL_USE
 }
 
-@Serializable
-data class Usage(
-  @SerialName("input_tokens")
-  val inputTokens: Int,
-  @SerialName("output_tokens")
-  val outputTokens: Int,
-  @SerialName("cache_creation_input_tokens")
-  val cacheCreationInputTokens: Int? = null,
-  @SerialName("cache_read_input_tokens")
-  val cacheReadInputTokens: Int? = null,
-)
-
-fun Usage.add(usage: Usage): Usage = Usage(
-  inputTokens = inputTokens + usage.inputTokens,
-  outputTokens = outputTokens + usage.outputTokens,
-  cacheReadInputTokens = (cacheReadInputTokens ?: 0) + (usage.cacheReadInputTokens ?: 0),
-  cacheCreationInputTokens = (cacheCreationInputTokens ?: 0) + (usage.cacheCreationInputTokens ?: 0),
-)
-
-fun Usage.cost(
-  model: Model,
-  isBatch: Boolean = false
-): Cost = Cost(
-  inputTokens = inputTokens * model.cost.inputTokens / 1000000.0 * (if (isBatch) .5 else 1.0),
-  outputTokens = outputTokens * model.cost.outputTokens / 1000000.0 * (if (isBatch) .5 else 1.0),
-  cacheReadInputTokens = (cacheReadInputTokens ?: 0) * model.cost.inputTokens * .1 / 1000000.0 * (if (isBatch) .5 else 1.0),
-  cacheCreationInputTokens = (cacheCreationInputTokens ?: 0) * model.cost.inputTokens * .25 / 1000000.0 * (if (isBatch) .5 else 1.0)
-)
-
 operator fun MutableCollection<in Message>.plusAssign(
   response: MessageResponse
 ) {
   this += response.asMessage()
+}
+
+@Serializable
+@SerialName("message")
+data class MessageResponse(
+  val id: String,
+  val role: Role,
+  val content: List<Content>, // limited to Text and ToolUse
+  val model: String,
+  @SerialName("stop_reason")
+  val stopReason: StopReason?,
+  @SerialName("stop_sequence")
+  val stopSequence: String?,
+  val usage: Usage
+) : Response(type = "message") {
+
+  fun asMessage(): Message = Message {
+    role = Role.ASSISTANT
+    content += this@MessageResponse.content
+  }
+
 }

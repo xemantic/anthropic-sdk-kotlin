@@ -26,6 +26,8 @@ val javaTarget = libs.versions.javaTarget.get()
 val kotlinTarget = KotlinVersion.fromVersion(libs.versions.kotlinTarget.get())
 
 val isReleaseBuild = !project.version.toString().endsWith("-SNAPSHOT")
+val jvmOnlyBuild: String? by project
+val isJvmOnlyBuild: Boolean = (jvmOnlyBuild == null) || (jvmOnlyBuild!!.uppercase() == "true")
 val githubActor: String? by project
 val githubToken: String? by project
 val signingKey: String? by project
@@ -65,10 +67,14 @@ kotlin {
     }
   }
 
-  js {
-    browser()
-    nodejs()
-  }
+  if (!isJvmOnlyBuild) {
+
+    js {
+      browser()
+      nodejs()
+      binaries.library()
+    }
+
 //  linuxX64()
 //
 //  mingwX64()
@@ -82,6 +88,8 @@ kotlin {
 //    isMingwX64 -> mingwX64("native")
 //    else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
 //  }
+
+  }
 
   sourceSets {
 
@@ -114,21 +122,23 @@ kotlin {
       }
     }
 
-    linuxTest {
-      dependencies {
-        implementation(libs.ktor.client.curl)
+    if (!isJvmOnlyBuild) {
+      linuxTest {
+        dependencies {
+          implementation(libs.ktor.client.curl)
+        }
       }
-    }
 
-    mingwTest {
-      dependencies {
-        implementation(libs.ktor.client.curl)
+      mingwTest {
+        dependencies {
+          implementation(libs.ktor.client.curl)
+        }
       }
-    }
 
-    macosTest {
-      dependencies {
-        implementation(libs.ktor.client.darwin)
+      macosTest {
+        dependencies {
+          implementation(libs.ktor.client.darwin)
+        }
       }
     }
 
@@ -162,13 +172,19 @@ tasks.withType<Test> {
   enabled = !skipTests
 }
 
-tasks.withType<KotlinNativeTest> {
-  enabled = !skipTests
-}
 
-tasks.withType<KotlinJsTest> {
-  // for now always skip JS tests, until we will find how to safely pass apiKey to them
-  enabled = false
+
+if (!isJvmOnlyBuild) {
+
+  tasks.withType<KotlinNativeTest> {
+    enabled = !skipTests
+  }
+
+  tasks.withType<KotlinJsTest> {
+    // for now always skip JS tests, until we will find how to safely pass apiKey to them
+    enabled = false
+  }
+
 }
 
 powerAssert {

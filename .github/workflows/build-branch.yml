@@ -27,6 +27,6 @@ jobs:
       run: sudo apt-get install -y libcurl4-gnutls-dev
 
     - name: Build
-      run: ./gradlew build
+      run: ./gradlew -PjvmOnlyBuild=false build
       env:
         ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}

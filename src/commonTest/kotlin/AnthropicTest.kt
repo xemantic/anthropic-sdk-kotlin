@@ -1,18 +1,18 @@
 package com.xemantic.anthropic
 
-import com.xemantic.anthropic.event.ContentBlockDeltaEvent
 import com.xemantic.anthropic.event.Delta.TextDelta
-import com.xemantic.anthropic.message.Image
+import com.xemantic.anthropic.event.Event
+import com.xemantic.anthropic.image.Image
 import com.xemantic.anthropic.message.Message
 import com.xemantic.anthropic.message.Role
 import com.xemantic.anthropic.message.StopReason
-import com.xemantic.anthropic.message.Text
-import com.xemantic.anthropic.message.ToolUse
 import com.xemantic.anthropic.message.plusAssign
-import com.xemantic.anthropic.test.Calculator
-import com.xemantic.anthropic.test.DatabaseQueryTool
-import com.xemantic.anthropic.test.FibonacciTool
-import com.xemantic.anthropic.test.TestDatabase
+import com.xemantic.anthropic.tool.Calculator
+import com.xemantic.anthropic.tool.DatabaseQuery
+import com.xemantic.anthropic.tool.FibonacciTool
+import com.xemantic.anthropic.tool.TestDatabase
+import com.xemantic.anthropic.text.Text
+import com.xemantic.anthropic.tool.ToolUse
 import io.kotest.assertions.assertSoftly
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
@@ -43,8 +43,7 @@ class AnthropicTest {
 
     // then
     assertSoftly(response) {
-      type shouldBe "message"
-      role shouldBe  Role.ASSISTANT
+      role shouldBe Role.ASSISTANT
       model shouldBe "claude-3-5-sonnet-20241022"
       stopReason shouldBe StopReason.END_TURN
       content.size shouldBe 1
@@ -94,7 +93,7 @@ class AnthropicTest {
     val response = client.messages.stream {
         +Message { +"Say: 'The sun slowly dipped below the horizon, painting the sky in a breathtaking array of oranges, pinks, and purples.'" }
       }
-        .filterIsInstance<ContentBlockDeltaEvent>()
+        .filterIsInstance<Event.ContentBlockDelta>()
         .map { (it.delta as TextDelta).text }
         .toList()
         .joinToString(separator = "")
@@ -115,20 +114,19 @@ class AnthropicTest {
     // when
     val initialResponse = client.messages.create {
       messages = conversation
-      useTools()
+      singleTool<Calculator>() // we are forcing the use of this tool
     }
     conversation += initialResponse
 
     // then
     assertSoftly(initialResponse) {
       stopReason shouldBe StopReason.TOOL_USE
-      content.size shouldBe 2
-      content[0] shouldBe instanceOf<Text>()
-      content[1] shouldBe instanceOf<ToolUse>()
-      (content[1] as ToolUse).name shouldBe "Calculator"
+      content.size shouldBe 1 // and therefore there is only ToolUse without commentary
+      content[0] shouldBe instanceOf<ToolUse>()
+      (content[0] as ToolUse).name shouldBe "Calculator"
     }
 
-    val toolUse = initialResponse.content[1] as ToolUse
+    val toolUse = initialResponse.content[0] as ToolUse
     val result = toolUse.use() // here we execute the tool
 
     conversation += Message { +result }
@@ -136,7 +134,7 @@ class AnthropicTest {
     // when
     val resultResponse = client.messages.create {
       messages = conversation
-      useTools()
+      tool<Calculator>() // we are not forcing the use, but tool definition needs to be present
     }
 
     // then
@@ -158,7 +156,7 @@ class AnthropicTest {
     // when
     val response = client.messages.create {
       +Message { +"What's fibonacci number 42" }
-      useTools()
+      allTools()
     }
 
     // then
@@ -187,7 +185,7 @@ class AnthropicTest {
 
     val fibonacciResponse = client.messages.create {
       messages = conversation
-      useTools()
+      allTools()
     }
     conversation += fibonacciResponse
 
@@ -198,7 +196,7 @@ class AnthropicTest {
 
     val calculatorResponse = client.messages.create {
       messages = conversation
-      useTools()
+      allTools()
     }
     conversation += calculatorResponse
 
@@ -209,7 +207,7 @@ class AnthropicTest {
 
     val finalResponse = client.messages.create {
       messages = conversation
-      useTools()
+      allTools()
     }
 
     finalResponse.content[0] shouldBe instanceOf<Text>()
@@ -222,7 +220,7 @@ class AnthropicTest {
     // given
     val testDatabase = TestDatabase()
     val client = Anthropic {
-      tool<DatabaseQueryTool> {
+      tool<DatabaseQuery> {
         database = testDatabase
       }
     }
@@ -230,7 +228,8 @@ class AnthropicTest {
     // when
     val response = client.messages.create {
       +Message { +"List data in CUSTOMER table" }
-      useTool<DatabaseQueryTool>()
+      singleTool<DatabaseQuery>() // we are forcing the use of this tool
+      // could be also just tool<DatabaseQuery>() if we are confident that LLM will use this one
     }
     val toolUse = response.content.filterIsInstance<ToolUse>().first()
     toolUse.use()
