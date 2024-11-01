@@ -152,7 +152,7 @@ fun main() = runBlocking {
 
   val initialResponse = client.messages.create {
     messages = conversation
-    useTools()
+    allTools()
   }
   println("Initial response:")
   println(initialResponse)
@@ -220,7 +220,7 @@ fun main() = runBlocking {
 
   val response = client.messages.create {
     +Message { +"Select all the users who never logged in to the the system" }
-    useOneTool<QueryDatabase>()
+    singleTool<QueryDatabase>()
   }
 
   val tool = response.content.filterIsInstance<ToolUse>().first()
