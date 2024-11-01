@@ -63,7 +63,7 @@ Otherwise, you need to add to your `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-  implementation("com.xemantic.anthropic:anthropic-sdk-kotlin:.0.4.0")
+  implementation("com.xemantic.anthropic:anthropic-sdk-kotlin:.0.7.0")
 } 
 ```
 
@@ -72,7 +72,7 @@ dependencies {
 ```kotlin
 dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")  
-  implementation("io.ktor:ktor-client-java:3.0.0") // or the latest ktor version
+  implementation("io.ktor:ktor-client-java:3.0.1") // or the latest ktor version
   // and if you don't care about configuring logging
   implementation("org.slf4j:slf4j-simple:2.0.16")
 }
