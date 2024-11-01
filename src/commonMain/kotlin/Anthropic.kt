@@ -1,11 +1,15 @@
 package com.xemantic.anthropic
 
+import com.xemantic.anthropic.error.AnthropicException
+import com.xemantic.anthropic.error.ErrorResponse
 import com.xemantic.anthropic.event.Event
+import com.xemantic.anthropic.cache.CacheControl
 import com.xemantic.anthropic.message.MessageRequest
-import com.xemantic.anthropic.message.Tool
-import com.xemantic.anthropic.message.ToolUse
-import com.xemantic.anthropic.tool.UsableTool
-import com.xemantic.anthropic.tool.toolOf
+import com.xemantic.anthropic.message.MessageResponse
+import com.xemantic.anthropic.tool.BuiltInTool
+import com.xemantic.anthropic.tool.ToolUse
+import com.xemantic.anthropic.tool.Tool
+import com.xemantic.anthropic.tool.ToolInput
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.*
@@ -26,11 +30,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.serializer
-import kotlin.reflect.KType
-import kotlin.reflect.typeOf
 
 /**
  * The default Anthropic API base.
@@ -42,26 +41,10 @@ const val ANTHROPIC_API_BASE: String = "https://api.anthropic.com/"
  */
 const val DEFAULT_ANTHROPIC_VERSION: String = "2023-06-01"
 
-/**
- * An exception thrown when API requests returns error.
- */
-class AnthropicException(
-  error: Error,
-  httpStatusCode: HttpStatusCode
-) : RuntimeException(error.toString())
-
 expect val envApiKey: String?
 
 expect val missingApiKeyMessage: String
 
-/**
- * A JSON format suitable for communication with Anthropic API.
- */
-val anthropicJson: Json = Json {
-  allowSpecialFloatingPointValues = true
-  explicitNulls = false
-  encodeDefaults = true
-}
 
 /**
  * The public constructor function which for the Anthropic API client.
@@ -82,10 +65,9 @@ fun Anthropic(
     defaultModel = config.defaultModel.id,
     defaultMaxTokens = config.defaultMaxTokens,
     directBrowserAccess = config.directBrowserAccess,
-    logLevel = if (config.logHttp) LogLevel.ALL else LogLevel.NONE
-  ).apply {
-    toolEntryMap = (config.usableTools as List<Anthropic.ToolEntry<UsableTool>>).associateBy { it.tool.name }
-  }
+    logLevel = if (config.logHttp) LogLevel.ALL else LogLevel.NONE,
+    toolMap = config.tools.associateBy { it.name }
+  )
 } // TODO this can be a second constructor, then toolMap can be private
 
 class Anthropic internal constructor(
@@ -96,7 +78,8 @@ class Anthropic internal constructor(
   val defaultModel: String,
   val defaultMaxTokens: Int,
   val directBrowserAccess: Boolean,
-  val logLevel: LogLevel
+  val logLevel: LogLevel,
+  private val toolMap: Map<String, Tool>
 ) {
 
   class Config {
@@ -110,27 +93,25 @@ class Anthropic internal constructor(
     var directBrowserAccess: Boolean = false
     var logHttp: Boolean = false
 
-    @PublishedApi
-    internal var usableTools: List<ToolEntry<out UsableTool>> = emptyList()
+    var tools: List<Tool> = emptyList()
 
-    inline fun <reified T : UsableTool> tool(
-      noinline block: T.() -> Unit = {}
+    inline fun <reified T : ToolInput> tool(
+      cacheControl: CacheControl? = null,
+      noinline inputInitializer: T.() -> Unit = {}
     ) {
-      val entry = ToolEntry(typeOf<T>(), toolOf<T>(), serializer<T>(), block)
-      usableTools += entry
+      tools += Tool<T>(cacheControl, initializer = inputInitializer)
+    }
+
+    inline fun <reified T : BuiltInTool> builtInTool(
+      tool: T,
+      noinline inputInitializer: T.() -> Unit = {}
+    ) {
+      @Suppress("UNCHECKED_CAST")
+      tool.inputInitializer = inputInitializer as ToolInput.() -> Unit
+      tools += tool
     }
 
   }
-
-  @PublishedApi
-  internal class ToolEntry<T : UsableTool>(
-    val type: KType,
-    val tool: Tool, // TODO, no cache control
-    val serializer: KSerializer<T>,
-    val initialize: T.() -> Unit = {}
-  )
-
-  internal var toolEntryMap = mapOf<String, ToolEntry<UsableTool>>()
 
   private val client = HttpClient {
 
@@ -179,7 +160,7 @@ class Anthropic internal constructor(
       val request = MessageRequest.Builder(
         defaultModel,
         defaultMaxTokens,
-        toolEntryMap
+        toolMap
       ).apply(block).build()
 
       val apiResponse = client.post("/v1/messages") {
@@ -191,8 +172,7 @@ class Anthropic internal constructor(
         is MessageResponse -> response.apply {
           content.filterIsInstance<ToolUse>()
             .forEach { toolUse ->
-              val entry = toolEntryMap[toolUse.name]!!
-              toolUse.toolEntry = entry
+              toolUse.tool = toolMap[toolUse.name]!!
             }
         }
         is ErrorResponse -> throw AnthropicException(
@@ -211,7 +191,7 @@ class Anthropic internal constructor(
       val request = MessageRequest.Builder(
         defaultModel,
         defaultMaxTokens,
-        toolEntryMap
+        toolMap
       ).apply {
         block(this)
         stream = true

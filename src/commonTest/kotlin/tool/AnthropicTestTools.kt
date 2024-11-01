@@ -1,14 +1,11 @@
-package com.xemantic.anthropic.test
+package com.xemantic.anthropic.tool
 
-import com.xemantic.anthropic.message.ToolResult
 import com.xemantic.anthropic.schema.Description
-import com.xemantic.anthropic.tool.AnthropicTool
-import com.xemantic.anthropic.tool.UsableTool
 import kotlinx.serialization.Transient
 
 @AnthropicTool("FibonacciTool")
 @Description("Calculate Fibonacci number n")
-data class FibonacciTool(val n: Int): UsableTool {
+data class FibonacciTool(val n: Int): ToolInput {
 
   tailrec fun fibonacci(
     n: Int, a: Int = 0, b: Int = 1
@@ -28,7 +25,7 @@ data class Calculator(
   val operation: Operation,
   val a: Double,
   val b: Double
-): UsableTool {
+): ToolInput {
 
   @Suppress("unused") // it is used, but by Anthropic, so we skip the warning
   enum class Operation(
@@ -63,18 +60,18 @@ class TestDatabase : Database {
 
 @AnthropicTool("DatabaseQuery")
 @Description("Executes database query")
-data class DatabaseQueryTool(
+data class DatabaseQuery(
   val query: String
-) : UsableTool {
+) : ToolInput {
 
   @Transient
-  lateinit var database: Database
+  internal lateinit var database: Database
 
   override suspend fun use(
     toolUseId: String
   ) = ToolResult(
     toolUseId,
-    text  = database.execute(query).joinToString()
+    text = database.execute(query).joinToString()
   )
 
 }

@@ -1,6 +1,7 @@
 package com.xemantic.anthropic
 
 import com.xemantic.anthropic.message.MessageRequest
+import com.xemantic.anthropic.message.MessageResponse
 import kotlinx.coroutines.runBlocking
 import java.util.function.Consumer
 

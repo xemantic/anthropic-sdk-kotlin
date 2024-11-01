@@ -1,7 +1,54 @@
 package com.xemantic.anthropic.tool.computer
 
+import com.xemantic.anthropic.cache.CacheControl
+import com.xemantic.anthropic.tool.BuiltInTool
+import com.xemantic.anthropic.tool.ToolResult
+import com.xemantic.anthropic.tool.ToolInput
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
+
+@Serializable
+@SerialName("computer")
+@OptIn(ExperimentalSerializationApi::class)
+data class Computer(
+  override val cacheControl: CacheControl? = null,
+  @SerialName("display_width_px")
+  val displayWidthPx: Int,
+  @SerialName("display_height_px")
+  val displayHeightPx: Int,
+  @SerialName("display_number")
+  val displayNumber: Int? = null
+) : BuiltInTool(
+  name = "computer",
+  type = "computer_20241022"
+) {
+
+  init {
+    inputSerializer = Input.serializer()
+    initialize<Input> {
+      service = computerService
+    }
+  }
+
+  @Serializable
+  data class Input(
+    val action: Action,
+    val coordinate: Coordinate?,
+    val text: String
+  ) : ToolInput {
+
+    @Transient
+    lateinit var service: ComputerService
+
+    override suspend fun use(
+      toolUseId: String
+    ) = service.use(toolUseId, this)
+
+  }
+
+}
 
 enum class Action {
   @SerialName("key")
@@ -27,7 +74,18 @@ enum class Action {
 }
 
 @Serializable
-data class Resolution(
-  val width: Int,
-  val height: Int
-)
+data class Resolution(val width: Int, val height: Int)
+
+@Serializable
+data class Coordinate(val x: Int, val y: Int)
+
+interface ComputerService {
+
+  suspend fun use(
+    toolUseId: String,
+    input: Computer.Input
+  ): ToolResult
+
+}
+
+expect val computerService: ComputerService

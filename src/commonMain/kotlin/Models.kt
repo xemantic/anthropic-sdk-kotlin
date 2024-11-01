@@ -14,8 +14,8 @@ enum class Model(
     maxOutput = 8182,
     messageBatchesApi = true,
     cost = Cost(
-      input = 3.0,
-      output = 15.0
+      inputTokens = 3.0,
+      outputTokens = 15.0
     )
   ),
 
@@ -25,8 +25,8 @@ enum class Model(
     maxOutput = 8182,
     messageBatchesApi = true,
     cost = Cost(
-      input = 3.0,
-      output = 15.0
+      inputTokens = 3.0,
+      outputTokens = 15.0
     )
   ),
 
@@ -36,8 +36,8 @@ enum class Model(
     maxOutput = 8182,
     messageBatchesApi = true,
     cost = Cost(
-      input = 3.0,
-      output = 15.0
+      inputTokens = 3.0,
+      outputTokens = 15.0
     )
   ),
 
@@ -47,8 +47,8 @@ enum class Model(
     maxOutput = 4096,
     messageBatchesApi = true,
     cost = Cost(
-      input = 15.0,
-      output = 75.0
+      inputTokens = 15.0,
+      outputTokens = 75.0
     )
   ),
 
@@ -58,8 +58,8 @@ enum class Model(
     maxOutput = 4096,
     messageBatchesApi = true,
     cost = Cost(
-      input = 15.0,
-      output = 75.0
+      inputTokens = 15.0,
+      outputTokens = 75.0
     )
   ),
 
@@ -69,8 +69,8 @@ enum class Model(
     maxOutput = 4096,
     messageBatchesApi = true,
     cost = Cost(
-      input = 3.0,
-      output = 15.0
+      inputTokens = 3.0,
+      outputTokens = 15.0
     )
   ),
 
@@ -80,15 +80,18 @@ enum class Model(
     maxOutput = 4096,
     messageBatchesApi = true,
     cost = Cost(
-      input = .25,
-      output = 1.25
+      inputTokens = .25,
+      outputTokens = 1.25
     )
   );
 
   /**
    * Cost per MTok
    */
-  data class Cost(val input: Double, val output: Double)
+  data class Cost(
+    val inputTokens: Double,
+    val outputTokens: Double
+  )
 
   companion object {
     val DEFAULT: Model = CLAUDE_3_5_SONNET

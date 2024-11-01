@@ -79,7 +79,8 @@ private fun generateSchemaProperty(
 private fun enumProperty(
   descriptor: SerialDescriptor,
   description: String?
-) = JsonSchemaProperty( // TODO should it return type enum?
+) = JsonSchemaProperty(
+  type = "string",
   enum = descriptor.elementNames(),
   description = description,
 )
