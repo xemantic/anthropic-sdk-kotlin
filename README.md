@@ -132,13 +132,13 @@ If you want to write AI agents, you need tools, and this is where this library s
 ```kotlin
 @AnthropicTool("get_weather")
 @Description("Get the weather for a specific location")
-data class WeatherTool(val location: String): ToolInput {
-  override fun use(
-    toolUseId: String
-  ) = ToolResult(
-    toolUseId,
-    "The weather is 73f" // it should use some external service
-  )
+data class WeatherTool(val location: String): ToolInput() {
+  init {
+    use {
+      // in the real world it should use some external service
+      +"The weather is 73f"
+    }
+  }
 }
 
 fun main() = runBlocking {
@@ -192,21 +192,20 @@ internet or DB connection pool to access the database.
 ```kotlin
 @AnthropicTool("query_database")
 @Description("Executes SQL on the database")
-data class QueryDatabase(val sql: String): ToolInput {
+data class QueryDatabase(val sql: String): ToolInput() {
 
   @Transient
   internal lateinit var connection: Connection
 
-  override fun use(
-    toolUseId: String
-  ) = ToolResult(
-    toolUseId,
-    text = connection.prepareStatement(sql).use { statement ->
-      statement.resultSet.use { resultSet ->
-        resultSet.toString()
+  init {
+    use {
+      +connection.prepareStatement(sql).use { statement ->
+        statement.executeQuery().use { resultSet ->
+          resultSet.toString()
+        }
       }
     }
-  )
+  }
 
 }
 

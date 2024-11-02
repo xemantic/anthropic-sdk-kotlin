@@ -1,16 +1,17 @@
 package com.xemantic.anthropic
 
 import com.xemantic.anthropic.batch.MessageBatchResponse
+import com.xemantic.anthropic.content.Document
 import com.xemantic.anthropic.error.ErrorResponse
-import com.xemantic.anthropic.image.Image
+import com.xemantic.anthropic.content.Image
 import com.xemantic.anthropic.message.Content
 import com.xemantic.anthropic.message.MessageResponse
-import com.xemantic.anthropic.text.Text
+import com.xemantic.anthropic.content.Text
+import com.xemantic.anthropic.content.ToolResult
+import com.xemantic.anthropic.content.ToolUse
 import com.xemantic.anthropic.tool.BuiltInTool
 import com.xemantic.anthropic.tool.DefaultTool
 import com.xemantic.anthropic.tool.Tool
-import com.xemantic.anthropic.tool.ToolResult
-import com.xemantic.anthropic.tool.ToolUse
 import com.xemantic.anthropic.tool.bash.Bash
 import com.xemantic.anthropic.tool.computer.Computer
 import com.xemantic.anthropic.tool.editor.TextEditor
@@ -42,6 +43,7 @@ private val anthropicSerializersModule = SerializersModule {
     subclass(Image::class)
     subclass(ToolUse::class)
     subclass(ToolResult::class)
+    subclass(Document::class)
   }
   polymorphicDefaultDeserializer(Tool::class) { ToolSerializer }
   polymorphicDefaultSerializer(Tool::class) { ToolSerializer }

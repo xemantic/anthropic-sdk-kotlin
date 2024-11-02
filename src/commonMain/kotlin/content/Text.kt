@@ -1,4 +1,4 @@
-package com.xemantic.anthropic.text
+package com.xemantic.anthropic.content
 
 import com.xemantic.anthropic.cache.CacheControl
 import com.xemantic.anthropic.message.Content

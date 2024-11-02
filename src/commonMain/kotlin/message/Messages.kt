@@ -3,7 +3,7 @@ package com.xemantic.anthropic.message
 import com.xemantic.anthropic.Model
 import com.xemantic.anthropic.Response
 import com.xemantic.anthropic.cache.CacheControl
-import com.xemantic.anthropic.text.Text
+import com.xemantic.anthropic.content.ContentBuilder
 import com.xemantic.anthropic.tool.Tool
 import com.xemantic.anthropic.tool.ToolChoice
 import com.xemantic.anthropic.tool.ToolInput
@@ -88,7 +88,7 @@ data class MessageRequest(
 
     /**
      * Sets both, the [tools] list and the [toolChoice] with
-     * just one tool to use, forcing the API to respond with the [com.xemantic.anthropic.tool.ToolUse].
+     * just one tool to use, forcing the API to respond with the [com.xemantic.anthropic.content.ToolUse].
      */
     inline fun <reified T : ToolInput> singleTool() {
       val name = toolName<T>()
@@ -103,14 +103,14 @@ data class MessageRequest(
     /**
      * Sets both, the [tools] list and the [toolChoice] with
      * just one tool to use, forcing the API to respond with the
-     * [com.xemantic.anthropic.tool.ToolUse] instance.
+     * [com.xemantic.anthropic.content.ToolUse] instance.
      */
     fun chooseTool(name: String) {
       val tool = requireNotNull(toolMap[name]) {
         "No tool with such name defined in Anthropic client: $name"
       }
       tools = listOf(tool)
-      toolChoice = ToolChoice.Tool(name = tool.name)
+      toolChoice = ToolChoice.Tool(name = tool.name, disableParallelToolUse = true)
     }
 
     fun messages(vararg messages: Message) {
@@ -176,21 +176,11 @@ data class Message(
   val content: List<Content>
 ) {
 
-  class Builder {
+  class Builder : ContentBuilder {
+
+    override val content = mutableListOf<Content>()
+
     var role = Role.USER
-    val content = mutableListOf<Content>()
-
-    operator fun Content.unaryPlus() {
-      content += this
-    }
-
-    operator fun List<Content>.unaryPlus() {
-      content += this
-    }
-
-    operator fun String.unaryPlus() {
-      content += Text(this)
-    }
 
     fun build() = Message(
       role = role,
@@ -215,7 +205,7 @@ data class System(
 ) {
 
   enum class Type {
-    @SerialName("text")
+    @SerialName("content/text")
     TEXT
   }
 

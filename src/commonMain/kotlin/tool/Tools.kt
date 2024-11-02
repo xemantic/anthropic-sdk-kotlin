@@ -1,12 +1,10 @@
 package com.xemantic.anthropic.tool
 
-import com.xemantic.anthropic.anthropicJson
 import com.xemantic.anthropic.cache.CacheControl
-import com.xemantic.anthropic.message.Content
 import com.xemantic.anthropic.schema.Description
 import com.xemantic.anthropic.schema.JsonSchema
 import com.xemantic.anthropic.schema.jsonSchemaOf
-import com.xemantic.anthropic.text.Text
+import com.xemantic.anthropic.content.ToolResult
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.MetaSerializable
@@ -15,7 +13,6 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.Transient
 import kotlinx.serialization.json.JsonClassDiscriminator
-import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.serializer
 
 @Serializable
@@ -35,13 +32,6 @@ abstract class Tool {
   @Transient
   @PublishedApi
   internal lateinit var inputInitializer: ToolInput.() -> Unit
-
-  inline fun <reified T: ToolInput> initialize(
-    noinline block: T.() -> Unit
-  ) {
-    @Suppress("UNCHECKED_CAST")
-    inputInitializer = block as ToolInput.() -> Unit
-  }
 
 }
 
@@ -76,7 +66,13 @@ abstract class BuiltInTool(
  * with a given tool use ID. The implementation of the [use] method should
  * contain the logic for executing the tool and returning the [ToolResult].
  */
-interface ToolInput {
+abstract class ToolInput() {
+
+  private lateinit var block: suspend ToolResult.Builder.() -> Unit
+
+  fun use(block: suspend ToolResult.Builder.() -> Unit) {
+    this.block = block
+  }
 
   /**
    * Executes the tool and returns the result.
@@ -84,7 +80,11 @@ interface ToolInput {
    * @param toolUseId A unique identifier for this particular use of the tool.
    * @return A [ToolResult] containing the outcome of executing the tool.
    */
-  suspend fun use(toolUseId: String): ToolResult
+  suspend fun use(toolUseId: String): ToolResult {
+    return ToolResult(toolUseId) {
+      block(this)
+    }
+  }
 
 }
 
@@ -157,103 +157,32 @@ inline fun <reified T : ToolInput> Tool(
 }
 
 @Serializable
-@SerialName("tool_use")
-data class ToolUse(
-  @SerialName("cache_control")
-  override val cacheControl: CacheControl? = null,
-  val id: String,
-  val name: String,
-  val input: JsonObject
-) : Content() {
-
-  @Transient
-  @PublishedApi
-  internal lateinit var tool: Tool
-
-  @PublishedApi
-  internal fun decodeInput() = anthropicJson.decodeFromJsonElement(
-    deserializer = tool.inputSerializer,
-    element = input
-  ).apply(tool.inputInitializer)
-
-  inline fun <reified T : ToolInput> input(): T = (decodeInput() as T)
-
-  suspend fun use(): ToolResult {
-    val toolInput = decodeInput()
-    return try {
-      toolInput.use(toolUseId = id)
-    } catch (e: Exception) {
-      e.printStackTrace()
-      ToolResult(
-        toolUseId = id,
-        isError = true,
-        content = listOf(
-          Text(
-            text = e.message ?: "Unknown error occurred"
-          )
-        )
-      )
-    }
-  }
-
-}
-
-
-@Serializable
-@SerialName("tool_result")
-data class ToolResult(
-  @SerialName("tool_use_id")
-  val toolUseId: String,
-  val content: List<Content>, // TODO only Text, Image allowed here, should be accessible in gthe builder
-  @SerialName("is_error")
-  val isError: Boolean = false,
-  @SerialName("cache_control")
-  override val cacheControl: CacheControl? = null
-) : Content()
-
-fun ToolResult(
-  toolUseId: String,
-  text: String
-): ToolResult = ToolResult(
-  toolUseId,
-  content = listOf(Text(text))
-)
-
-inline fun <reified T> ToolResult(
-  toolUseId: String,
-  value: T
-): ToolResult = ToolResult(
-  toolUseId,
-  content = listOf(
-    Text(
-      anthropicJson.encodeToString(
-        serializer = serializer<T>(),
-        value = value
-      )
-    )
-  )
-)
-
-@Serializable
 @JsonClassDiscriminator("type")
 @OptIn(ExperimentalSerializationApi::class)
-sealed class ToolChoice(
-  @SerialName("disable_parallel_tool_use")
-  val disableParallelToolUse: Boolean? = false
-) {
+sealed class ToolChoice {
+
+  abstract val disableParallelToolUse: Boolean?
 
   @Serializable
   @SerialName("auto")
-  class Auto : ToolChoice()
+  class Auto(
+    @SerialName("disable_parallel_tool_use")
+    override val disableParallelToolUse: Boolean? = null
+  ) : ToolChoice()
 
   @Serializable
   @SerialName("any")
-  class Any : ToolChoice()
+  class Any(
+    @SerialName("disable_parallel_tool_use")
+    override val disableParallelToolUse: Boolean? = null
+  ) : ToolChoice()
 
   @Serializable
   @SerialName("tool")
   class Tool(
-    val name: String
+    val name: String,
+    @SerialName("disable_parallel_tool_use")
+    override val disableParallelToolUse: Boolean? = null
   ) : ToolChoice()
 
 }

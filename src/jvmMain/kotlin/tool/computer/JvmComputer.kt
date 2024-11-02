@@ -1,7 +1,6 @@
 package com.xemantic.anthropic.tool.computer
 
-import com.xemantic.anthropic.image.Image
-import com.xemantic.anthropic.tool.ToolResult
+import com.xemantic.anthropic.content.Image
 import java.awt.Rectangle
 import java.awt.Robot
 import java.awt.Toolkit
@@ -10,20 +9,9 @@ import javax.imageio.ImageIO
 
 object JvmComputerService : ComputerService {
 
-  override suspend fun use(
-    toolUseId: String,
-    input: Computer.Input
-  ): ToolResult = when (input.action) {
-    Action.SCREENSHOT -> ToolResult(
-      toolUseId = toolUseId,
-      content = listOf(
-        Image {
-          data = takeScreenshot()
-          mediaType = Image.MediaType.IMAGE_JPEG
-        }
-      )
-    )
-    else -> TODO()
+  override fun screenshot() = Image {
+    data = takeScreenshot()
+    mediaType = Image.MediaType.IMAGE_JPEG
   }
 
 }
@@ -38,5 +26,3 @@ fun takeScreenshot(): ByteArray {
   }
   return output.toByteArray()
 }
-
-actual val computerService: ComputerService get() = JvmComputerService

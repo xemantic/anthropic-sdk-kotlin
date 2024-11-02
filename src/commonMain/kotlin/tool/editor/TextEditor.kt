@@ -3,7 +3,6 @@ package com.xemantic.anthropic.tool.editor
 import com.xemantic.anthropic.cache.CacheControl
 import com.xemantic.anthropic.tool.BuiltInTool
 import com.xemantic.anthropic.tool.ToolInput
-import com.xemantic.anthropic.tool.ToolResult
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -21,9 +20,6 @@ data class TextEditor(
 
   init {
     inputSerializer = Input.serializer()
-    inputInitializer = {
-      //service = computerService
-    }
   }
 
   @Serializable
@@ -41,14 +37,19 @@ data class TextEditor(
     val path: String,
     @SerialName("view_range")
     val viewRange: Int? = 0
-  ) : ToolInput {
+  ) : ToolInput() {
 
     @Transient
     lateinit var service: TextEditorService
 
-    override suspend fun use(
-      toolUseId: String
-    ) = service.use(toolUseId, this)
+    init {
+      use {
+        when (command) {
+          Command.VIEW -> service.view(path)
+          else -> TODO("not implemented yet")
+        }
+      }
+    }
 
   }
 
@@ -70,11 +71,6 @@ enum class Command {
 
 interface TextEditorService {
 
-  suspend fun use(
-    toolUseId: String,
-    input: TextEditor.Input
-  ): ToolResult
+  fun view(path: String)
 
 }
-
-expect val textEditorService: TextEditorService

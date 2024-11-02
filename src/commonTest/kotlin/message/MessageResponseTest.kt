@@ -1,8 +1,8 @@
 package com.xemantic.anthropic.message
 
 import com.xemantic.anthropic.Response
+import com.xemantic.anthropic.content.ToolUse
 import com.xemantic.anthropic.test.testJson
-import com.xemantic.anthropic.tool.ToolUse
 import com.xemantic.anthropic.usage.Usage
 import io.kotest.assertions.assertSoftly
 import io.kotest.matchers.shouldBe

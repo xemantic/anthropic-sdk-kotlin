@@ -11,17 +11,19 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlin.test.Test
 
-class UsableToolTest {
+class ToolInputTest {
 
   @AnthropicTool("TestTool")
   @Description("Test tool receiving a message and outputting it back")
   class TestToolInput(
     @Description("the message")
     val message: String
-  ) : ToolInput {
-    override suspend fun use(
-      toolUseId: String
-    ) = ToolResult(toolUseId, message)
+  ) : ToolInput() {
+    init {
+      use {
+        +message
+      }
+    }
   }
 
   @Test
@@ -65,16 +67,12 @@ class UsableToolTest {
     }
   }
 
-  class NoAnnotationTool : ToolInput {
-    override suspend fun use(
-      toolUseId: String
-    ) = ToolResult(toolUseId, "nothing")
-  }
+  class NoAnnotationTool : ToolInput()
 
   @Test
   fun shouldFailToCreateToolWithoutAnthropicToolAnnotation() {
     shouldThrowWithMessage<SerializationException>(
-      "Cannot find serializer for class com.xemantic.anthropic.tool.UsableToolTest\$NoAnnotationTool, " +
+      "Cannot find serializer for class com.xemantic.anthropic.tool.ToolInputTest\$NoAnnotationTool, " +
           "make sure that it is annotated with @AnthropicTool and kotlin.serialization plugin is enabled for the project"
     ) {
       Tool<NoAnnotationTool>()
@@ -82,16 +80,12 @@ class UsableToolTest {
   }
 
   @Serializable
-  class OnlySerializableAnnotationTool : ToolInput {
-    override suspend fun use(
-      toolUseId: String
-    ) = ToolResult(toolUseId, "nothing")
-  }
+  class OnlySerializableAnnotationTool : ToolInput()
 
   @Test
   fun shouldFailToCreateToolWithOnlySerializableAnnotation() {
     shouldThrowWithMessage<SerializationException>(
-      "The class com.xemantic.anthropic.tool.UsableToolTest\$OnlySerializableAnnotationTool must be annotated with @AnthropicTool"
+      "The class com.xemantic.anthropic.tool.ToolInputTest\$OnlySerializableAnnotationTool must be annotated with @AnthropicTool"
     ) {
       Tool<OnlySerializableAnnotationTool>()
     }

@@ -3,7 +3,6 @@ package com.xemantic.anthropic.tool.bash
 import com.xemantic.anthropic.cache.CacheControl
 import com.xemantic.anthropic.tool.BuiltInTool
 import com.xemantic.anthropic.tool.ToolInput
-import com.xemantic.anthropic.tool.ToolResult
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -22,10 +21,12 @@ data class Bash(
   data class Input(
     val command: String,
     val restart: Boolean? = false,
-  ) : ToolInput {
+  ) : ToolInput() {
 
-    override suspend fun use(toolUseId: String): ToolResult {
-      TODO("Not yet implemented")
+    init {
+      use {
+        TODO("Not yet implemented")
+      }
     }
 
   }

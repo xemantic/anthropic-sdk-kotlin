@@ -1,8 +1,8 @@
 package com.xemantic.anthropic.tool.computer
 
 import com.xemantic.anthropic.cache.CacheControl
+import com.xemantic.anthropic.content.Image
 import com.xemantic.anthropic.tool.BuiltInTool
-import com.xemantic.anthropic.tool.ToolResult
 import com.xemantic.anthropic.tool.ToolInput
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
@@ -27,9 +27,6 @@ data class Computer(
 
   init {
     inputSerializer = Input.serializer()
-    initialize<Input> {
-      service = computerService
-    }
   }
 
   @Serializable
@@ -37,14 +34,19 @@ data class Computer(
     val action: Action,
     val coordinate: Coordinate?,
     val text: String
-  ) : ToolInput {
+  ) : ToolInput() {
 
     @Transient
     lateinit var service: ComputerService
 
-    override suspend fun use(
-      toolUseId: String
-    ) = service.use(toolUseId, this)
+    init {
+      use {
+        when (action) {
+          Action.SCREENSHOT -> +service.screenshot()
+          else -> TODO("Not implemented yet")
+        }
+      }
+    }
 
   }
 
@@ -81,11 +83,6 @@ data class Coordinate(val x: Int, val y: Int)
 
 interface ComputerService {
 
-  suspend fun use(
-    toolUseId: String,
-    input: Computer.Input
-  ): ToolResult
+  fun screenshot(): Image
 
 }
-
-expect val computerService: ComputerService
