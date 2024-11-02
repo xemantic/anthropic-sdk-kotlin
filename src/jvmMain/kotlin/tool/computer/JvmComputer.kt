@@ -1,7 +1,7 @@
 package com.xemantic.anthropic.tool.computer
 
-import com.xemantic.anthropic.image.Image
-import com.xemantic.anthropic.tool.ToolResult
+import com.xemantic.anthropic.content.Image
+import com.xemantic.anthropic.content.ToolResult
 import java.awt.Rectangle
 import java.awt.Robot
 import java.awt.Toolkit
@@ -13,7 +13,7 @@ object JvmComputerService : ComputerService {
   override suspend fun use(
     toolUseId: String,
     input: Computer.Input
-  ): ToolResult = when (input.action) {
+  ) = when (input.action) {
     Action.SCREENSHOT -> ToolResult(
       toolUseId = toolUseId,
       content = listOf(

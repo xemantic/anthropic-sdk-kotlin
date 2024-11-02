@@ -1,9 +1,9 @@
 package com.xemantic.anthropic.tool.bash
 
 import com.xemantic.anthropic.cache.CacheControl
+import com.xemantic.anthropic.content.ToolResult
 import com.xemantic.anthropic.tool.BuiltInTool
 import com.xemantic.anthropic.tool.ToolInput
-import com.xemantic.anthropic.tool.ToolResult
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

@@ -1,11 +1,12 @@
 package com.xemantic.anthropic.message
 
+import com.xemantic.anthropic.content.ToolResult
 import com.xemantic.anthropic.message.MessageRequestTest.TemperatureUnit
 import com.xemantic.anthropic.schema.Description
 import com.xemantic.anthropic.test.testJson
 import com.xemantic.anthropic.tool.AnthropicTool
 import com.xemantic.anthropic.tool.Tool
-import com.xemantic.anthropic.tool.ToolResult
+import com.xemantic.anthropic.tool.ToolChoice
 import com.xemantic.anthropic.tool.ToolInput
 import com.xemantic.anthropic.tool.bash.Bash
 import com.xemantic.anthropic.tool.computer.Computer
@@ -28,7 +29,7 @@ data class GetWeather(
 
   override suspend fun use(
     toolUseId: String
-  ) = ToolResult(toolUseId, "42")
+  ) = ToolResult(toolUseId) { +"42" }
 
 }
 
@@ -138,6 +139,71 @@ class MessageRequestTest {
             "type": "bash_20241022",
             "name": "bash"
           },
+          {
+            "name": "get_weather",
+            "description": "Get the current weather in a given location",
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "location": {
+                  "type": "string",
+                  "description": "The city and state, e.g. San Francisco, CA"
+                },
+                "unit": {
+                  "type": "string",
+                  "enum": ["celsius", "fahrenheit"],
+                  "description": "The unit of temperature, either 'celsius' or 'fahrenheit'"
+                }
+              },
+              "required": ["location"]
+            }
+          }          
+        ]
+      }
+    """.trimIndent()
+  }
+
+  @Test
+  fun shouldCreateMessageRequestWithExplicitToolChoice() {
+    // given
+    val request = MessageRequest {
+      +Message {
+        +"What's the weather in Berlin?"
+      }
+      tools = listOf(
+        Tool<GetWeather>()
+      )
+      toolChoice = ToolChoice.Tool(
+        name = "get_weather",
+        disableParallelToolUse = true
+      )
+    }
+
+    // when
+    val json = testJson.encodeToString(request)
+
+    // then
+    json shouldEqualJson """
+      {
+        "model": "claude-3-5-sonnet-latest",
+        "messages": [
+          {
+            "role": "user",
+            "content": [
+              {
+                "type": "text",
+                "text": "What's the weather in Berlin?"
+              }
+            ]
+          }
+        ],
+        "max_tokens": 8182,
+        "tool_choice": {
+          "type": "tool",
+          "name": "get_weather",
+          "disable_parallel_tool_use": true
+        },
+        "tools": [
           {
             "name": "get_weather",
             "description": "Get the current weather in a given location",

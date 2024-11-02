@@ -1,4 +1,4 @@
-package com.xemantic.anthropic.image
+package com.xemantic.anthropic.content
 
 import java.io.File
 

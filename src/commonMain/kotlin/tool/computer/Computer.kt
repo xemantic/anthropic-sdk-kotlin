@@ -1,8 +1,8 @@
 package com.xemantic.anthropic.tool.computer
 
 import com.xemantic.anthropic.cache.CacheControl
+import com.xemantic.anthropic.content.ToolResult
 import com.xemantic.anthropic.tool.BuiltInTool
-import com.xemantic.anthropic.tool.ToolResult
 import com.xemantic.anthropic.tool.ToolInput
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName

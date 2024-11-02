@@ -4,10 +4,10 @@ import com.xemantic.anthropic.error.AnthropicException
 import com.xemantic.anthropic.error.ErrorResponse
 import com.xemantic.anthropic.event.Event
 import com.xemantic.anthropic.cache.CacheControl
+import com.xemantic.anthropic.content.ToolUse
 import com.xemantic.anthropic.message.MessageRequest
 import com.xemantic.anthropic.message.MessageResponse
 import com.xemantic.anthropic.tool.BuiltInTool
-import com.xemantic.anthropic.tool.ToolUse
 import com.xemantic.anthropic.tool.Tool
 import com.xemantic.anthropic.tool.ToolInput
 import io.ktor.client.HttpClient
@@ -27,7 +27,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 
@@ -172,7 +172,14 @@ class Anthropic internal constructor(
         is MessageResponse -> response.apply {
           content.filterIsInstance<ToolUse>()
             .forEach { toolUse ->
-              toolUse.tool = toolMap[toolUse.name]!!
+              val tool = toolMap[toolUse.name]
+              if (tool != null) {
+                toolUse.tool = tool
+              } else {
+                // Sometimes it happens that Claude is sending non-defined tool name in tool use
+                // TODO in the future it should go to the stderr
+                println("Error!!! Unexpected tool use: ${toolUse.name}")
+              }
             }
         }
         is ErrorResponse -> throw AnthropicException(
@@ -206,8 +213,9 @@ class Anthropic internal constructor(
         }
       ) {
         incoming
-          .filter { it.data != null }
-          .map { anthropicJson.decodeFromString<Event>(it.data!!) }
+          .map { it.data }
+          .filterNotNull()
+          .map { anthropicJson.decodeFromString<Event>(it) }
           .collect {
             emit(it)
           }

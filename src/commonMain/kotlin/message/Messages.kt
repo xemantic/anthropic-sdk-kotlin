@@ -3,7 +3,7 @@ package com.xemantic.anthropic.message
 import com.xemantic.anthropic.Model
 import com.xemantic.anthropic.Response
 import com.xemantic.anthropic.cache.CacheControl
-import com.xemantic.anthropic.text.Text
+import com.xemantic.anthropic.content.Text
 import com.xemantic.anthropic.tool.Tool
 import com.xemantic.anthropic.tool.ToolChoice
 import com.xemantic.anthropic.tool.ToolInput
@@ -110,7 +110,7 @@ data class MessageRequest(
         "No tool with such name defined in Anthropic client: $name"
       }
       tools = listOf(tool)
-      toolChoice = ToolChoice.Tool(name = tool.name)
+      toolChoice = ToolChoice.Tool(name = tool.name, disableParallelToolUse = true)
     }
 
     fun messages(vararg messages: Message) {
@@ -215,7 +215,7 @@ data class System(
 ) {
 
   enum class Type {
-    @SerialName("text")
+    @SerialName("content/text")
     TEXT
   }
 

@@ -1,5 +1,6 @@
 package com.xemantic.anthropic.tool
 
+import com.xemantic.anthropic.content.ToolResult
 import com.xemantic.anthropic.schema.Description
 import kotlinx.serialization.Transient
 
@@ -15,7 +16,9 @@ data class FibonacciTool(val n: Int): ToolInput {
 
   override suspend fun use(
     toolUseId: String,
-  ) = ToolResult(toolUseId, "${fibonacci(n)}")
+  ) = ToolResult(toolUseId) {
+    +"${fibonacci(n)}"
+  }
 
 }
 
@@ -37,10 +40,9 @@ data class Calculator(
     DIVIDE({ a, b -> a / b })
   }
 
-  override suspend fun use(toolUseId: String) = ToolResult(
-    toolUseId,
-    operation.calculate(a, b).toString()
-  )
+  override suspend fun use(toolUseId: String) = ToolResult(toolUseId) {
+    +operation.calculate(a, b).toString()
+  }
 
 }
 
@@ -69,9 +71,11 @@ data class DatabaseQuery(
 
   override suspend fun use(
     toolUseId: String
-  ) = ToolResult(
-    toolUseId,
-    text = database.execute(query).joinToString()
-  )
+  ): ToolResult {
+    val result = database.execute(query).joinToString()
+    return ToolResult(toolUseId) {
+      +result
+    }
+  }
 
 }

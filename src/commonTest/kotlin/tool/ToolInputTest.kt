@@ -1,6 +1,7 @@
 package com.xemantic.anthropic.tool
 
 import com.xemantic.anthropic.cache.CacheControl
+import com.xemantic.anthropic.content.ToolResult
 import com.xemantic.anthropic.schema.Description
 import com.xemantic.anthropic.schema.JsonSchema
 import com.xemantic.anthropic.schema.JsonSchemaProperty
@@ -11,7 +12,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlin.test.Test
 
-class UsableToolTest {
+class ToolInputTest {
 
   @AnthropicTool("TestTool")
   @Description("Test tool receiving a message and outputting it back")
@@ -21,7 +22,7 @@ class UsableToolTest {
   ) : ToolInput {
     override suspend fun use(
       toolUseId: String
-    ) = ToolResult(toolUseId, message)
+    ) = ToolResult(toolUseId) { +message }
   }
 
   @Test
@@ -68,13 +69,13 @@ class UsableToolTest {
   class NoAnnotationTool : ToolInput {
     override suspend fun use(
       toolUseId: String
-    ) = ToolResult(toolUseId, "nothing")
+    ) = ToolResult(toolUseId)
   }
 
   @Test
   fun shouldFailToCreateToolWithoutAnthropicToolAnnotation() {
     shouldThrowWithMessage<SerializationException>(
-      "Cannot find serializer for class com.xemantic.anthropic.tool.UsableToolTest\$NoAnnotationTool, " +
+      "Cannot find serializer for class com.xemantic.anthropic.tool.ToolInputTest\$NoAnnotationTool, " +
           "make sure that it is annotated with @AnthropicTool and kotlin.serialization plugin is enabled for the project"
     ) {
       Tool<NoAnnotationTool>()
@@ -85,13 +86,13 @@ class UsableToolTest {
   class OnlySerializableAnnotationTool : ToolInput {
     override suspend fun use(
       toolUseId: String
-    ) = ToolResult(toolUseId, "nothing")
+    ) = ToolResult(toolUseId)
   }
 
   @Test
   fun shouldFailToCreateToolWithOnlySerializableAnnotation() {
     shouldThrowWithMessage<SerializationException>(
-      "The class com.xemantic.anthropic.tool.UsableToolTest\$OnlySerializableAnnotationTool must be annotated with @AnthropicTool"
+      "The class com.xemantic.anthropic.tool.ToolInputTest\$OnlySerializableAnnotationTool must be annotated with @AnthropicTool"
     ) {
       Tool<OnlySerializableAnnotationTool>()
     }
