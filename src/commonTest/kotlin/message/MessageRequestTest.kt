@@ -78,6 +78,7 @@ class MessageRequestTest {
     """.trimIndent()
   }
 
+  @Suppress("unused") // it is used by the serializer
   enum class TemperatureUnit {
     @SerialName("celsius")
     CELSIUS,

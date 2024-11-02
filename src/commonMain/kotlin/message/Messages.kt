@@ -88,7 +88,7 @@ data class MessageRequest(
 
     /**
      * Sets both, the [tools] list and the [toolChoice] with
-     * just one tool to use, forcing the API to respond with the [com.xemantic.anthropic.tool.ToolUse].
+     * just one tool to use, forcing the API to respond with the [com.xemantic.anthropic.content.ToolUse].
      */
     inline fun <reified T : ToolInput> singleTool() {
       val name = toolName<T>()
@@ -103,7 +103,7 @@ data class MessageRequest(
     /**
      * Sets both, the [tools] list and the [toolChoice] with
      * just one tool to use, forcing the API to respond with the
-     * [com.xemantic.anthropic.tool.ToolUse] instance.
+     * [com.xemantic.anthropic.content.ToolUse] instance.
      */
     fun chooseTool(name: String) {
       val tool = requireNotNull(toolMap[name]) {
