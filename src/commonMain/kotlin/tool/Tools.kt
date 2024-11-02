@@ -33,13 +33,6 @@ abstract class Tool {
   @PublishedApi
   internal lateinit var inputInitializer: ToolInput.() -> Unit
 
-  inline fun <reified T: ToolInput> initialize(
-    noinline block: T.() -> Unit
-  ) {
-    @Suppress("UNCHECKED_CAST")
-    inputInitializer = block as ToolInput.() -> Unit
-  }
-
 }
 
 @Serializable
@@ -73,7 +66,13 @@ abstract class BuiltInTool(
  * with a given tool use ID. The implementation of the [use] method should
  * contain the logic for executing the tool and returning the [ToolResult].
  */
-interface ToolInput {
+abstract class ToolInput() {
+
+  private lateinit var block: suspend ToolResult.Builder.() -> Unit
+
+  fun use(block: suspend ToolResult.Builder.() -> Unit) {
+    this.block = block
+  }
 
   /**
    * Executes the tool and returns the result.
@@ -81,7 +80,11 @@ interface ToolInput {
    * @param toolUseId A unique identifier for this particular use of the tool.
    * @return A [ToolResult] containing the outcome of executing the tool.
    */
-  suspend fun use(toolUseId: String): ToolResult
+  suspend fun use(toolUseId: String): ToolResult {
+    return ToolResult(toolUseId) {
+      block(this)
+    }
+  }
 
 }
 

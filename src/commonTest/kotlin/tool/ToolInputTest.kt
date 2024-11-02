@@ -1,7 +1,6 @@
 package com.xemantic.anthropic.tool
 
 import com.xemantic.anthropic.cache.CacheControl
-import com.xemantic.anthropic.content.ToolResult
 import com.xemantic.anthropic.schema.Description
 import com.xemantic.anthropic.schema.JsonSchema
 import com.xemantic.anthropic.schema.JsonSchemaProperty
@@ -19,10 +18,12 @@ class ToolInputTest {
   class TestToolInput(
     @Description("the message")
     val message: String
-  ) : ToolInput {
-    override suspend fun use(
-      toolUseId: String
-    ) = ToolResult(toolUseId) { +message }
+  ) : ToolInput() {
+    init {
+      use {
+        +message
+      }
+    }
   }
 
   @Test
@@ -66,11 +67,7 @@ class ToolInputTest {
     }
   }
 
-  class NoAnnotationTool : ToolInput {
-    override suspend fun use(
-      toolUseId: String
-    ) = ToolResult(toolUseId)
-  }
+  class NoAnnotationTool : ToolInput()
 
   @Test
   fun shouldFailToCreateToolWithoutAnthropicToolAnnotation() {
@@ -83,11 +80,7 @@ class ToolInputTest {
   }
 
   @Serializable
-  class OnlySerializableAnnotationTool : ToolInput {
-    override suspend fun use(
-      toolUseId: String
-    ) = ToolResult(toolUseId)
-  }
+  class OnlySerializableAnnotationTool : ToolInput()
 
   @Test
   fun shouldFailToCreateToolWithOnlySerializableAnnotation() {

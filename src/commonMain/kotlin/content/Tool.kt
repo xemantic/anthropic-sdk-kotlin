@@ -10,7 +10,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import kotlinx.serialization.json.JsonObject
-import kotlin.collections.plus
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
@@ -69,27 +68,16 @@ data class ToolResult(
   override val cacheControl: CacheControl? = null
 ) : Content() {
 
-  class Builder {
+  class Builder : ContentBuilder {
 
-    var content: List<Content> = emptyList()
+    override val content: MutableList<Content> = mutableListOf()
+
     var isError: Boolean? = null
     var cacheControl: CacheControl? = null
 
-    fun content(message: String) {
-      content = listOf(Text(text = message))
-    }
-
     fun error(message: String) {
-      content(message)
+      +message
       isError = true
-    }
-
-    operator fun List<Content>.unaryPlus() {
-      content += this
-    }
-
-    operator fun String.unaryPlus() {
-      content(this)
     }
 
   }
@@ -97,7 +85,7 @@ data class ToolResult(
 }
 
 @OptIn(ExperimentalContracts::class)
-fun ToolResult(
+inline fun ToolResult(
   toolUseId: String,
   block: ToolResult.Builder.() -> Unit = {}
 ): ToolResult {
@@ -105,7 +93,7 @@ fun ToolResult(
     callsInPlace(block, InvocationKind.EXACTLY_ONCE)
   }
   val builder = ToolResult.Builder()
-  builder.apply(block)
+  block(builder)
   return ToolResult(
     toolUseId = toolUseId,
     content = builder.content.toNullIfEmpty(),

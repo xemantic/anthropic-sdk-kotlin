@@ -1,6 +1,5 @@
 package com.xemantic.anthropic.message
 
-import com.xemantic.anthropic.content.ToolResult
 import com.xemantic.anthropic.message.MessageRequestTest.TemperatureUnit
 import com.xemantic.anthropic.schema.Description
 import com.xemantic.anthropic.test.testJson
@@ -25,12 +24,12 @@ data class GetWeather(
   val location: String,
   @Description("The unit of temperature, either 'celsius' or 'fahrenheit'")
   val unit: TemperatureUnit? = null
-) : ToolInput {
-
-  override suspend fun use(
-    toolUseId: String
-  ) = ToolResult(toolUseId) { +"42" }
-
+) : ToolInput() {
+  init {
+    use {
+      +"42"
+    }
+  }
 }
 
 /**

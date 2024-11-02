@@ -3,7 +3,7 @@ package com.xemantic.anthropic.message
 import com.xemantic.anthropic.Model
 import com.xemantic.anthropic.Response
 import com.xemantic.anthropic.cache.CacheControl
-import com.xemantic.anthropic.content.Text
+import com.xemantic.anthropic.content.ContentBuilder
 import com.xemantic.anthropic.tool.Tool
 import com.xemantic.anthropic.tool.ToolChoice
 import com.xemantic.anthropic.tool.ToolInput
@@ -176,21 +176,11 @@ data class Message(
   val content: List<Content>
 ) {
 
-  class Builder {
+  class Builder : ContentBuilder {
+
+    override val content = mutableListOf<Content>()
+
     var role = Role.USER
-    val content = mutableListOf<Content>()
-
-    operator fun Content.unaryPlus() {
-      content += this
-    }
-
-    operator fun List<Content>.unaryPlus() {
-      content += this
-    }
-
-    operator fun String.unaryPlus() {
-      content += Text(this)
-    }
 
     fun build() = Message(
       role = role,

@@ -1,25 +1,22 @@
 package com.xemantic.anthropic.tool
 
-import com.xemantic.anthropic.content.ToolResult
 import com.xemantic.anthropic.schema.Description
 import kotlinx.serialization.Transient
 
+tailrec fun fibonacci(
+  n: Int, a: Int = 0, b: Int = 1
+): Int = when (n) {
+  0 -> a; 1 -> b; else -> fibonacci(n - 1, b, a + b)
+}
+
 @AnthropicTool("FibonacciTool")
 @Description("Calculate Fibonacci number n")
-data class FibonacciTool(val n: Int): ToolInput {
-
-  tailrec fun fibonacci(
-    n: Int, a: Int = 0, b: Int = 1
-  ): Int = when (n) {
-    0 -> a; 1 -> b; else -> fibonacci(n - 1, b, a + b)
+data class FibonacciTool(val n: Int) : ToolInput() {
+  init {
+    use {
+      +fibonacci(n)
+    }
   }
-
-  override suspend fun use(
-    toolUseId: String,
-  ) = ToolResult(toolUseId) {
-    +"${fibonacci(n)}"
-  }
-
 }
 
 @AnthropicTool("Calculator")
@@ -28,7 +25,7 @@ data class Calculator(
   val operation: Operation,
   val a: Double,
   val b: Double
-): ToolInput {
+): ToolInput() {
 
   @Suppress("unused") // it is used, but by Anthropic, so we skip the warning
   enum class Operation(
@@ -40,8 +37,10 @@ data class Calculator(
     DIVIDE({ a, b -> a / b })
   }
 
-  override suspend fun use(toolUseId: String) = ToolResult(toolUseId) {
-    +operation.calculate(a, b).toString()
+  init {
+    use {
+      +operation.calculate(a, b)
+    }
   }
 
 }
@@ -64,17 +63,14 @@ class TestDatabase : Database {
 @Description("Executes database query")
 data class DatabaseQuery(
   val query: String
-) : ToolInput {
+) : ToolInput() {
 
   @Transient
   internal lateinit var database: Database
 
-  override suspend fun use(
-    toolUseId: String
-  ): ToolResult {
-    val result = database.execute(query).joinToString()
-    return ToolResult(toolUseId) {
-      +result
+  init {
+    use {
+      +database.execute(query).joinToString()
     }
   }
 

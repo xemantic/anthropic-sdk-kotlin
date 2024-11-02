@@ -95,6 +95,7 @@ class Anthropic internal constructor(
 
     var tools: List<Tool> = emptyList()
 
+    // TODO in the future this should be rather Tool builder
     inline fun <reified T : ToolInput> tool(
       cacheControl: CacheControl? = null,
       noinline inputInitializer: T.() -> Unit = {}
