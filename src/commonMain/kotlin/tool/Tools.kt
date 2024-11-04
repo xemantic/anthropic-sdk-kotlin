@@ -15,7 +15,6 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.Transient
 import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.serializer
-import java.lang.IllegalStateException
 
 @Serializable
 @JsonClassDiscriminator("name")
@@ -39,7 +38,6 @@ abstract class Tool {
 
 @Serializable
 @PublishedApi
-@OptIn(ExperimentalSerializationApi::class)
 internal data class DefaultTool(
   override val name: String,
   override val description: String? = null,
@@ -50,7 +48,6 @@ internal data class DefaultTool(
 ) : Tool()
 
 @Serializable
-@OptIn(ExperimentalSerializationApi::class)
 abstract class BuiltInTool(
   override val name: String,
   val type: String,
@@ -68,7 +65,7 @@ abstract class BuiltInTool(
  * with a given tool use ID. The implementation of the [use] method should
  * contain the logic for executing the tool and returning the [ToolResult].
  */
-abstract class ToolInput() {
+abstract class ToolInput {
 
   private var block: suspend ToolResult.Builder.() -> Any? = {}
 
@@ -95,7 +92,6 @@ abstract class ToolInput() {
 
 }
 
-@OptIn(ExperimentalSerializationApi::class)
 inline fun <reified T : ToolInput> toolName(): String = serializer<T>().name()
 
 @OptIn(ExperimentalSerializationApi::class)
