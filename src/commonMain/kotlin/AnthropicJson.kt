@@ -1,12 +1,12 @@
 package com.xemantic.anthropic
 
 import com.xemantic.anthropic.batch.MessageBatchResponse
+import com.xemantic.anthropic.content.Content
 import com.xemantic.anthropic.content.Document
 import com.xemantic.anthropic.error.ErrorResponse
 import com.xemantic.anthropic.content.Image
-import com.xemantic.anthropic.message.Content
-import com.xemantic.anthropic.message.MessageResponse
 import com.xemantic.anthropic.content.Text
+import com.xemantic.anthropic.message.MessageResponse
 import com.xemantic.anthropic.content.ToolResult
 import com.xemantic.anthropic.content.ToolUse
 import com.xemantic.anthropic.tool.BuiltInTool

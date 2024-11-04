@@ -3,6 +3,7 @@ package com.xemantic.anthropic.message
 import com.xemantic.anthropic.Model
 import com.xemantic.anthropic.Response
 import com.xemantic.anthropic.cache.CacheControl
+import com.xemantic.anthropic.content.Content
 import com.xemantic.anthropic.content.ContentBuilder
 import com.xemantic.anthropic.tool.Tool
 import com.xemantic.anthropic.tool.ToolChoice
@@ -205,19 +206,9 @@ data class System(
 ) {
 
   enum class Type {
-    @SerialName("content/text")
+    @SerialName("text")
     TEXT
   }
-
-}
-
-@Serializable
-@JsonClassDiscriminator("type")
-@OptIn(ExperimentalSerializationApi::class)
-abstract class Content {
-
-  @SerialName("cache_control")
-  abstract val cacheControl: CacheControl?
 
 }
 

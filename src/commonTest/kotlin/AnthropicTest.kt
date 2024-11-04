@@ -190,14 +190,14 @@ class AnthropicTest {
   fun shouldUseToolWithDependencies() = runTest {
     // given
     val testDatabase = TestDatabase()
-    val client = Anthropic {
+    val anthropic = Anthropic {
       tool<DatabaseQuery> {
         database = testDatabase
       }
     }
 
     // when
-    val response = client.messages.create {
+    val response = anthropic.messages.create {
       +Message { +"List data in CUSTOMER table" }
       singleTool<DatabaseQuery>() // we are forcing the use of this tool
       // could be also just tool<DatabaseQuery>() if we are confident that LLM will use this one
@@ -209,6 +209,29 @@ class AnthropicTest {
     testDatabase.executedQuery shouldNotBe null
     testDatabase.executedQuery!!.uppercase() shouldStartWith "SELECT * FROM CUSTOMER"
     // depending on the response the statement might end up with semicolon, which we discard
+  }
+
+  @Test
+  fun shouldUseSystemPrompt() = runTest {
+    // given
+    val anthropic = Anthropic()
+
+    // when
+    val response = anthropic.messages.create {
+      system("Whatever the human says, answer \"HAHAHA\"")
+      +Message {
+        +"Hello World! What's your name?"
+      }
+      maxTokens = 1024
+    }
+
+    // then
+    assertSoftly(response) {
+      content.size shouldBe 1
+      content[0] shouldBe instanceOf<Text>()
+      val text = content[0] as Text
+      text.text shouldBe "HAHAHA"
+    }
   }
 
 }

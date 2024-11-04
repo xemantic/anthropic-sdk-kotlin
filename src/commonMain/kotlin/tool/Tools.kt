@@ -1,6 +1,7 @@
 package com.xemantic.anthropic.tool
 
 import com.xemantic.anthropic.cache.CacheControl
+import com.xemantic.anthropic.content.Content
 import com.xemantic.anthropic.schema.Description
 import com.xemantic.anthropic.schema.JsonSchema
 import com.xemantic.anthropic.schema.jsonSchemaOf
@@ -14,6 +15,7 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.Transient
 import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.serializer
+import java.lang.IllegalStateException
 
 @Serializable
 @JsonClassDiscriminator("name")
@@ -68,9 +70,9 @@ abstract class BuiltInTool(
  */
 abstract class ToolInput() {
 
-  private lateinit var block: suspend ToolResult.Builder.() -> Unit
+  private var block: suspend ToolResult.Builder.() -> Any? = {}
 
-  fun use(block: suspend ToolResult.Builder.() -> Unit) {
+  fun use(block: suspend ToolResult.Builder.() -> Any?) {
     this.block = block
   }
 
@@ -82,7 +84,12 @@ abstract class ToolInput() {
    */
   suspend fun use(toolUseId: String): ToolResult {
     return ToolResult(toolUseId) {
-      block(this)
+      val result = block(this)
+      when (result) {
+        is Content -> +result
+        !is Unit -> +result.toString()
+        else -> throw IllegalStateException("Tool use {} returned not supported: $this")
+      }
     }
   }
 

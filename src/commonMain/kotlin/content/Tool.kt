@@ -2,7 +2,6 @@ package com.xemantic.anthropic.content
 
 import com.xemantic.anthropic.anthropicJson
 import com.xemantic.anthropic.cache.CacheControl
-import com.xemantic.anthropic.message.Content
 import com.xemantic.anthropic.message.toNullIfEmpty
 import com.xemantic.anthropic.tool.Tool
 import com.xemantic.anthropic.tool.ToolInput

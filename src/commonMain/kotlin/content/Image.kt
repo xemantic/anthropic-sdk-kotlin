@@ -1,7 +1,6 @@
 package com.xemantic.anthropic.content
 
 import com.xemantic.anthropic.cache.CacheControl
-import com.xemantic.anthropic.message.Content
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.io.encoding.Base64

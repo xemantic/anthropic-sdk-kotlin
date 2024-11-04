@@ -14,7 +14,7 @@ tailrec fun fibonacci(
 data class FibonacciTool(val n: Int) : ToolInput() {
   init {
     use {
-      +fibonacci(n)
+      fibonacci(n)
     }
   }
 }
@@ -39,7 +39,7 @@ data class Calculator(
 
   init {
     use {
-      +operation.calculate(a, b)
+      operation.calculate(a, b)
     }
   }
 
@@ -70,7 +70,7 @@ data class DatabaseQuery(
 
   init {
     use {
-      +database.execute(query).joinToString()
+      database.execute(query).joinToString()
     }
   }
 
