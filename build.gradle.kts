@@ -160,16 +160,15 @@ tasks.withType<DependencyUpdatesTask> {
 }
 
 tasks.withType<Test> {
+  enabled = !skipTests
   testLogging {
     events(
-      TestLogEvent.PASSED,
       TestLogEvent.SKIPPED,
       TestLogEvent.FAILED
     )
     showStackTraces = true
     exceptionFormat = TestExceptionFormat.FULL
   }
-  enabled = !skipTests
 }
 
 
