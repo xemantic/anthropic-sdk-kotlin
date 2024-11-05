@@ -10,8 +10,7 @@ import javax.imageio.ImageIO
 object JvmComputerService : ComputerService {
 
   override fun screenshot() = Image {
-    data = takeScreenshot()
-    mediaType = Image.MediaType.IMAGE_JPEG
+    bytes = takeScreenshot()
   }
 
 }

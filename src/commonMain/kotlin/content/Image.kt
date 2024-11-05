@@ -3,8 +3,6 @@ package com.xemantic.anthropic.content
 import com.xemantic.anthropic.cache.CacheControl
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
 
 @Serializable
 @SerialName("image")
@@ -40,32 +38,32 @@ data class Image(
 
   }
 
-  class Builder {
-    var data: ByteArray? = null
-    var mediaType: MediaType? = null
+  class Builder : DataBuilder {
+    override var bytes: ByteArray? = null
     var cacheControl: CacheControl? = null
   }
 
 }
 
-// TODO move image magic here from Claudine to further simplify the API
+fun MagicNumber.toImageMediaType(): Image.MediaType? = when (this) {
+  MagicNumber.JPEG -> Image.MediaType.IMAGE_JPEG
+  MagicNumber.PNG -> Image.MediaType.IMAGE_PNG
+  MagicNumber.GIF -> Image.MediaType.IMAGE_GIF
+  MagicNumber.WEBP -> Image.MediaType.IMAGE_WEBP
+  else -> null
+}
 
-// TODO write it functional way
 fun Image(block: Image.Builder.() -> Unit): Image {
   val builder = Image.Builder()
   block(builder)
+  val magicNumber = builder.magicNumber()
+  val mediaType = requireNotNull(magicNumber.toImageMediaType()) {
+    "provided bytes do not contain any supported Image format"
+  }
   return Image(
     source = Image.Source(
-      mediaType = requireNotNull(builder.mediaType) {
-        "Image 'mediaType' must be defined"
-      },
-      data =
-        @OptIn(ExperimentalEncodingApi::class)
-        Base64.encode(
-          requireNotNull(builder.data) {
-            "Image 'data' must be defined"
-          }
-        )
+      mediaType = mediaType,
+      data = builder.toBase64()
     )
   )
 }
