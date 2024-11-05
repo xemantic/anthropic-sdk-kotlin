@@ -45,6 +45,8 @@ data class Image(
 
 }
 
+val ByteArray.isImage get() = this.findMagicNumber()?.toImageMediaType() != null
+
 fun MagicNumber.toImageMediaType(): Image.MediaType? = when (this) {
   MagicNumber.JPEG -> Image.MediaType.IMAGE_JPEG
   MagicNumber.PNG -> Image.MediaType.IMAGE_PNG

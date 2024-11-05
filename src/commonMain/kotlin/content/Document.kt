@@ -40,6 +40,8 @@ data class Document(
 
 }
 
+val ByteArray.isDocument get() = this.findMagicNumber()?.toDocumentMediaType() != null
+
 fun MagicNumber.toDocumentMediaType(): Document.MediaType? = when (this) {
   MagicNumber.PDF -> Document.MediaType.APPLICATION_PDF
   else -> null

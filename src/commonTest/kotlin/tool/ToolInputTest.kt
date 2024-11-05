@@ -21,7 +21,7 @@ class ToolInputTest {
   ) : ToolInput() {
     init {
       use {
-        +message
+        message
       }
     }
   }

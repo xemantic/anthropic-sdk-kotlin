@@ -136,7 +136,7 @@ data class WeatherTool(val location: String): ToolInput() {
   init {
     use {
       // in the real world it should use some external service
-      +"The weather is 73f"
+      "The weather is 73f"
     }
   }
 }
@@ -199,7 +199,7 @@ data class QueryDatabase(val sql: String): ToolInput() {
 
   init {
     use {
-      +connection.prepareStatement(sql).use { statement ->
+      connection.prepareStatement(sql).use { statement ->
         statement.executeQuery().use { resultSet ->
           resultSet.toString()
         }

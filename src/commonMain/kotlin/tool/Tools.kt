@@ -82,10 +82,13 @@ abstract class ToolInput {
   suspend fun use(toolUseId: String): ToolResult {
     return ToolResult(toolUseId) {
       val result = block(this)
-      when (result) {
-        is Content -> +result
-        !is Unit -> +result.toString()
-        else -> throw IllegalStateException("Tool use {} returned not supported: $this")
+      if (result != null) {
+        when (result) {
+          is Content -> +result
+          is Unit -> {} // nothing to do
+          !is Unit -> +result.toString()
+          else -> throw IllegalStateException("Tool use {} returned not supported: $this")
+        }
       }
     }
   }
