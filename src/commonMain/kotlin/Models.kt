@@ -30,6 +30,28 @@ enum class Model(
     )
   ),
 
+  CLAUDE_3_5_HAIKU(
+    id = "claude-3-5-haiku-latest",
+    contextWindow = 200000,
+    maxOutput = 8182,
+    messageBatchesApi = true,
+    cost = Cost(
+      inputTokens = 1.0,
+      outputTokens = 5.0
+    )
+  ),
+
+  CLAUDE_3_5_HAIKU_20241022(
+    id = "claude-3-5-haiku-20241022",
+    contextWindow = 200000,
+    maxOutput = 8182,
+    messageBatchesApi = true,
+    cost = Cost(
+      inputTokens = 1.0,
+      outputTokens = 5.0
+    )
+  ),
+
   CLAUDE_3_5_SONNET_20240620(
     id = "claude-3-5-sonnet-20240620",
     contextWindow = 200000,
