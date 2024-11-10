@@ -27,7 +27,7 @@ data class GetWeather(
 ) : ToolInput() {
   init {
     use {
-      +"42"
+      "42"
     }
   }
 }
