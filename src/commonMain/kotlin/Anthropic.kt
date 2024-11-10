@@ -10,6 +10,8 @@ import com.xemantic.anthropic.message.MessageResponse
 import com.xemantic.anthropic.tool.BuiltInTool
 import com.xemantic.anthropic.tool.Tool
 import com.xemantic.anthropic.tool.ToolInput
+import com.xemantic.anthropic.usage.Cost
+import com.xemantic.anthropic.usage.Usage
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.*
@@ -26,6 +28,8 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.atomicfu.atomic
+import kotlinx.atomicfu.update
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
@@ -66,7 +70,8 @@ fun Anthropic(
     defaultMaxTokens = config.defaultMaxTokens,
     directBrowserAccess = config.directBrowserAccess,
     logLevel = if (config.logHttp) LogLevel.ALL else LogLevel.NONE,
-    toolMap = config.tools.associateBy { it.name }
+    modelMap = config.modelMap,
+    toolMap = config.tools.associateBy { it.name },
   )
 } // TODO this can be a second constructor, then toolMap can be private
 
@@ -79,6 +84,7 @@ class Anthropic internal constructor(
   val defaultMaxTokens: Int,
   val directBrowserAccess: Boolean,
   val logLevel: LogLevel,
+  private val modelMap: Map<String, AnthropicModel>,
   private val toolMap: Map<String, Tool>
 ) {
 
@@ -94,6 +100,8 @@ class Anthropic internal constructor(
     var logHttp: Boolean = false
 
     var tools: List<Tool> = emptyList()
+
+    var modelMap: Map<String, AnthropicModel> = Model.entries.associateBy { it.id }
 
     // TODO in the future this should be rather Tool builder
     inline fun <reified T : ToolInput> tool(
@@ -182,6 +190,7 @@ class Anthropic internal constructor(
                 println("Error!!! Unexpected tool use: ${toolUse.name}")
               }
             }
+          updateTotals()
         }
         is ErrorResponse -> throw AnthropicException(
           error = response.error,
@@ -217,8 +226,12 @@ class Anthropic internal constructor(
           .map { it.data }
           .filterNotNull()
           .map { anthropicJson.decodeFromString<Event>(it) }
-          .collect {
-            emit(it)
+          .collect { event ->
+            // TODO we need better way of handling subsequent deltas with usage
+            if (event is Event.MessageStart) {
+              event.message.updateTotals()
+            }
+            emit(event)
           }
       }
     }
@@ -227,5 +240,21 @@ class Anthropic internal constructor(
 
   val messages = Messages()
 
-}
+  private val _totalUsage = atomic(Usage.ZERO)
+  val totalUsage: Usage get() = _totalUsage.value
 
+  private val _totalCost = atomic(Cost.ZERO)
+  val totalCost: Cost get() = _totalCost.value
+
+  private val MessageResponse.anthropicModel: AnthropicModel get() = requireNotNull(
+    modelMap[model]
+  ) {
+    "The model returned in the response is not known to Anthropic API client: $id"
+  }
+
+  private fun MessageResponse.updateTotals() {
+    _totalUsage.update { it + usage }
+    _totalCost.update { it + (usage.cost(anthropicModel) / Model.PRICE_UNIT) }
+  }
+
+}

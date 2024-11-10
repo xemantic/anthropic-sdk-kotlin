@@ -1,12 +1,33 @@
 package com.xemantic.anthropic
 
-enum class Model(
-  val id: String,
-  val contextWindow: Int,
-  val maxOutput: Int,
-  val messageBatchesApi: Boolean,
+import com.xemantic.anthropic.usage.Cost
+
+/**
+ * The model used by the API.
+ * E.g., Claude LLM `sonnet`, `opus`, `haiku` family.
+ */
+interface AnthropicModel {
+
+  val id: String
+  val contextWindow: Int
+  val maxOutput: Int
+  val messageBatchesApi: Boolean
   val cost: Cost
-) {
+
+}
+
+/**
+ * Predefined models supported by Anthropic API.
+ *
+ * It could include Vertex AI (Google Cloud), or Bedrock (AWS) models in the future.
+ */
+enum class Model(
+  override val id: String,
+  override val contextWindow: Int,
+  override val maxOutput: Int,
+  override val messageBatchesApi: Boolean,
+  override val cost: Cost
+) : AnthropicModel {
 
   CLAUDE_3_5_SONNET(
     id = "claude-3-5-sonnet-latest",
@@ -107,16 +128,12 @@ enum class Model(
     )
   );
 
-  /**
-   * Cost per MTok
-   */
-  data class Cost(
-    val inputTokens: Double,
-    val outputTokens: Double
-  )
-
   companion object {
+
     val DEFAULT: Model = CLAUDE_3_5_SONNET
+
+    const val PRICE_UNIT: Double = 1000000.0
+
   }
 
 }

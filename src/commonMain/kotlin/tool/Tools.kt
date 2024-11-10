@@ -1,5 +1,6 @@
 package com.xemantic.anthropic.tool
 
+import com.xemantic.anthropic.anthropicJson
 import com.xemantic.anthropic.cache.CacheControl
 import com.xemantic.anthropic.content.Content
 import com.xemantic.anthropic.schema.Description
@@ -13,6 +14,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.Transient
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.serializer
 
@@ -65,8 +67,10 @@ abstract class BuiltInTool(
  * with a given tool use ID. The implementation of the [use] method should
  * contain the logic for executing the tool and returning the [ToolResult].
  */
+@Serializable
 abstract class ToolInput {
 
+  @Transient
   private var block: suspend ToolResult.Builder.() -> Any? = {}
 
   fun use(block: suspend ToolResult.Builder.() -> Any?) {
@@ -82,12 +86,10 @@ abstract class ToolInput {
   suspend fun use(toolUseId: String): ToolResult {
     return ToolResult(toolUseId) {
       val result = block(this)
-      if (result != null) {
+      if ((result != null) && (result !is Unit)) {
         when (result) {
           is Content -> +result
-          is Unit -> {} // nothing to do
-          !is Unit -> +result.toString()
-          else -> throw IllegalStateException("Tool use {} returned not supported: $this")
+          else -> +anthropicJson.encodeToString(result)
         }
       }
     }

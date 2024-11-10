@@ -5,6 +5,7 @@ javaTarget = "17"
 kotlin = "2.0.21"
 kotlinxCoroutines = "1.9.0"
 kotlinxDatetime = "0.6.1"
+kotlinxAtomicFu = "0.26.0"
 ktor = "3.0.1"
 kotest = "6.0.0.M1"
 
@@ -42,6 +43,7 @@ kotest-assertions-json = { module = "io.kotest:kotest-assertions-json", version.
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-plugin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 kotlin-plugin-power-assert = { id = "org.jetbrains.kotlin.plugin.power-assert", version.ref = "kotlin" }
+kotlinx-atomicfu = { id = "org.jetbrains.kotlinx.atomicfu", version.ref = "kotlinxAtomicFu" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokkaPlugin" }
 versions = { id = "com.github.ben-manes.versions", version.ref = "versionsPlugin" }
 publish = { id = "io.github.gradle-nexus.publish-plugin", version.ref = "publishPlugin" }

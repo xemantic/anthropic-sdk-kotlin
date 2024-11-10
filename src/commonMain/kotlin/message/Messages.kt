@@ -11,7 +11,6 @@ import com.xemantic.anthropic.tool.ToolInput
 import com.xemantic.anthropic.tool.toolName
 import com.xemantic.anthropic.usage.Usage
 import kotlinx.serialization.*
-import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlin.collections.mutableListOf
 
 /**

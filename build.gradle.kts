@@ -12,6 +12,7 @@ import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
 plugins {
   alias(libs.plugins.kotlin.multiplatform)
   alias(libs.plugins.kotlin.plugin.serialization)
+  alias(libs.plugins.kotlinx.atomicfu)
   alias(libs.plugins.kotlin.plugin.power.assert)
   alias(libs.plugins.dokka)
   alias(libs.plugins.versions)
@@ -92,6 +93,14 @@ kotlin {
   }
 
   sourceSets {
+
+    all {
+      languageSettings {
+        languageVersion = kotlinTarget.version
+        apiVersion = kotlinTarget.version
+        progressiveMode = true
+      }
+    }
 
     commonMain {
       dependencies {

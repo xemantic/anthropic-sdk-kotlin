@@ -13,6 +13,7 @@ import com.xemantic.anthropic.tool.TestDatabase
 import com.xemantic.anthropic.content.Text
 import com.xemantic.anthropic.content.ToolUse
 import io.kotest.assertions.assertSoftly
+import io.kotest.matchers.doubles.shouldBeLessThan
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -30,10 +31,10 @@ class AnthropicTest {
   @Test
   fun shouldReceiveAnIntroductionFromClaude() = runTest {
     // given
-    val client = Anthropic()
+    val anthropic = Anthropic()
 
     // when
-    val response = client.messages.create {
+    val response = anthropic.messages.create {
       +Message {
         +"Hello World! What's your name?"
       }
@@ -41,7 +42,7 @@ class AnthropicTest {
     }
 
     // then
-    assertSoftly(response) {
+    response.apply {
       role shouldBe Role.ASSISTANT
       model shouldBe "claude-3-5-sonnet-20241022"
       stopReason shouldBe StopReason.END_TURN
@@ -53,6 +54,22 @@ class AnthropicTest {
       usage.inputTokens shouldBe 15
       usage.outputTokens shouldBeGreaterThan 0
     }
+
+    anthropic.totalUsage.apply {
+      inputTokens shouldBe 15
+      outputTokens shouldBeGreaterThan 0
+      cacheReadInputTokens shouldBe 0
+      cacheCreationInputTokens shouldBe 0
+    }
+
+    anthropic.totalCost.apply {
+      inputTokens shouldBeLessThan 0.0000000001
+      outputTokens shouldBeLessThan 0.000000001
+      cacheReadInputTokens shouldBe 0.0
+      cacheCreationInputTokens shouldBe 0.0
+      total shouldBeLessThan 0.000000001
+    }
+
   }
 
   @Test
