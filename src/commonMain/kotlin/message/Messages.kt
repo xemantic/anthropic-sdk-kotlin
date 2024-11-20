@@ -35,7 +35,9 @@ data class Metadata(
 
 @Serializable
 data class MessageRequest(
-  val model: String,
+  val model: String? = null, // model has to be off on Vertex AI
+  @SerialName("anthropic_version")
+  val anthropicVersion: String? = null, // needed by Vertex AI
   val messages: List<Message>,
   @SerialName("max_tokens")
   val maxTokens: Int,
@@ -57,10 +59,11 @@ data class MessageRequest(
   class Builder internal constructor(
     defaultModel: String,
     defaultMaxTokens: Int,
+    private val vertexAi: Boolean,
     @PublishedApi
     internal val toolMap: Map<String, Tool>
   ) {
-    var model: String = defaultModel
+    var model: String? = if (vertexAi) null else defaultModel
     var maxTokens: Int = defaultMaxTokens
     var messages: List<Message> = emptyList()
     var metadata = null
@@ -138,6 +141,7 @@ data class MessageRequest(
 
     fun build(): MessageRequest = MessageRequest(
       model = model,
+      anthropicVersion = if (vertexAi) "vertex-2023-10-16" else model,
       maxTokens = maxTokens,
       messages = messages,
       metadata = metadata,
@@ -165,6 +169,7 @@ internal fun MessageRequest(
   val builder = MessageRequest.Builder(
     defaultModel = model.id,
     defaultMaxTokens = model.maxOutput,
+    vertexAi = true,
     toolMap = toolMap
   )
   block(builder)

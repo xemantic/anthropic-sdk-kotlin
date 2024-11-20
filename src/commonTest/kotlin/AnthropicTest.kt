@@ -30,7 +30,10 @@ class AnthropicTest {
   @Test
   fun shouldReceiveAnIntroductionFromClaude() = runTest {
     // given
-    val client = Anthropic()
+    val client = Anthropic {
+      apiBase = "https://us-east5-aiplatform.googleapis.com/v1/projects/aihack24ber-8517/locations/us-east5/publishers/anthropic/models/claude-3-5-sonnet-v2@20241022:streamRawPredict"
+      logHttp = true
+    }
 
     // when
     val response = client.messages.create {
@@ -221,6 +224,29 @@ class AnthropicTest {
       system("Whatever the human says, answer \"HAHAHA\"")
       +Message {
         +"Hello World! What's your name?"
+      }
+      maxTokens = 1024
+    }
+
+    // then
+    assertSoftly(response) {
+      content.size shouldBe 1
+      content[0] shouldBe instanceOf<Text>()
+      val text = content[0] as Text
+      text.text shouldBe "HAHAHA"
+    }
+  }
+
+  // TODO it should be rather JSON test
+  @Test
+  fun shouldProperlyEscapeControlCharacters() = runTest {
+    // given
+    val anthropic = Anthropic()
+
+    // when
+    val response = anthropic.messages.create {
+      +Message {
+        +"What is this control character: \u0002?"
       }
       maxTokens = 1024
     }

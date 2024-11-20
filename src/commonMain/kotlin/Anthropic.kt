@@ -1,5 +1,5 @@
 package com.xemantic.anthropic
-
+// TODO test use case when ToolResult is empty text -> intenral server error
 import com.xemantic.anthropic.error.AnthropicException
 import com.xemantic.anthropic.error.ErrorResponse
 import com.xemantic.anthropic.event.Event
@@ -66,6 +66,7 @@ fun Anthropic(
     defaultMaxTokens = config.defaultMaxTokens,
     directBrowserAccess = config.directBrowserAccess,
     logLevel = if (config.logHttp) LogLevel.ALL else LogLevel.NONE,
+    vertexAi = true,
     toolMap = config.tools.associateBy { it.name }
   )
 } // TODO this can be a second constructor, then toolMap can be private
@@ -79,6 +80,7 @@ class Anthropic internal constructor(
   val defaultMaxTokens: Int,
   val directBrowserAccess: Boolean,
   val logLevel: LogLevel,
+  val vertexAi: Boolean = true,
   private val toolMap: Map<String, Tool>
 ) {
 
@@ -140,7 +142,11 @@ class Anthropic internal constructor(
 
     defaultRequest {
       url(apiBase)
-      header("x-api-key", apiKey)
+      if (vertexAi) {
+        header("Authorization", "Bearer")
+      } else {
+        header("x-api-key", apiKey)
+      }
       header("anthropic-version", anthropicVersion)
       if (anthropicBeta != null) {
         header("anthropic-beta", anthropicBeta)
@@ -158,13 +164,17 @@ class Anthropic internal constructor(
       block: MessageRequest.Builder.() -> Unit
     ): MessageResponse {
 
+      // TODO consider this builder as inner class
       val request = MessageRequest.Builder(
         defaultModel,
         defaultMaxTokens,
+        vertexAi = true,
         toolMap
       ).apply(block).build()
 
-      val apiResponse = client.post("/v1/messages") {
+      val uri = ""
+//      val uri = "/v1/messages"
+      val apiResponse = client.post(uri) {
         contentType(ContentType.Application.Json)
         setBody(request)
       }
@@ -199,6 +209,7 @@ class Anthropic internal constructor(
       val request = MessageRequest.Builder(
         defaultModel,
         defaultMaxTokens,
+        vertexAi = true,
         toolMap
       ).apply {
         block(this)

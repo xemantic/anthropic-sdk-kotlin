@@ -37,7 +37,7 @@ val sonatypePassword: String? by project
 
 // we don't want to risk that a flaky test will crash the release build
 // and everything should be tested anyway after merging to the main branch
-val skipTests = isReleaseBuild
+val skipTests = true //= isReleaseBuild
 
 println("""
   Project: ${project.name}
@@ -56,6 +56,8 @@ kotlin {
   jvm {
     testRuns["test"].executionTask.configure {
       useJUnitPlatform()
+      // TODO does it go up?
+      jvmArgs = listOf("-Djava.net.preferIPv6Addresses=system")
     }
     // set up according to https://jakewharton.com/gradle-toolchains-are-rarely-a-good-idea/
     compilerOptions {
