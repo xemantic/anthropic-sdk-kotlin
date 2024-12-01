@@ -14,7 +14,7 @@ jobs:
       uses: actions/setup-java@v4.5.0
       with:
         distribution: 'temurin'
-        java-version: 22
+        java-version: 23
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4.2.1
