@@ -2,15 +2,15 @@
 kotlinTarget = "2.0"
 javaTarget = "17"
 
-kotlin = "2.0.21"
+kotlin = "2.1.0"
 kotlinxCoroutines = "1.9.0"
 kotlinxDatetime = "0.6.1"
 ktor = "3.0.1"
 kotest = "6.0.0.M1"
 
 # logging is not used at the moment, might be enabled later
-log4j = "2.24.1"
-jackson = "2.18.1"
+log4j = "2.24.2"
+jackson = "2.18.2"
 
 versionsPlugin = "0.51.0"
 dokkaPlugin = "1.9.20"
