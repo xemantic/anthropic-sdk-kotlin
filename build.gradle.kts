@@ -25,8 +25,8 @@ val javaTarget = libs.versions.javaTarget.get()
 val kotlinTarget = KotlinVersion.fromVersion(libs.versions.kotlinTarget.get())
 
 val isReleaseBuild = !project.version.toString().endsWith("-SNAPSHOT")
-//val jvmOnlyBuild: String? by project
-//val isJvmOnlyBuild: Boolean = (jvmOnlyBuild == null) || (jvmOnlyBuild!!.uppercase() == "true")
+val jvmOnlyBuild: String? by project
+val isJvmOnlyBuild: Boolean = (jvmOnlyBuild == null) || (jvmOnlyBuild!!.uppercase() == "true")
 val githubActor: String? by project
 val githubToken: String? by project
 val signingKey: String? by project
@@ -72,26 +72,27 @@ kotlin {
     }
   }
 
-  js {
-    // browser tests switched off for a moment
-    browser {
-      testTask {
-        // for unknown reason browser tests are failing
-        enabled = false
-        useKarma {
-          useChromeHeadless()
+  if (!isJvmOnlyBuild) {
+    js {
+      // browser tests switched off for a moment
+      browser {
+        testTask {
+          // for unknown reason browser tests are failing
+          enabled = false
+          useKarma {
+            useChromeHeadless()
+          }
         }
       }
-    }
-    nodejs {
-      testTask {
-        useMocha {
-          timeout = "20s"
+      nodejs {
+        testTask {
+          useMocha {
+            timeout = "20s"
+          }
         }
       }
+      binaries.library()
     }
-    binaries.library()
-  }
 
 //  wasmJs {
 //    browser()
@@ -105,35 +106,36 @@ kotlin {
 //    binaries.library()
 //  }
 
-  // native, see https://kotlinlang.org/docs/native-target-support.html
-  // tier 1
-  macosX64()
-  macosArm64()
-  iosSimulatorArm64()
-  iosX64()
-  iosArm64()
+    // native, see https://kotlinlang.org/docs/native-target-support.html
+    // tier 1
+    macosX64()
+    macosArm64()
+    iosSimulatorArm64()
+    iosX64()
+    iosArm64()
 
-  // tier 2
-  linuxX64()
-  linuxArm64()
-  watchosSimulatorArm64()
-  watchosX64()
-  watchosArm32()
-  watchosArm64()
-  tvosSimulatorArm64()
-  tvosX64()
-  tvosArm64()
+    // tier 2
+    linuxX64()
+    linuxArm64()
+    watchosSimulatorArm64()
+    watchosX64()
+    watchosArm32()
+    watchosArm64()
+    tvosSimulatorArm64()
+    tvosX64()
+    tvosArm64()
 
 //  // tier 3
 //  androidNativeArm32()
 //  androidNativeArm64()
 //  androidNativeX86()
 //  androidNativeX64()
-  mingwX64()
+    mingwX64()
 //  watchosDeviceArm64()
 
 //  @OptIn(ExperimentalSwiftExportDsl::class)
 //  swiftExport {}
+  }
 
   sourceSets {
 
@@ -167,21 +169,23 @@ kotlin {
       }
     }
 
-    linuxTest {
-      dependencies {
-        implementation(libs.ktor.client.curl)
+    if (!isJvmOnlyBuild) {
+      linuxTest {
+        dependencies {
+          implementation(libs.ktor.client.curl)
+        }
       }
-    }
 
-    mingwTest {
-      dependencies {
-        implementation(libs.ktor.client.curl)
+      mingwTest {
+        dependencies {
+          implementation(libs.ktor.client.curl)
+        }
       }
-    }
 
-    macosTest {
-      dependencies {
-        implementation(libs.ktor.client.darwin)
+      macosTest {
+        dependencies {
+          implementation(libs.ktor.client.darwin)
+        }
       }
     }
 
@@ -189,18 +193,19 @@ kotlin {
 
 }
 
+if (!isJvmOnlyBuild) {
 //// skip test for certain targets which are not fully supported by kotest
 ////tasks.named("compileTestKotlinWasmWasi") { enabled = false}
-tasks.named("iosSimulatorArm64Test") { enabled = false }
-tasks.named("watchosSimulatorArm64Test") { enabled = false }
-tasks.named("tvosSimulatorArm64Test") { enabled = false }
+  tasks.named("iosSimulatorArm64Test") { enabled = false }
+  tasks.named("watchosSimulatorArm64Test") { enabled = false }
+  tasks.named("tvosSimulatorArm64Test") { enabled = false }
 //tasks.named("androidNativeArm64Test") { enabled = false }
 //tasks.named("androidNativeX64Test") { enabled = false }
 //tasks.named("androidNativeX86Test") { enabled = false }
 //tasks.named("compileTestKotlinAndroidNativeX64") { enabled = false }
 //
 //// skip tests which require XCode components to be installed
-
+}
 
 fun isNonStable(version: String): Boolean {
   val stableKeyword = listOf("RELEASE", "FINAL", "GA").any { version.uppercase().contains(it) }
