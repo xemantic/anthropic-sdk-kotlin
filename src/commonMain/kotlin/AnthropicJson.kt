@@ -35,6 +35,7 @@ import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
 
 // Note: surprisingly the order is important. This definition needs to go first.
+@Suppress("UNUSED_ANONYMOUS_PARAMETER")
 private val anthropicSerializersModule = SerializersModule {
   polymorphicDefaultDeserializer(Response::class) { ResponseSerializer }
   polymorphicDefaultDeserializer(Content::class) { ContentSerializer }
@@ -106,8 +107,10 @@ private object ContentSerializer : JsonContentPolymorphicSerializer<Content>(
 private object ToolSerializer : KSerializer<Tool> {
 
   @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
-  override val descriptor: SerialDescriptor =
-    buildSerialDescriptor("ToolSerializer", SerialKind.CONTEXTUAL)
+  override val descriptor: SerialDescriptor = buildSerialDescriptor(
+    serialName = "com.xemantic.anthropic.Tool",
+    kind = SerialKind.CONTEXTUAL
+  )
 
   override fun serialize(encoder: Encoder, value: Tool) {
     val serializer = when (value) {

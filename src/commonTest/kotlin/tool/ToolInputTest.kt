@@ -1,20 +1,23 @@
 package com.xemantic.anthropic.tool
 
+import com.xemantic.ai.tool.schema.meta.Description
 import com.xemantic.anthropic.cache.CacheControl
-import com.xemantic.anthropic.schema.Description
-import com.xemantic.anthropic.schema.JsonSchema
-import com.xemantic.anthropic.schema.JsonSchemaProperty
-import io.kotest.assertions.assertSoftly
-import io.kotest.assertions.throwables.shouldThrowWithMessage
+import com.xemantic.anthropic.test.assert
+import io.kotest.assertions.json.shouldEqualJson
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldMatch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlin.test.Test
 
 class ToolInputTest {
 
+  /**
+   * Let's start with defining a test tool used later in the tests.
+   */
   @AnthropicTool("TestTool")
-  @Description("Test tool receiving a message and outputting it back")
+  @Description("A test tool receiving a message and outputting it back")
   class TestToolInput(
     @Description("the message")
     val message: String
@@ -27,42 +30,56 @@ class ToolInputTest {
   }
 
   @Test
-  fun shouldCreateToolFromUsableToolAnnotatedWithAnthropicTool() {
+  fun `Should create a tool instance from the test tool annotated with AnthropicTool`() {
     // when
     val tool = Tool<TestToolInput>()
 
-    assertSoftly(tool) {
+    tool.assert {
       name shouldBe "TestTool"
-      description shouldBe "Test tool receiving a message and outputting it back"
-      inputSchema shouldBe JsonSchema(
-        properties = mapOf("message" to JsonSchemaProperty(
-          type = "string",
-          description = "the message"
-        )),
-        required = listOf("message")
-      )
+      description shouldBe "A test tool receiving a message and outputting it back"
+      inputSchema.toString() shouldEqualJson """
+        {
+          "type": "object",
+          "properties": {
+            "message": {
+              "type": "string",
+              "description": "the message"
+            }
+          },
+          "required": [
+            "message"
+          ]
+        }
+      """
       cacheControl shouldBe null
     }
   }
 
-  // TODO maybe we need a builder here?
   @Test
-  fun shouldCreateToolWithCacheControlFromUsableToolSuppliedWithCacheControl() {
+  fun `Should create a tool instance from the test tool with given cacheControl`() {
     // when
+    // TODO we need a builder here?
     val tool = Tool<TestToolInput>(
       cacheControl = CacheControl(type = CacheControl.Type.EPHEMERAL)
     )
 
-    assertSoftly(tool) {
+    tool.assert {
       name shouldBe "TestTool"
-      description shouldBe "Test tool receiving a message and outputting it back"
-      inputSchema shouldBe JsonSchema(
-        properties = mapOf("message" to JsonSchemaProperty(
-          type = "string",
-          description = "the message"
-        )),
-        required = listOf("message")
-      )
+      description shouldBe "A test tool receiving a message and outputting it back"
+      inputSchema.toString() shouldEqualJson """
+        {
+          "type": "object",
+          "properties": {
+            "message": {
+              "type": "string",
+              "description": "the message"
+            }
+          },
+          "required": [
+            "message"
+          ]
+        }
+      """
       cacheControl shouldBe CacheControl(type = CacheControl.Type.EPHEMERAL)
     }
   }
@@ -70,25 +87,21 @@ class ToolInputTest {
   class NoAnnotationTool : ToolInput()
 
   @Test
-  fun shouldFailToCreateToolWithoutAnthropicToolAnnotation() {
-    shouldThrowWithMessage<SerializationException>(
-      "Cannot find serializer for class com.xemantic.anthropic.tool.ToolInputTest\$NoAnnotationTool, " +
-          "make sure that it is annotated with @AnthropicTool and kotlin.serialization plugin is enabled for the project"
-    ) {
+  fun `Should fail to create a Tool without AnthropicTool annotation`() {
+    shouldThrow<SerializationException> {
       Tool<NoAnnotationTool>()
-    }
+    }.message shouldMatch "Cannot find serializer for class .*NoAnnotationTool, " +
+        "make sure that it is annotated with @AnthropicTool and kotlin.serialization plugin is enabled for the project"
   }
 
   @Serializable
   class OnlySerializableAnnotationTool : ToolInput()
 
   @Test
-  fun shouldFailToCreateToolWithOnlySerializableAnnotation() {
-    shouldThrowWithMessage<SerializationException>(
-      "The class com.xemantic.anthropic.tool.ToolInputTest\$OnlySerializableAnnotationTool must be annotated with @AnthropicTool"
-    ) {
+  fun `Should fail to create a Tool with only Serializable annotation`() {
+    shouldThrow<SerializationException> {
       Tool<OnlySerializableAnnotationTool>()
-    }
+    }.message shouldMatch "The class .*OnlySerializableAnnotationTool must be annotated with @AnthropicTool"
   }
 
 }

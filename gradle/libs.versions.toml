@@ -1,5 +1,5 @@
 [versions]
-kotlinTarget = "2.0"
+kotlinTarget = "2.1"
 javaTarget = "17"
 
 kotlin = "2.1.0"
@@ -7,6 +7,8 @@ kotlinxCoroutines = "1.9.0"
 kotlinxDatetime = "0.6.1"
 ktor = "3.0.1"
 kotest = "6.0.0.M1"
+
+xemanticAiToolSchema = "0.1.1"
 
 # logging is not used at the moment, might be enabled later
 log4j = "2.24.2"
@@ -20,6 +22,9 @@ publishPlugin = "2.0.0"
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
+
+# xemantic
+xemantic-ai-tool-schema = { module = "com.xemantic.ai:xemantic-ai-tool-schema", version.ref = "xemanticAiToolSchema"}
 
 # logging libs
 log4j-slf4j2 = { module = "org.apache.logging.log4j:log4j-slf4j2-impl", version.ref = "log4j" }

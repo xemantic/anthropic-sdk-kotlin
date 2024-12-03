@@ -1,10 +1,10 @@
 package com.xemantic.anthropic.tool
 
+import com.xemantic.ai.tool.schema.JsonSchema
+import com.xemantic.ai.tool.schema.generator.jsonSchemaOf
+import com.xemantic.ai.tool.schema.meta.Description
 import com.xemantic.anthropic.cache.CacheControl
 import com.xemantic.anthropic.content.Content
-import com.xemantic.anthropic.schema.Description
-import com.xemantic.anthropic.schema.JsonSchema
-import com.xemantic.anthropic.schema.jsonSchemaOf
 import com.xemantic.anthropic.content.ToolResult
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -151,7 +151,7 @@ inline fun <reified T : ToolInput> Tool(
   return DefaultTool(
     name = toolName,
     description = description,
-    inputSchema = jsonSchemaOf<T>(),
+    inputSchema = jsonSchemaOf<T>(suppressDescription = true),
     cacheControl = cacheControl
   ).apply {
     @Suppress("UNCHECKED_CAST")

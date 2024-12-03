@@ -1,6 +1,6 @@
 package com.xemantic.anthropic.tool
 
-import com.xemantic.anthropic.schema.Description
+import com.xemantic.ai.tool.schema.meta.Description
 import kotlinx.serialization.Transient
 
 tailrec fun fibonacci(

@@ -3,7 +3,7 @@ package com.xemantic.anthropic.content
 import com.xemantic.anthropic.Anthropic
 import com.xemantic.anthropic.message.Message
 import com.xemantic.anthropic.message.StopReason
-import io.kotest.assertions.assertSoftly
+import com.xemantic.anthropic.test.assert
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.instanceOf
@@ -44,7 +44,7 @@ class DocumentTest {
     }
 
     // then
-    assertSoftly(response) {
+    response.assert {
       stopReason shouldBe StopReason.END_TURN
       content.size shouldBe 1
       content[0] shouldBe instanceOf<Text>()

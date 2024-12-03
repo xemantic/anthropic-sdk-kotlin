@@ -1,13 +1,13 @@
 package com.xemantic.anthropic.content
 
 import io.kotest.matchers.shouldBe
-import org.junit.jupiter.api.Test
 import java.io.File
+import kotlin.test.Test
 
 class MagicNumberTest {
 
   @Test
-  fun shouldDetectImageMediaType() {
+  fun `Should detect file Magic Number`() {
     File(
       "test-data/minimal.pdf"
     ).readBytes().findMagicNumber() shouldBe MagicNumber.PDF
