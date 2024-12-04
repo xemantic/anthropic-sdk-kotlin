@@ -6,12 +6,12 @@ import com.xemantic.anthropic.test.testJson
 import io.kotest.assertions.json.shouldEqualJson
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.encodeToString
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
 
 class JvmDocumentTest {
 
   @Test
-  fun shouldSerializePdfToBase64InMessageRequest() = runTest {
+  fun `Should serialize PDF to Base64 in MessageRequest`() = runTest {
     val messageRequest = MessageRequest {
       +Message {
         +Document("test-data/minimal.pdf")
@@ -47,8 +47,7 @@ class JvmDocumentTest {
         ],
         "max_tokens": 8182
       }
-    """.trimIndent()
-
+    """
   }
 
 }

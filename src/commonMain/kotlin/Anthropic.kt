@@ -124,6 +124,13 @@ class Anthropic internal constructor(
 
   private val client = HttpClient {
 
+    val retriableResponses = setOf<HttpStatusCode>(
+      HttpStatusCode.RequestTimeout,
+      HttpStatusCode.Conflict,
+      HttpStatusCode.TooManyRequests,
+      HttpStatusCode.InternalServerError
+    )
+
     install(ContentNegotiation) {
       json(anthropicJson)
     }
@@ -137,12 +144,10 @@ class Anthropic internal constructor(
     }
 
     install(HttpRequestRetry) {
-      retryOnServerErrors(maxRetries = 5)
       exponentialDelay()
       maxRetries = 5
       retryIf { _, response ->
-        response.status == HttpStatusCode.TooManyRequests
-            || response.status.value == 529 // Overloaded
+        response.status in retriableResponses || response.status.value >= 500
       }
     }
 

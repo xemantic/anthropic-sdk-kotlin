@@ -1,11 +1,10 @@
 package com.xemantic.anthropic.tool
 
-import com.xemantic.anthropic.anthropicJson
+import com.xemantic.ai.tool.schema.JsonSchema
+import com.xemantic.ai.tool.schema.generator.jsonSchemaOf
+import com.xemantic.ai.tool.schema.meta.Description
 import com.xemantic.anthropic.cache.CacheControl
 import com.xemantic.anthropic.content.Content
-import com.xemantic.anthropic.schema.Description
-import com.xemantic.anthropic.schema.JsonSchema
-import com.xemantic.anthropic.schema.jsonSchemaOf
 import com.xemantic.anthropic.content.ToolResult
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -14,7 +13,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.Transient
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.serializer
 
@@ -86,10 +84,12 @@ abstract class ToolInput {
   suspend fun use(toolUseId: String): ToolResult {
     return ToolResult(toolUseId) {
       val result = block(this)
-      if ((result != null) && (result !is Unit)) {
+      if (result != null) {
         when (result) {
           is Content -> +result
-          else -> +anthropicJson.encodeToString(result)
+          is Unit -> {} // nothing to do
+          !is Unit -> +result.toString()
+          else -> throw IllegalStateException("Tool use {} returned not supported: $this")
         }
       }
     }
@@ -153,7 +153,7 @@ inline fun <reified T : ToolInput> Tool(
   return DefaultTool(
     name = toolName,
     description = description,
-    inputSchema = jsonSchemaOf<T>(),
+    inputSchema = jsonSchemaOf<T>(suppressDescription = true),
     cacheControl = cacheControl
   ).apply {
     @Suppress("UNCHECKED_CAST")

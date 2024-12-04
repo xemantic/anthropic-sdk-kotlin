@@ -1,7 +1,6 @@
 package com.xemantic.anthropic.message
 
-import com.xemantic.anthropic.message.MessageRequestTest.TemperatureUnit
-import com.xemantic.anthropic.schema.Description
+import com.xemantic.ai.tool.schema.meta.Description
 import com.xemantic.anthropic.test.testJson
 import com.xemantic.anthropic.tool.AnthropicTool
 import com.xemantic.anthropic.tool.Tool
@@ -22,7 +21,6 @@ import kotlin.test.Test
 data class GetWeather(
   @Description("The city and state, e.g. San Francisco, CA")
   val location: String,
-  @Description("The unit of temperature, either 'celsius' or 'fahrenheit'")
   val unit: TemperatureUnit? = null
 ) : ToolInput() {
   init {
@@ -30,6 +28,15 @@ data class GetWeather(
       "42"
     }
   }
+}
+
+@Description("The unit of temperature, either 'celsius' or 'fahrenheit'")
+@Suppress("unused") // it is used by the serializer
+enum class TemperatureUnit {
+  @SerialName("celsius")
+  CELSIUS,
+  @SerialName("fahrenheit")
+  FAHRENHEIT
 }
 
 /**
@@ -77,14 +84,6 @@ class MessageRequestTest {
     """.trimIndent()
   }
 
-  @Suppress("unused") // it is used by the serializer
-  enum class TemperatureUnit {
-    @SerialName("celsius")
-    CELSIUS,
-    @SerialName("fahrenheit")
-    FAHRENHEIT
-  }
-
   @Test
   fun shouldCreateMessageRequestWithMultipleTools() {
     // given
@@ -107,7 +106,6 @@ class MessageRequestTest {
     // when
     val json = testJson.encodeToString(request)
 
-    // then
     json shouldEqualJson """
       {
         "model": "claude-3-5-sonnet-latest",
@@ -151,8 +149,8 @@ class MessageRequestTest {
                 },
                 "unit": {
                   "type": "string",
-                  "enum": ["celsius", "fahrenheit"],
-                  "description": "The unit of temperature, either 'celsius' or 'fahrenheit'"
+                  "description": "The unit of temperature, either 'celsius' or 'fahrenheit'",
+                  "enum": ["celsius", "fahrenheit"]
                 }
               },
               "required": ["location"]
@@ -161,6 +159,7 @@ class MessageRequestTest {
         ]
       }
     """.trimIndent()
+    // then
   }
 
   @Test
