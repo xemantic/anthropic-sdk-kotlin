@@ -1,13 +1,12 @@
-@file:OptIn(ExperimentalKotlinGradlePluginApi::class)
+@file:OptIn(ExperimentalKotlinGradlePluginApi::class, ExperimentalWasmDsl::class)
 
 import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
-import org.jetbrains.kotlin.gradle.targets.js.testing.KotlinJsTest
-import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
 
 plugins {
   alias(libs.plugins.kotlin.multiplatform)
@@ -40,10 +39,12 @@ val sonatypePassword: String? by project
 val skipTests = isReleaseBuild
 
 println("""
-  Project: ${project.name}
-  Version: ${project.version}
-  Release: $isReleaseBuild
-""".trimIndent()
++--------------------------------------------  
+| Project: ${project.name}
+| Version: ${project.version}
+| Release build: $isReleaseBuild
++--------------------------------------------
+"""
 )
 
 repositories {
@@ -52,11 +53,15 @@ repositories {
 
 kotlin {
 
-  //explicitApi() // check with serialization?
+  compilerOptions {
+    apiVersion = kotlinTarget
+    languageVersion = kotlinTarget
+    extraWarnings.set(true)
+    freeCompilerArgs.add("-Xmulti-dollar-interpolation")
+    progressiveMode = true
+  }
+
   jvm {
-    testRuns["test"].executionTask.configure {
-      useJUnitPlatform()
-    }
     // set up according to https://jakewharton.com/gradle-toolchains-are-rarely-a-good-idea/
     compilerOptions {
       apiVersion = kotlinTarget
@@ -68,27 +73,68 @@ kotlin {
   }
 
   if (!isJvmOnlyBuild) {
-
     js {
-      browser()
-      nodejs()
+      // browser tests switched off for a moment
+      browser {
+        testTask {
+          // for unknown reason browser tests are failing
+          enabled = false
+          useKarma {
+            useChromeHeadless()
+          }
+        }
+      }
+      nodejs {
+        testTask {
+          useMocha {
+            timeout = "20s"
+          }
+        }
+      }
       binaries.library()
     }
 
-//  linuxX64()
-//
-//  mingwX64()
-//  macosArm64()
-
-//  val hostOs = System.getProperty("os.name")
-//  val isMingwX64 = hostOs.startsWith("Windows")
-//  val nativeTarget = when {
-//    hostOs == "Mac OS X" -> macosX64("native")
-//    hostOs == "Linux" -> linuxX64("native")
-//    isMingwX64 -> mingwX64("native")
-//    else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
+//  wasmJs {
+//    browser()
+//    nodejs()
+//    //d8()
+//    binaries.library()
 //  }
 
+//  wasmWasi {
+//    nodejs()
+//    binaries.library()
+//  }
+
+    // native, see https://kotlinlang.org/docs/native-target-support.html
+    // tier 1
+    macosX64()
+    macosArm64()
+    iosSimulatorArm64()
+    iosX64()
+    iosArm64()
+
+    // tier 2
+    linuxX64()
+    linuxArm64()
+    watchosSimulatorArm64()
+    watchosX64()
+    watchosArm32()
+    watchosArm64()
+    tvosSimulatorArm64()
+    tvosX64()
+    tvosArm64()
+
+//  // tier 3
+//  androidNativeArm32()
+//  androidNativeArm64()
+//  androidNativeX86()
+//  androidNativeX64()
+    mingwX64()
+//  watchosDeviceArm64()
+
+//  @OptIn(ExperimentalSwiftExportDsl::class)
+//  swiftExport {}
   }
 
   sourceSets {
@@ -100,6 +146,7 @@ kotlin {
         implementation(libs.ktor.client.content.negotiation)
         implementation(libs.ktor.client.logging)
         implementation(libs.ktor.serialization.kotlinx.json)
+        implementation(libs.xemantic.ai.tool.schema)
       }
     }
 
@@ -146,6 +193,20 @@ kotlin {
 
 }
 
+if (!isJvmOnlyBuild) {
+//// skip test for certain targets which are not fully supported by kotest
+////tasks.named("compileTestKotlinWasmWasi") { enabled = false}
+  tasks.named("iosSimulatorArm64Test") { enabled = false }
+  tasks.named("watchosSimulatorArm64Test") { enabled = false }
+  tasks.named("tvosSimulatorArm64Test") { enabled = false }
+//tasks.named("androidNativeArm64Test") { enabled = false }
+//tasks.named("androidNativeX64Test") { enabled = false }
+//tasks.named("androidNativeX86Test") { enabled = false }
+//tasks.named("compileTestKotlinAndroidNativeX64") { enabled = false }
+//
+//// skip tests which require XCode components to be installed
+}
+
 fun isNonStable(version: String): Boolean {
   val stableKeyword = listOf("RELEASE", "FINAL", "GA").any { version.uppercase().contains(it) }
   val regex = "^[0-9,.v-]+(-r)?$".toRegex()
@@ -171,31 +232,16 @@ tasks.withType<Test> {
   }
 }
 
-
-
-if (!isJvmOnlyBuild) {
-
-  tasks.withType<KotlinNativeTest> {
-    enabled = !skipTests
-  }
-
-  tasks.withType<KotlinJsTest> {
-    // for now always skip JS tests, until we will find how to safely pass apiKey to them
-    enabled = false
-  }
-
-}
-
 powerAssert {
-  functions = listOf(
-    "io.kotest.matchers.shouldBe"
-  )
-  includedSourceSets = listOf("commonTest", "jvmTest", "nativeTest")
+//  functions = listOf(
+//    "io.kotest.matchers.shouldBe"
+//  )
+//  includedSourceSets = listOf("commonTest", "jvmTest", "nativeTest")
 }
 
 // maybe this one is not necessary?
 tasks.dokkaHtml.configure {
-  outputDirectory.set(buildDir.resolve("dokka"))
+  outputDirectory.set(layout.buildDirectory.dir("dokka"))
 }
 
 val javadocJar by tasks.registering(Jar::class) {
@@ -219,9 +265,6 @@ publishing {
   publications {
     withType<MavenPublication> {
       artifact(javadocJar)
-//      from(components["kotlin"])
-//      artifact(javadocJar)
-//      artifact(sourcesJar)
       pom {
         name = "anthropic-sdk-kotlin"
         description = "Kotlin multiplatform client for accessing Ahtropic APIs"

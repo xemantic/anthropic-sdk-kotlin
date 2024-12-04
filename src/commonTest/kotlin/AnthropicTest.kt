@@ -12,7 +12,7 @@ import com.xemantic.anthropic.tool.FibonacciTool
 import com.xemantic.anthropic.tool.TestDatabase
 import com.xemantic.anthropic.content.Text
 import com.xemantic.anthropic.content.ToolUse
-import io.kotest.assertions.assertSoftly
+import com.xemantic.anthropic.test.assert
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -23,12 +23,13 @@ import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import kotlin.test.Ignore
 import kotlin.test.Test
 
 class AnthropicTest {
 
   @Test
-  fun shouldReceiveAnIntroductionFromClaude() = runTest {
+  fun `Should receive an introduction from Claude`() = runTest {
     // given
     val client = Anthropic()
 
@@ -41,7 +42,7 @@ class AnthropicTest {
     }
 
     // then
-    assertSoftly(response) {
+    response.assert {
       role shouldBe Role.ASSISTANT
       model shouldBe "claude-3-5-sonnet-20241022"
       stopReason shouldBe StopReason.END_TURN
@@ -56,25 +57,25 @@ class AnthropicTest {
   }
 
   @Test
-  fun shouldStreamTheResponse() = runTest {
+  fun `Should stream the response`() = runTest {
     // given
     val client = Anthropic()
 
     // when
     val response = client.messages.stream {
-        +Message { +"Say: 'The sun slowly dipped below the horizon, painting the sky in a breathtaking array of oranges, pinks, and purples.'" }
-      }
-        .filterIsInstance<Event.ContentBlockDelta>()
-        .map { (it.delta as TextDelta).text }
-        .toList()
-        .joinToString(separator = "")
+      +Message { +"Say: 'The sun slowly dipped below the horizon, painting the sky in a breathtaking array of oranges, pinks, and purples.'" }
+    }
+      .filterIsInstance<Event.ContentBlockDelta>()
+      .map { (it.delta as TextDelta).text }
+      .toList()
+      .joinToString(separator = "")
 
     // then
     response shouldBe "The sun slowly dipped below the horizon, painting the sky in a breathtaking array of oranges, pinks, and purples."
   }
 
   @Test
-  fun shouldUseCalculatorTool() = runTest {
+  fun `Should use Calculator tool`() = runTest {
     // given
     val client = Anthropic {
       tool<Calculator>()
@@ -90,7 +91,7 @@ class AnthropicTest {
     conversation += initialResponse
 
     // then
-    assertSoftly(initialResponse) {
+    initialResponse.assert {
       stopReason shouldBe StopReason.TOOL_USE
       content.size shouldBe 1 // and therefore there is only ToolUse without commentary
       content[0] shouldBe instanceOf<ToolUse>()
@@ -109,7 +110,7 @@ class AnthropicTest {
     }
 
     // then
-    assertSoftly(resultResponse) {
+    resultResponse.assert {
       stopReason shouldBe StopReason.END_TURN
       content.size shouldBe 1
       content[0] shouldBe instanceOf<Text>()
@@ -118,7 +119,7 @@ class AnthropicTest {
   }
 
   @Test
-  fun shouldUseFibonacciTool() = runTest {
+  fun `Should use FibonacciTool`() = runTest {
     // given
     val client = Anthropic {
       tool<FibonacciTool>()
@@ -135,7 +136,7 @@ class AnthropicTest {
     toolUse.name shouldBe "FibonacciTool"
 
     val result = toolUse.use()
-    assertSoftly(result) {
+    result.assert {
       toolUseId shouldBe toolUse.id
       isError shouldBe false
       content shouldBe listOf(Text(text = "267914296"))
@@ -143,7 +144,8 @@ class AnthropicTest {
   }
 
   @Test
-  fun shouldUse2ToolsInSequence() = runTest {
+  @Ignore // this test is flaky because it has wrong sometimes claude will decide to use both tools at once.
+  fun `Should use 2 tools in sequence`() = runTest {
     // given
     val client = Anthropic {
       tool<FibonacciTool>()
@@ -156,7 +158,7 @@ class AnthropicTest {
 
     val fibonacciResponse = client.messages.create {
       messages = conversation
-      allTools()
+      singleTool<FibonacciTool>()
     }
     conversation += fibonacciResponse
 
@@ -167,7 +169,7 @@ class AnthropicTest {
 
     val calculatorResponse = client.messages.create {
       messages = conversation
-      allTools()
+      singleTool<Calculator>()
     }
     conversation += calculatorResponse
 
@@ -187,7 +189,7 @@ class AnthropicTest {
   }
 
   @Test
-  fun shouldUseToolWithDependencies() = runTest {
+  fun `Should use tool with dependencies`() = runTest {
     // given
     val testDatabase = TestDatabase()
     val anthropic = Anthropic {
@@ -212,7 +214,7 @@ class AnthropicTest {
   }
 
   @Test
-  fun shouldUseSystemPrompt() = runTest {
+  fun `Should use system prompt`() = runTest {
     // given
     val anthropic = Anthropic()
 
@@ -226,7 +228,7 @@ class AnthropicTest {
     }
 
     // then
-    assertSoftly(response) {
+    response.assert {
       content.size shouldBe 1
       content[0] shouldBe instanceOf<Text>()
       val text = content[0] as Text

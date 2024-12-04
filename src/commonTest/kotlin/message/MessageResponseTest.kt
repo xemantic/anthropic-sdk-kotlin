@@ -2,9 +2,9 @@ package com.xemantic.anthropic.message
 
 import com.xemantic.anthropic.Response
 import com.xemantic.anthropic.content.ToolUse
+import com.xemantic.anthropic.test.assert
 import com.xemantic.anthropic.test.testJson
 import com.xemantic.anthropic.usage.Usage
-import io.kotest.assertions.assertSoftly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.instanceOf
 import kotlin.test.Test
@@ -46,7 +46,7 @@ class MessageResponseTest {
 
     val response = testJson.decodeFromString<Response>(jsonResponse)
     response shouldBe instanceOf<MessageResponse>()
-    assertSoftly(response as MessageResponse) {
+    (response as MessageResponse).assert {
       id shouldBe "msg_01PspkNzNG3nrf5upeTsmWLF"
       role shouldBe Role.ASSISTANT
       model shouldBe "claude-3-5-sonnet-20241022"
@@ -60,7 +60,7 @@ class MessageResponseTest {
       )
     }
     val toolUse = response.content[0] as ToolUse
-    assertSoftly(toolUse) {
+    toolUse.assert {
       id shouldBe "toolu_01YHJK38TBKCRPn7zfjxcKHx"
       name shouldBe "Calculator"
       // TODO generate JsonObject to assert input

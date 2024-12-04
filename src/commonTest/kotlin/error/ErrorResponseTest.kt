@@ -1,8 +1,8 @@
 package com.xemantic.anthropic.error
 
 import com.xemantic.anthropic.Response
+import com.xemantic.anthropic.test.assert
 import com.xemantic.anthropic.test.testJson
-import io.kotest.assertions.assertSoftly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.instanceOf
 import kotlin.test.Test
@@ -27,7 +27,7 @@ class ErrorResponseTest {
 
     val response = testJson.decodeFromString<Response>(jsonResponse)
     response shouldBe instanceOf<ErrorResponse>()
-    assertSoftly(response as ErrorResponse) {
+    (response as ErrorResponse).assert {
       error shouldBe Error(
         type = "not_found_error",
         message = "The requested resource could not be found."
