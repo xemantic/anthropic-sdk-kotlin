@@ -2,14 +2,13 @@ package com.xemantic.anthropic.tool
 
 import com.xemantic.ai.tool.schema.meta.Description
 import com.xemantic.anthropic.cache.CacheControl
-import com.xemantic.anthropic.test.assert
+import com.xemantic.kotlin.test.have
+import com.xemantic.kotlin.test.should
 import io.kotest.assertions.json.shouldEqualJson
-import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldMatch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlin.test.Test
+import kotlin.test.assertFailsWith
 
 class ToolInputTest {
 
@@ -34,10 +33,11 @@ class ToolInputTest {
     // when
     val tool = Tool<TestToolInput>()
 
-    tool.assert {
-      name shouldBe "TestTool"
-      description shouldBe "A test tool receiving a message and outputting it back"
-      inputSchema.toString() shouldEqualJson """
+    tool should {
+      have(name == "TestTool")
+      have(description == "A test tool receiving a message and outputting it back")
+      have(cacheControl == null)
+      inputSchema.toString() shouldEqualJson /* language=json */ """
         {
           "type": "object",
           "properties": {
@@ -51,7 +51,6 @@ class ToolInputTest {
           ]
         }
       """
-      cacheControl shouldBe null
     }
   }
 
@@ -63,10 +62,11 @@ class ToolInputTest {
       cacheControl = CacheControl(type = CacheControl.Type.EPHEMERAL)
     )
 
-    tool.assert {
-      name shouldBe "TestTool"
-      description shouldBe "A test tool receiving a message and outputting it back"
-      inputSchema.toString() shouldEqualJson """
+    tool should  {
+      have(name == "TestTool")
+      have(description == "A test tool receiving a message and outputting it back")
+      have(cacheControl == CacheControl(type = CacheControl.Type.EPHEMERAL))
+      inputSchema.toString() shouldEqualJson /* language=json */ """
         {
           "type": "object",
           "properties": {
@@ -80,7 +80,6 @@ class ToolInputTest {
           ]
         }
       """
-      cacheControl shouldBe CacheControl(type = CacheControl.Type.EPHEMERAL)
     }
   }
 
@@ -88,10 +87,14 @@ class ToolInputTest {
 
   @Test
   fun `Should fail to create a Tool without AnthropicTool annotation`() {
-    shouldThrow<SerializationException> {
+    val exception = assertFailsWith<SerializationException> {
       Tool<NoAnnotationTool>()
-    }.message shouldMatch "Cannot find serializer for class .*NoAnnotationTool, " +
-        "make sure that it is annotated with @AnthropicTool and kotlin.serialization plugin is enabled for the project"
+    } should {
+      have(message!!.matches(Regex(
+        "Cannot find serializer for class .*NoAnnotationTool, " +
+            "make sure that it is annotated with @AnthropicTool and kotlin.serialization plugin is enabled for the project"
+      )))
+    }
   }
 
   @Serializable
@@ -99,9 +102,13 @@ class ToolInputTest {
 
   @Test
   fun `Should fail to create a Tool with only Serializable annotation`() {
-    shouldThrow<SerializationException> {
+    assertFailsWith<SerializationException> {
       Tool<OnlySerializableAnnotationTool>()
-    }.message shouldMatch "The class .*OnlySerializableAnnotationTool must be annotated with @AnthropicTool"
+    } should {
+      have(message!!.matches(Regex(
+        "The class .*OnlySerializableAnnotationTool must be annotated with @AnthropicTool"
+      )))
+    }
   }
 
 }
