@@ -5,6 +5,8 @@ import com.xemantic.anthropic.Response
 import com.xemantic.anthropic.cache.CacheControl
 import com.xemantic.anthropic.content.Content
 import com.xemantic.anthropic.content.ContentBuilder
+import com.xemantic.anthropic.content.ToolUse
+import com.xemantic.anthropic.toPrettyJson
 import com.xemantic.anthropic.tool.Tool
 import com.xemantic.anthropic.tool.ToolChoice
 import com.xemantic.anthropic.tool.ToolInput
@@ -151,6 +153,8 @@ data class MessageRequest(
     )
   }
 
+  override fun toString(): String = toPrettyJson()
+
 }
 
 /**
@@ -245,6 +249,15 @@ data class MessageResponse(
   fun asMessage(): Message = Message {
     role = Role.ASSISTANT
     content += this@MessageResponse.content
+  }
+
+  suspend fun useTools(): Message {
+    val toolResults = content.filterIsInstance<ToolUse>().map {
+      it.use()
+    }
+    return Message {
+      this@Message.content += toolResults
+    }
   }
 
 }
