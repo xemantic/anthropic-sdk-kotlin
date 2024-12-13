@@ -1,12 +1,40 @@
 package com.xemantic.anthropic
 
-enum class Model(
-  val id: String,
-  val contextWindow: Int,
-  val maxOutput: Int,
-  val messageBatchesApi: Boolean,
+import com.xemantic.ai.money.Money
+import com.xemantic.ai.money.Ratio
+import com.xemantic.anthropic.usage.Cost
+
+/**
+ * The model used by the API.
+ * E.g., Claude LLM `sonnet`, `opus`, `haiku` family.
+ */
+interface AnthropicModel {
+
+  val id: String
+  val contextWindow: Int
+  val maxOutput: Int
+  val messageBatchesApi: Boolean
   val cost: Cost
-) {
+
+}
+
+val ANTHROPIC_TOKEN_COST_RATIO = Money.Ratio("0.000001")
+
+val String.dollarsPerMillion: Money get() = Money(this) * ANTHROPIC_TOKEN_COST_RATIO
+
+/**
+ * Predefined models supported by Anthropic API.
+ *
+ * It could include Vertex AI (Google Cloud), or Bedrock (AWS) models in the future.
+ */
+// TODO model should be interface AnthropicApi models should be enum
+enum class Model(
+  override val id: String,
+  override val contextWindow: Int,
+  override val maxOutput: Int,
+  override val messageBatchesApi: Boolean,
+  override val cost: Cost
+) : AnthropicModel {
 
   CLAUDE_3_5_SONNET(
     id = "claude-3-5-sonnet-latest",
@@ -14,8 +42,8 @@ enum class Model(
     maxOutput = 8182,
     messageBatchesApi = true,
     cost = Cost(
-      inputTokens = 3.0,
-      outputTokens = 15.0
+      inputTokens = "3".dollarsPerMillion,
+      outputTokens = "15".dollarsPerMillion
     )
   ),
 
@@ -25,8 +53,8 @@ enum class Model(
     maxOutput = 8182,
     messageBatchesApi = true,
     cost = Cost(
-      inputTokens = 3.0,
-      outputTokens = 15.0
+      inputTokens = "3".dollarsPerMillion,
+      outputTokens = "15".dollarsPerMillion
     )
   ),
 
@@ -36,8 +64,8 @@ enum class Model(
     maxOutput = 8182,
     messageBatchesApi = true,
     cost = Cost(
-      inputTokens = 1.0,
-      outputTokens = 5.0
+      inputTokens = "0.80".dollarsPerMillion,
+      outputTokens = "4".dollarsPerMillion
     )
   ),
 
@@ -47,8 +75,8 @@ enum class Model(
     maxOutput = 8182,
     messageBatchesApi = true,
     cost = Cost(
-      inputTokens = 1.0,
-      outputTokens = 5.0
+      inputTokens = "0.80".dollarsPerMillion,
+      outputTokens = "4".dollarsPerMillion
     )
   ),
 
@@ -58,8 +86,8 @@ enum class Model(
     maxOutput = 8182,
     messageBatchesApi = true,
     cost = Cost(
-      inputTokens = 3.0,
-      outputTokens = 15.0
+      inputTokens = "3".dollarsPerMillion,
+      outputTokens = "15".dollarsPerMillion
     )
   ),
 
@@ -69,8 +97,8 @@ enum class Model(
     maxOutput = 4096,
     messageBatchesApi = true,
     cost = Cost(
-      inputTokens = 15.0,
-      outputTokens = 75.0
+      inputTokens = "15".dollarsPerMillion,
+      outputTokens = "75".dollarsPerMillion
     )
   ),
 
@@ -80,8 +108,8 @@ enum class Model(
     maxOutput = 4096,
     messageBatchesApi = true,
     cost = Cost(
-      inputTokens = 15.0,
-      outputTokens = 75.0
+      inputTokens = "15".dollarsPerMillion,
+      outputTokens = "75".dollarsPerMillion
     )
   ),
 
@@ -91,8 +119,8 @@ enum class Model(
     maxOutput = 4096,
     messageBatchesApi = true,
     cost = Cost(
-      inputTokens = 3.0,
-      outputTokens = 15.0
+      inputTokens = "3".dollarsPerMillion,
+      outputTokens = "15".dollarsPerMillion
     )
   ),
 
@@ -102,21 +130,15 @@ enum class Model(
     maxOutput = 4096,
     messageBatchesApi = true,
     cost = Cost(
-      inputTokens = .25,
-      outputTokens = 1.25
+      inputTokens = "0.25".dollarsPerMillion,
+      outputTokens = "1.25".dollarsPerMillion
     )
   );
 
-  /**
-   * Cost per MTok
-   */
-  data class Cost(
-    val inputTokens: Double,
-    val outputTokens: Double
-  )
-
   companion object {
+
     val DEFAULT: Model = CLAUDE_3_5_SONNET
+
   }
 
 }

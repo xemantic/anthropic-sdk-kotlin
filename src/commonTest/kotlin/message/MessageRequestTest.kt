@@ -10,34 +10,10 @@ import com.xemantic.anthropic.tool.bash.Bash
 import com.xemantic.anthropic.tool.computer.Computer
 import com.xemantic.anthropic.tool.editor.TextEditor
 import io.kotest.assertions.json.shouldEqualJson
-import io.kotest.matchers.shouldBe
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.encodeToString
+import kotlin.test.Ignore
 import kotlin.test.Test
-
-// given
-@AnthropicTool("get_weather")
-@Description("Get the current weather in a given location")
-data class GetWeather(
-  @Description("The city and state, e.g. San Francisco, CA")
-  val location: String,
-  val unit: TemperatureUnit? = null
-) : ToolInput() {
-  init {
-    use {
-      "42"
-    }
-  }
-}
-
-@Description("The unit of temperature, either 'celsius' or 'fahrenheit'")
-@Suppress("unused") // it is used by the serializer
-enum class TemperatureUnit {
-  @SerialName("celsius")
-  CELSIUS,
-  @SerialName("fahrenheit")
-  FAHRENHEIT
-}
 
 /**
  * Tests the JSON serialization format of created Anthropic API message requests.
@@ -45,15 +21,7 @@ enum class TemperatureUnit {
 class MessageRequestTest {
 
   @Test
-  fun defaultMessageShouldHaveRoleUser() {
-    // given
-    val message = Message {}
-    // then
-    message.role shouldBe Role.USER
-  }
-
-  @Test
-  fun shouldCreateTheSimplestMessageRequest() {
+  fun `Should create simple MessageRequest`() {
     // given
     val request = MessageRequest {
       +Message {
@@ -65,7 +33,7 @@ class MessageRequestTest {
     val json = testJson.encodeToString(request)
 
     // then
-    json shouldEqualJson """
+    json shouldEqualJson /* language=json */ """
       {
         "model": "claude-3-5-sonnet-latest",
         "messages": [
@@ -81,17 +49,44 @@ class MessageRequestTest {
         ],
         "max_tokens": 8182
       }
-    """.trimIndent()
+    """
+    // Note: max_tokens value will default to the max for a given model
+    // claude-3-5-sonnet-latest ist the default model
+  }
+
+  // now we need some test tool
+  @AnthropicTool("get_weather")
+  @Description("Get the weather for a specific location")
+  data class GetWeather(
+    @Description("The city and state, e.g. San Francisco, CA")
+    val location: String,
+    val unit: TemperatureUnit? = null
+  ) : ToolInput() {
+    init {
+      use {
+        "42"
+      }
+    }
+  }
+
+  @Description("The unit of temperature, either 'celsius' or 'fahrenheit'")
+  @Suppress("unused") // it is used by the serializer
+  enum class TemperatureUnit {
+    @SerialName("celsius")
+    CELSIUS,
+    @SerialName("fahrenheit")
+    FAHRENHEIT
   }
 
   @Test
-  fun shouldCreateMessageRequestWithMultipleTools() {
+  fun `Should create MessageRequest with multiple tools`() {
     // given
     val request = MessageRequest {
       +Message {
         +"Hey Claude!?"
       }
       tools = listOf(
+        // built in tools
         Computer(
           displayWidthPx = 1024,
           displayHeightPx = 768,
@@ -99,6 +94,7 @@ class MessageRequestTest {
         ),
         TextEditor(),
         Bash(),
+        // custom tool
         Tool<GetWeather>()
       )
     }
@@ -106,7 +102,8 @@ class MessageRequestTest {
     // when
     val json = testJson.encodeToString(request)
 
-    json shouldEqualJson """
+    // then
+    json shouldEqualJson /* language=json */ """
       {
         "model": "claude-3-5-sonnet-latest",
         "messages": [
@@ -139,7 +136,7 @@ class MessageRequestTest {
           },
           {
             "name": "get_weather",
-            "description": "Get the current weather in a given location",
+            "description": "Get the weather for a specific location",
             "input_schema": {
               "type": "object",
               "properties": {
@@ -158,12 +155,11 @@ class MessageRequestTest {
           }          
         ]
       }
-    """.trimIndent()
-    // then
+    """
   }
 
   @Test
-  fun shouldCreateMessageRequestWithExplicitToolChoice() {
+  fun `Should create MessageRequest with explicit ToolChoice`() {
     // given
     val request = MessageRequest {
       +Message {
@@ -182,7 +178,7 @@ class MessageRequestTest {
     val json = testJson.encodeToString(request)
 
     // then
-    json shouldEqualJson """
+    json shouldEqualJson /* language=json */ """
       {
         "model": "claude-3-5-sonnet-latest",
         "messages": [
@@ -205,7 +201,7 @@ class MessageRequestTest {
         "tools": [
           {
             "name": "get_weather",
-            "description": "Get the current weather in a given location",
+            "description": "Get the weather for a specific location",
             "input_schema": {
               "type": "object",
               "properties": {
@@ -224,13 +220,13 @@ class MessageRequestTest {
           }          
         ]
       }
-    """.trimIndent()
+    """
   }
 
   @Test
-  fun shouldDeserializeMessageRequestForExampleStoredOnDisk() {
+  fun `Should deserialize MessageRequest - for example a JSON stored on disk`() {
     // given
-    val request = """
+    val request = /* language=json */ """
       {
         "model": "claude-3-5-sonnet-latest",
         "messages": [
@@ -282,14 +278,19 @@ class MessageRequestTest {
           }          
         ]
       }
-    """.trimIndent()
+    """
 
     // when
     val messageRequest = testJson.decodeFromString<MessageRequest>(request)
 
     // then
-    // TODO assertions
-    println(messageRequest)
+    messageRequest.toString() shouldEqualJson request
+  }
+
+  @Test
+  @Ignore // TODO this test can be fixed only when the model is refactored to be configurable
+  fun `Should fail to create a MessageRequest instance for unknown model`() {
+    //val messageRequest = MessageRequest {  }
   }
 
 }

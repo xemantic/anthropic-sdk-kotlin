@@ -2,11 +2,13 @@ package com.xemantic.anthropic.message
 
 import com.xemantic.anthropic.Response
 import com.xemantic.anthropic.content.ToolUse
-import com.xemantic.anthropic.test.assert
 import com.xemantic.anthropic.test.testJson
 import com.xemantic.anthropic.usage.Usage
-import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.instanceOf
+import com.xemantic.kotlin.test.be
+import com.xemantic.kotlin.test.have
+import com.xemantic.kotlin.test.should
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import kotlin.test.Test
 
 /**
@@ -15,8 +17,9 @@ import kotlin.test.Test
 class MessageResponseTest {
 
   @Test
-  fun shouldDeserializeToolUseMessageResponse() {
+  fun `Should deserialize ToolUse message response`() {
     // given
+    /* language=json */
     val jsonResponse = """
       {
         "id": "msg_01PspkNzNG3nrf5upeTsmWLF",
@@ -42,28 +45,34 @@ class MessageResponseTest {
           "output_tokens": 86
         }
       }
-    """.trimIndent()
+    """
 
+    // when
     val response = testJson.decodeFromString<Response>(jsonResponse)
-    response shouldBe instanceOf<MessageResponse>()
-    (response as MessageResponse).assert {
-      id shouldBe "msg_01PspkNzNG3nrf5upeTsmWLF"
-      role shouldBe Role.ASSISTANT
-      model shouldBe "claude-3-5-sonnet-20241022"
-      content.size shouldBe 1
-      content[0] shouldBe instanceOf<ToolUse>()
-      stopReason shouldBe StopReason.TOOL_USE
-      stopSequence shouldBe null
-      usage shouldBe Usage(
+
+    // then
+    response should {
+      be<MessageResponse>()
+      have(id == "msg_01PspkNzNG3nrf5upeTsmWLF")
+      have(role == Role.ASSISTANT)
+      have(model == "claude-3-5-sonnet-20241022")
+      have(content.size == 1)
+      have(stopReason == StopReason.TOOL_USE)
+      have(stopSequence == null)
+      have(usage == Usage(
         inputTokens = 419,
         outputTokens = 86
-      )
-    }
-    val toolUse = response.content[0] as ToolUse
-    toolUse.assert {
-      id shouldBe "toolu_01YHJK38TBKCRPn7zfjxcKHx"
-      name shouldBe "Calculator"
-      // TODO generate JsonObject to assert input
+      ))
+      content[0] should {
+        be<ToolUse>()
+        have(id == "toolu_01YHJK38TBKCRPn7zfjxcKHx")
+        have(name == "Calculator")
+        have(input == buildJsonObject {
+          put("operation", JsonPrimitive("MULTIPLY"))
+          put("a", JsonPrimitive(15))
+          put("b", JsonPrimitive(7))
+        })
+      }
     }
   }
 

@@ -1,10 +1,10 @@
 package com.xemantic.anthropic.error
 
 import com.xemantic.anthropic.Response
-import com.xemantic.anthropic.test.assert
 import com.xemantic.anthropic.test.testJson
-import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.instanceOf
+import com.xemantic.kotlin.test.be
+import com.xemantic.kotlin.test.have
+import com.xemantic.kotlin.test.should
 import kotlin.test.Test
 
 /**
@@ -13,9 +13,8 @@ import kotlin.test.Test
 class ErrorResponseTest {
 
   @Test
-  fun shouldDeserializeToolUseMessageResponse() {
-    // given
-    val jsonResponse = """
+  fun `Should deserialize ErrorResponse`() {
+    testJson.decodeFromString<Response>(/* language=json */ """
       {
         "type": "error",
         "error": {
@@ -23,15 +22,12 @@ class ErrorResponseTest {
           "message": "The requested resource could not be found."
         }
       }
-    """.trimIndent()
-
-    val response = testJson.decodeFromString<Response>(jsonResponse)
-    response shouldBe instanceOf<ErrorResponse>()
-    (response as ErrorResponse).assert {
-      error shouldBe Error(
+    """) should {
+      be<ErrorResponse>()
+      have(error == Error(
         type = "not_found_error",
         message = "The requested resource could not be found."
-      )
+      ))
     }
   }
 

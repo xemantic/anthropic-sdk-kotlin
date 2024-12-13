@@ -158,13 +158,11 @@ fun main() = runBlocking {
   println(initialResponse)
 
   conversation += initialResponse
-  val tool = initialResponse.content.filterIsInstance<ToolUse>().first()
-  val toolResult = tool.use()
-  conversation += Message { +toolResult }
+  conversation += initialResonse.useTools()
 
   val finalResponse = client.messages.create {
     messages = conversation
-    useTools()
+    allTools()
   }
   println("Final response:")
   println(finalResponse)

@@ -2,7 +2,6 @@ package com.xemantic.anthropic.content
 
 import com.xemantic.anthropic.anthropicJson
 import com.xemantic.anthropic.cache.CacheControl
-import com.xemantic.anthropic.message.toNullIfEmpty
 import com.xemantic.anthropic.tool.Tool
 import com.xemantic.anthropic.tool.ToolInput
 import kotlinx.serialization.SerialName
@@ -41,13 +40,16 @@ data class ToolUse(
         val toolInput = decodeInput()
         toolInput.use(toolUseId = id)
       } else {
-        ToolResult(toolUseId = id) {
+        ToolResult {
+          toolUseId = id
           error("Cannot use unknown tool: $name")
         }
       }
     } catch (e: Exception) {
+      // TODO a better way to log this exception
       e.printStackTrace()
-      ToolResult(toolUseId = id) {
+      ToolResult {
+        toolUseId = id
         error(e.message ?: "Unknown error occurred")
       }
     }
@@ -55,9 +57,10 @@ data class ToolUse(
 
 }
 
+@ConsistentCopyVisibility
 @Serializable
 @SerialName("tool_result")
-data class ToolResult(
+data class ToolResult private constructor(
   @SerialName("tool_use_id")
   val toolUseId: String,
   val content: List<Content>? = null,
@@ -69,7 +72,42 @@ data class ToolResult(
 
   class Builder : ContentBuilder {
 
-    override val content: MutableList<Content> = mutableListOf()
+    private class ToolResultList(
+      private val list: MutableList<Content> = mutableListOf<Content>()
+    ) : MutableList<Content> by list {
+
+      override fun add(element: Content): Boolean {
+        require(element is Image || element is Text) {
+          "Only Image and Text content element is allowed"
+        }
+        return list.add(element)
+      }
+
+      override fun add(index: Int, element: Content) {
+        require(element is Image || element is Text) {
+          "Only Image and Text content element is allowed"
+        }
+        return list.add(index, element)
+      }
+
+      override fun addAll(elements: Collection<Content>): Boolean {
+        require(elements.all { it is Image || it is Text}) {
+          "Only Image and Text content elements are allowed"
+        }
+        return list.addAll(elements)
+      }
+
+      override fun set(index: Int, element: Content): Content {
+        require(element is Image || element is Text) {
+          "Only Image and Text content element is allowed"
+        }
+        return list.set(index, element)
+      }
+    }
+
+    var toolUseId: String? = null
+
+    override val content: MutableList<Content> = ToolResultList()
 
     var isError: Boolean? = null
     var cacheControl: CacheControl? = null
@@ -79,24 +117,33 @@ data class ToolResult(
       isError = true
     }
 
+    operator fun plus(text: Text) {
+      content += text
+    }
+
+    operator fun plus(image: Image) {
+      content += image
+    }
+
+    fun build(): ToolResult = ToolResult(
+      toolUseId = requireNotNull(toolUseId) {
+        "toolUseId cannot be null"
+      },
+      content = buildList { addAll(content) },
+      isError = isError,
+      cacheControl = cacheControl
+    )
+
   }
 
 }
 
 @OptIn(ExperimentalContracts::class)
 inline fun ToolResult(
-  toolUseId: String,
   block: ToolResult.Builder.() -> Unit = {}
 ): ToolResult {
   contract {
     callsInPlace(block, InvocationKind.EXACTLY_ONCE)
   }
-  val builder = ToolResult.Builder()
-  block(builder)
-  return ToolResult(
-    toolUseId = toolUseId,
-    content = builder.content.toNullIfEmpty(),
-    isError = if (builder.isError == null) false else null,
-    cacheControl = builder.cacheControl
-  )
+  return ToolResult.Builder().also(block).build()
 }

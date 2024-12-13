@@ -10,6 +10,9 @@ import com.xemantic.anthropic.message.MessageResponse
 import com.xemantic.anthropic.tool.BuiltInTool
 import com.xemantic.anthropic.tool.Tool
 import com.xemantic.anthropic.tool.ToolInput
+import com.xemantic.anthropic.usage.Cost
+import com.xemantic.anthropic.usage.Usage
+import com.xemantic.anthropic.usage.UsageCollector
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.*
@@ -66,7 +69,8 @@ fun Anthropic(
     defaultMaxTokens = config.defaultMaxTokens,
     directBrowserAccess = config.directBrowserAccess,
     logLevel = if (config.logHttp) LogLevel.ALL else LogLevel.NONE,
-    toolMap = config.tools.associateBy { it.name }
+    modelMap = config.modelMap,
+    toolMap = config.tools.associateBy { it.name },
   )
 } // TODO this can be a second constructor, then toolMap can be private
 
@@ -79,6 +83,7 @@ class Anthropic internal constructor(
   val defaultMaxTokens: Int,
   val directBrowserAccess: Boolean,
   val logLevel: LogLevel,
+  private val modelMap: Map<String, AnthropicModel>,
   private val toolMap: Map<String, Tool>
 ) {
 
@@ -87,13 +92,15 @@ class Anthropic internal constructor(
     var anthropicVersion: String = DEFAULT_ANTHROPIC_VERSION
     var anthropicBeta: String? = null
     var apiBase: String = ANTHROPIC_API_BASE
-    var defaultModel: Model = Model.DEFAULT
+    var defaultModel: AnthropicModel = Model.DEFAULT
     var defaultMaxTokens: Int = defaultModel.maxOutput
 
     var directBrowserAccess: Boolean = false
     var logHttp: Boolean = false
 
     var tools: List<Tool> = emptyList()
+
+    var modelMap: Map<String, AnthropicModel> = Model.entries.associateBy { it.id }
 
     // TODO in the future this should be rather Tool builder
     inline fun <reified T : ToolInput> tool(
@@ -176,6 +183,7 @@ class Anthropic internal constructor(
       val response = apiResponse.body<Response>()
       when (response) {
         is MessageResponse -> response.apply {
+          updateUsage(response)
           content.filterIsInstance<ToolUse>()
             .forEach { toolUse ->
               val tool = toolMap[toolUse.name]
@@ -192,7 +200,9 @@ class Anthropic internal constructor(
           error = response.error,
           httpStatusCode = apiResponse.status
         )
-        else -> throw RuntimeException("Unsupported response: $response") // should never happen
+        else -> throw RuntimeException(
+          "Unsupported response: $response"
+        ) // should never happen
       }
       return response
     }
@@ -222,8 +232,13 @@ class Anthropic internal constructor(
           .map { it.data }
           .filterNotNull()
           .map { anthropicJson.decodeFromString<Event>(it) }
-          .collect {
-            emit(it)
+          .collect { event ->
+            // TODO we need better way of handling subsequent deltas with usage
+            if (event is Event.MessageStart) {
+              // TODO more rules are needed here
+              updateUsage(event.message)
+            }
+            emit(event)
           }
       }
     }
@@ -232,5 +247,25 @@ class Anthropic internal constructor(
 
   val messages = Messages()
 
-}
+  private val usageCollector = UsageCollector()
 
+  val usage: Usage get() = usageCollector.usage
+
+  val cost: Cost get() = usageCollector.cost
+
+  override fun toString(): String = "Anthropic($usage, $cost)"
+
+  private val MessageResponse.anthropicModel: AnthropicModel get() = requireNotNull(
+    modelMap[model]
+  ) {
+    "The model returned in the response is not known to Anthropic API client: $id"
+  }
+
+  private fun updateUsage(response: MessageResponse) {
+    usageCollector.update(
+      modelCost = response.anthropicModel.cost,
+      usage = response.usage
+    )
+  }
+
+}

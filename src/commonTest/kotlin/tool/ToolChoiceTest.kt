@@ -16,11 +16,11 @@ class ToolChoiceTest {
   @Test
   fun shouldSerializeToolChoiceAuto() {
 
-    ToolChoice.Auto().json shouldEqualJson """
+    ToolChoice.Auto().json shouldEqualJson /* language=json */ """
       {
         "type": "auto"
       }
-    """.trimIndent()
+    """
 
     ToolChoice.Auto(
       disableParallelToolUse = true
@@ -29,27 +29,27 @@ class ToolChoiceTest {
         "type": "auto",
         "disable_parallel_tool_use": true
       }
-    """.trimIndent()
+    """
 
   }
 
   @Test
   fun shouldSerializeToolChoiceAny() {
 
-    ToolChoice.Any().json shouldEqualJson """
+    ToolChoice.Any().json shouldEqualJson /* language=json */ """
       {
         "type": "any"
       }
-    """.trimIndent()
+    """
 
     ToolChoice.Any(
       disableParallelToolUse = true
-    ).json shouldEqualJson """
+    ).json shouldEqualJson /* language=json */ """
       {
         "type": "any",
         "disable_parallel_tool_use": true
       }
-    """.trimIndent()
+    """
 
   }
 
@@ -58,23 +58,23 @@ class ToolChoiceTest {
 
     ToolChoice.Tool(
       name = "foo"
-    ).json shouldEqualJson """
+    ).json shouldEqualJson /* language=json */ """
       {
         "type": "tool",
         "name": "foo"
       }
-    """.trimIndent()
+    """
 
     ToolChoice.Tool(
       name = "foo",
       disableParallelToolUse = true
-    ).json shouldEqualJson """
+    ).json shouldEqualJson /* language=json */ """
       {
         "type": "tool",
         "name": "foo",
         "disable_parallel_tool_use": true
       }
-    """.trimIndent()
+    """
 
   }
 

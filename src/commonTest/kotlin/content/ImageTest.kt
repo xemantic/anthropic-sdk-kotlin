@@ -3,10 +3,9 @@ package com.xemantic.anthropic.content
 import com.xemantic.anthropic.Anthropic
 import com.xemantic.anthropic.message.Message
 import com.xemantic.anthropic.message.StopReason
-import com.xemantic.anthropic.test.assert
-import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
-import io.kotest.matchers.types.instanceOf
+import com.xemantic.kotlin.test.be
+import com.xemantic.kotlin.test.have
+import com.xemantic.kotlin.test.should
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 
@@ -27,7 +26,7 @@ const val testImage = "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAA
 class ImageTest {
 
   @Test
-  fun shouldReadTextFooFromTestImage() = runTest {
+  fun `Should read text FOO from test image`() = runTest {
     // given
     val client = Anthropic()
 
@@ -45,12 +44,13 @@ class ImageTest {
     }
 
     // then
-    response.assert {
-      stopReason shouldBe StopReason.END_TURN
-      content.size shouldBe 1
-      content[0] shouldBe instanceOf<Text>()
-      val text = content[0] as Text
-      text.text.uppercase() shouldContain "FOO"
+    response should {
+      have(stopReason == StopReason.END_TURN)
+      have(content.size == 1)
+      content[0] should {
+        be<Text>()
+        have("FOO" in text.uppercase())
+      }
     }
   }
 

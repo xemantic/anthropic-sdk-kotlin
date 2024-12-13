@@ -22,6 +22,7 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.SerialKind
 import kotlinx.serialization.descriptors.buildSerialDescriptor
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
@@ -64,6 +65,15 @@ val anthropicJson: Json = Json {
   explicitNulls = false
   encodeDefaults = true
 }
+
+@OptIn(ExperimentalSerializationApi::class)
+@PublishedApi
+internal val prettyAnthropicJson: Json = Json(from = anthropicJson) {
+  prettyPrint = true
+  prettyPrintIndent = "  "
+}
+
+inline fun <reified T> T.toPrettyJson(): String = prettyAnthropicJson.encodeToString<T>(this)
 
 private object ResponseSerializer : JsonContentPolymorphicSerializer<Response>(
   baseClass = Response::class

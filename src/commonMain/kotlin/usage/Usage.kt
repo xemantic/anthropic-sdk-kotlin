@@ -1,6 +1,10 @@
 package com.xemantic.anthropic.usage
 
-import com.xemantic.anthropic.Model
+import com.xemantic.ai.money.Money
+import com.xemantic.ai.money.ONE
+import com.xemantic.ai.money.Ratio
+import com.xemantic.ai.money.times
+import com.xemantic.ai.money.ZERO
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -14,37 +18,72 @@ data class Usage(
   val cacheCreationInputTokens: Int? = null,
   @SerialName("cache_read_input_tokens")
   val cacheReadInputTokens: Int? = null,
-)
-
-fun Usage.add(usage: Usage): Usage = Usage(
-  inputTokens = inputTokens + usage.inputTokens,
-  outputTokens = outputTokens + usage.outputTokens,
-  cacheReadInputTokens = (cacheReadInputTokens ?: 0) + (usage.cacheReadInputTokens ?: 0),
-  cacheCreationInputTokens = (cacheCreationInputTokens ?: 0) + (usage.cacheCreationInputTokens ?: 0),
-)
-
-fun Usage.cost(
-  model: Model,
-  isBatch: Boolean = false
-): Cost = Cost(
-  inputTokens = inputTokens * model.cost.inputTokens / 1000000.0 * (if (isBatch) .5 else 1.0),
-  outputTokens = outputTokens * model.cost.outputTokens / 1000000.0 * (if (isBatch) .5 else 1.0),
-  cacheReadInputTokens = (cacheReadInputTokens ?: 0) * model.cost.inputTokens * .1 / 1000000.0 * (if (isBatch) .5 else 1.0),
-  cacheCreationInputTokens = (cacheCreationInputTokens ?: 0) * model.cost.inputTokens * .25 / 1000000.0 * (if (isBatch) .5 else 1.0)
-)
-
-data class Cost(
-  val inputTokens: Double,
-  val outputTokens: Double,
-  val cacheCreationInputTokens: Double,
-  val cacheReadInputTokens: Double
 ) {
 
-  fun add(cost: Cost): Cost = Cost(
+  companion object {
+
+    val ZERO = Usage(
+      inputTokens = 0,
+      outputTokens = 0,
+      cacheCreationInputTokens = 0,
+      cacheReadInputTokens = 0
+    )
+
+  }
+
+  operator fun plus(usage: Usage): Usage = Usage(
+    inputTokens = inputTokens + usage.inputTokens,
+    outputTokens = outputTokens + usage.outputTokens,
+    cacheCreationInputTokens = (cacheCreationInputTokens ?: 0) + (usage.cacheCreationInputTokens ?: 0),
+    cacheReadInputTokens = (cacheReadInputTokens ?: 0) + (usage.cacheReadInputTokens ?: 0)
+  )
+
+  fun cost(
+    modelCost: Cost,
+    costRatio: Money.Ratio = Money.Ratio.ONE
+  ): Cost = Cost(
+    inputTokens = inputTokens * modelCost.inputTokens * costRatio,
+    outputTokens = outputTokens * modelCost.outputTokens * costRatio,
+    // how cacheCreation and batch are playing together?
+    cacheCreationInputTokens = (cacheCreationInputTokens ?: 0) * modelCost.cacheCreationInputTokens * costRatio,
+    cacheReadInputTokens = (cacheReadInputTokens ?: 0) * modelCost.cacheReadInputTokens * costRatio
+  )
+
+}
+
+@Serializable
+data class Cost(
+  val inputTokens: Money,
+  val outputTokens: Money,
+  val cacheCreationInputTokens: Money = inputTokens * Money.Ratio("1.25"),
+  val cacheReadInputTokens: Money = inputTokens * Money.Ratio("0.1"),
+) {
+
+  operator fun plus(cost: Cost): Cost = Cost(
     inputTokens = inputTokens + cost.inputTokens,
     outputTokens = outputTokens + cost.outputTokens,
     cacheCreationInputTokens = cacheCreationInputTokens + cost.cacheCreationInputTokens,
     cacheReadInputTokens = cacheReadInputTokens + cost.cacheReadInputTokens
   )
+
+  operator fun times(amount: Money): Cost = Cost(
+    inputTokens = inputTokens * amount,
+    outputTokens = outputTokens * amount,
+    cacheCreationInputTokens = cacheCreationInputTokens * amount,
+    cacheReadInputTokens = cacheReadInputTokens * amount
+  )
+
+  val total: Money get() =
+    inputTokens +
+        outputTokens +
+        cacheCreationInputTokens +
+        cacheReadInputTokens
+
+  companion object {
+    val ZERO = Cost(
+      inputTokens = Money.ZERO,
+      outputTokens = Money.ZERO
+    )
+  }
 
 }

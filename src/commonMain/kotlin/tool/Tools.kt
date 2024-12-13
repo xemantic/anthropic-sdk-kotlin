@@ -3,10 +3,12 @@ package com.xemantic.anthropic.tool
 import com.xemantic.ai.tool.schema.JsonSchema
 import com.xemantic.ai.tool.schema.generator.jsonSchemaOf
 import com.xemantic.ai.tool.schema.meta.Description
+import com.xemantic.anthropic.anthropicJson
 import com.xemantic.anthropic.cache.CacheControl
 import com.xemantic.anthropic.content.Content
 import com.xemantic.anthropic.content.ToolResult
 import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.MetaSerializable
 import kotlinx.serialization.SerialName
@@ -15,6 +17,7 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.Transient
 import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.serializer
+import kotlinx.serialization.serializerOrNull
 
 @Serializable
 @JsonClassDiscriminator("name")
@@ -65,8 +68,10 @@ abstract class BuiltInTool(
  * with a given tool use ID. The implementation of the [use] method should
  * contain the logic for executing the tool and returning the [ToolResult].
  */
+@Serializable
 abstract class ToolInput {
 
+  @Transient
   private var block: suspend ToolResult.Builder.() -> Any? = {}
 
   fun use(block: suspend ToolResult.Builder.() -> Any?) {
@@ -79,15 +84,23 @@ abstract class ToolInput {
    * @param toolUseId A unique identifier for this particular use of the tool.
    * @return A [ToolResult] containing the outcome of executing the tool.
    */
+  // TODO this needs a big test coverage
   suspend fun use(toolUseId: String): ToolResult {
-    return ToolResult(toolUseId) {
+    return ToolResult {
+      this.toolUseId = toolUseId
       val result = block(this)
-      if (result != null) {
-        when (result) {
-          is Content -> +result
-          is Unit -> {} // nothing to do
-          !is Unit -> +result.toString()
-          else -> throw IllegalStateException("Tool use {} returned not supported: $this")
+      if ((result != null) && (result !is Unit)) {
+        if (result is Content) {
+          +result
+        } else {
+          @OptIn(InternalSerializationApi::class)
+          val serializer = result::class.serializerOrNull() as KSerializer<Any>?
+          val value = if (serializer != null) {
+            anthropicJson.encodeToString(serializer, result)
+          } else {
+            result.toString()
+          }
+          +value
         }
       }
     }
