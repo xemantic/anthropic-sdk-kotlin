@@ -6,6 +6,7 @@ build/
 
 ### IntelliJ IDEA ###
 /.idea/
+!/.idea/copyright/
 *.iws
 *.iml
 *.ipr
