@@ -87,7 +87,7 @@ class ToolInputTest {
 
   @Test
   fun `Should fail to create a Tool without AnthropicTool annotation`() {
-    val exception = assertFailsWith<SerializationException> {
+    assertFailsWith<SerializationException> {
       Tool<NoAnnotationTool>()
     } should {
       have(message!!.matches(Regex(
