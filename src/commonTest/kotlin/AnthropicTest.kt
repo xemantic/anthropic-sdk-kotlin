@@ -16,6 +16,7 @@ import com.xemantic.anthropic.content.Text
 import com.xemantic.anthropic.content.ToolUse
 import com.xemantic.anthropic.usage.Cost
 import com.xemantic.anthropic.usage.Usage
+import com.xemantic.kotlin.test.assert
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
