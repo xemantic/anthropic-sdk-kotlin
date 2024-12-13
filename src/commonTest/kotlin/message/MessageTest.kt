@@ -2,7 +2,7 @@ package com.xemantic.anthropic.message
 
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
-import org.junit.Test
+import kotlin.test.Test
 
 class MessageTest {
 

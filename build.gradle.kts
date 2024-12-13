@@ -57,8 +57,8 @@ kotlin {
   compilerOptions {
     apiVersion = kotlinTarget
     languageVersion = kotlinTarget
-    extraWarnings.set(true)
     freeCompilerArgs.add("-Xmulti-dollar-interpolation")
+    extraWarnings.set(true)
     progressiveMode = true
   }
 
@@ -139,14 +139,6 @@ kotlin {
   }
 
   sourceSets {
-
-    all {
-      languageSettings {
-        languageVersion = kotlinTarget.version
-        apiVersion = kotlinTarget.version
-        progressiveMode = true
-      }
-    }
 
     commonMain {
       dependencies {
