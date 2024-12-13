@@ -156,6 +156,7 @@ kotlin {
         implementation(libs.ktor.client.logging)
         implementation(libs.ktor.serialization.kotlinx.json)
         implementation(libs.xemantic.ai.tool.schema)
+        api(libs.xemantic.ai.money)
       }
     }
 
@@ -163,7 +164,7 @@ kotlin {
       dependencies {
         implementation(libs.kotlin.test)
         implementation(libs.kotlinx.coroutines.test)
-        implementation(libs.kotest.assertions.core)
+        implementation(libs.xemantic.kotlin.test)
         implementation(libs.kotest.assertions.json)
       }
     }
@@ -242,10 +243,10 @@ tasks.withType<Test> {
 }
 
 powerAssert {
-//  functions = listOf(
-//    "io.kotest.matchers.shouldBe"
-//  )
-//  includedSourceSets = listOf("commonTest", "jvmTest", "nativeTest")
+  functions = listOf(
+    "com.xemantic.kotlin.test.assert",
+    "com.xemantic.kotlin.test.have"
+  )
 }
 
 // maybe this one is not necessary?

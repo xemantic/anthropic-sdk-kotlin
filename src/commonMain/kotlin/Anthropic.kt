@@ -12,6 +12,7 @@ import com.xemantic.anthropic.tool.Tool
 import com.xemantic.anthropic.tool.ToolInput
 import com.xemantic.anthropic.usage.Cost
 import com.xemantic.anthropic.usage.Usage
+import com.xemantic.anthropic.usage.UsageCollector
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.*
@@ -28,8 +29,6 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
-import kotlinx.atomicfu.atomic
-import kotlinx.atomicfu.update
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
@@ -93,7 +92,7 @@ class Anthropic internal constructor(
     var anthropicVersion: String = DEFAULT_ANTHROPIC_VERSION
     var anthropicBeta: String? = null
     var apiBase: String = ANTHROPIC_API_BASE
-    var defaultModel: Model = Model.DEFAULT
+    var defaultModel: AnthropicModel = Model.DEFAULT
     var defaultMaxTokens: Int = defaultModel.maxOutput
 
     var directBrowserAccess: Boolean = false
@@ -184,6 +183,7 @@ class Anthropic internal constructor(
       val response = apiResponse.body<Response>()
       when (response) {
         is MessageResponse -> response.apply {
+          updateUsage(response)
           content.filterIsInstance<ToolUse>()
             .forEach { toolUse ->
               val tool = toolMap[toolUse.name]
@@ -195,13 +195,14 @@ class Anthropic internal constructor(
                 println("Error!!! Unexpected tool use: ${toolUse.name}")
               }
             }
-          updateTotals()
         }
         is ErrorResponse -> throw AnthropicException(
           error = response.error,
           httpStatusCode = apiResponse.status
         )
-        else -> throw RuntimeException("Unsupported response: $response") // should never happen
+        else -> throw RuntimeException(
+          "Unsupported response: $response"
+        ) // should never happen
       }
       return response
     }
@@ -234,7 +235,8 @@ class Anthropic internal constructor(
           .collect { event ->
             // TODO we need better way of handling subsequent deltas with usage
             if (event is Event.MessageStart) {
-              event.message.updateTotals()
+              // TODO more rules are needed here
+              updateUsage(event.message)
             }
             emit(event)
           }
@@ -245,11 +247,13 @@ class Anthropic internal constructor(
 
   val messages = Messages()
 
-  private val _totalUsage = atomic(Usage.ZERO)
-  val totalUsage: Usage get() = _totalUsage.value
+  private val usageCollector = UsageCollector()
 
-  private val _totalCost = atomic(Cost.ZERO)
-  val totalCost: Cost get() = _totalCost.value
+  val usage: Usage get() = usageCollector.usage
+
+  val cost: Cost get() = usageCollector.cost
+
+  override fun toString(): String = "Anthropic($usage, $cost)"
 
   private val MessageResponse.anthropicModel: AnthropicModel get() = requireNotNull(
     modelMap[model]
@@ -257,9 +261,11 @@ class Anthropic internal constructor(
     "The model returned in the response is not known to Anthropic API client: $id"
   }
 
-  private fun MessageResponse.updateTotals() {
-    _totalUsage.update { it + usage }
-    _totalCost.update { it + (usage.cost(anthropicModel) / Model.PRICE_UNIT) }
+  private fun updateUsage(response: MessageResponse) {
+    usageCollector.update(
+      modelCost = response.anthropicModel.cost,
+      usage = response.usage
+    )
   }
 
 }
