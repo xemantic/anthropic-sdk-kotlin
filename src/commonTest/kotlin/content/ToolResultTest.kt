@@ -3,7 +3,7 @@ package com.xemantic.anthropic.content
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
-import org.junit.Test
+import kotlin.test.Test
 
 class ToolResultTest {
 
