@@ -11,7 +11,7 @@ class MagicNumberTest {
     assert(
       File(
         "test-data/minimal.pdf"
-      ).readBytes().findMagicNumber() == MagicNumber.JPEG
+      ).readBytes().findMagicNumber() == MagicNumber.PDF
     )
     assert(
       File(
