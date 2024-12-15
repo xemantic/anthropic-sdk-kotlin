@@ -18,7 +18,7 @@ package com.xemantic.anthropic.batch
 
 import com.xemantic.anthropic.Response
 import com.xemantic.anthropic.message.Message
-import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.Instant
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -74,13 +74,13 @@ data class MessageBatchResponse(
   @SerialName("request_counts")
   val requestCounts: RequestCounts,
   @SerialName("ended_at")
-  val endedAt: LocalDateTime?,
+  val endedAt: Instant?,
   @SerialName("created_at")
-  val createdAt: LocalDateTime,
+  val createdAt: Instant,
   @SerialName("expires_at")
-  val expiresAt: LocalDateTime,
+  val expiresAt: Instant,
   @SerialName("cancel_initiated_at")
-  val cancelInitiatedAt: LocalDateTime?,
+  val cancelInitiatedAt: Instant?,
   @SerialName("results_url")
   val resultsUrl: String?
 ) : Response(type = "message_batch")

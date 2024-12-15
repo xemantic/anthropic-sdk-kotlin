@@ -251,3 +251,15 @@ export ANTHROPIC_API_KEY=your-key-goes-here
 Many [unit tests](src/commonTest/kotlin) are actually integration tests calling Anthropic APIs
 and asserting against results. This is the reason why they might be flaky from time to time. For
 example if the test image is misinterpreted, or Claude is randomly fantasizing too much.
+
+## Project dependencies
+
+API dependencies (will be provided as transitive dependencies of `anthropic-sdk-kotlin`):
+
+* [xemantic-ai-tool-schema](https://github.com/xemantic/xemantic-ai-tool-schema)
+* [xemantic-ai-money](https://github.com/xemantic/xemantic-ai-money)
+* [kotlinx-datetime](https://github.com/Kotlin/kotlinx-datetime)
+
+Implementation dependencies:
+
+* [ktor](https://ktor.io/)
