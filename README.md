@@ -63,8 +63,8 @@ Otherwise, you need to add to your `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-  implementation("com.xemantic.anthropic:anthropic-sdk-kotlin:.0.10")
-} 
+  implementation("com.xemantic.anthropic:anthropic-sdk-kotlin:0.11")
+}
 ```
 
 , and in case of JVM:
