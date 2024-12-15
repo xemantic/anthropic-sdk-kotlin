@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.xemantic.anthropic.error
+package com.xemantic.ai.anthropic.error
 
-import com.xemantic.anthropic.Response
+import com.xemantic.ai.anthropic.Response
 import io.ktor.http.HttpStatusCode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

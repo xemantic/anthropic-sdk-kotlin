@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package com.xemantic.anthropic.tool
+package com.xemantic.ai.anthropic.tool
 
 import com.xemantic.ai.tool.schema.JsonSchema
 import com.xemantic.ai.tool.schema.generator.jsonSchemaOf
 import com.xemantic.ai.tool.schema.meta.Description
-import com.xemantic.anthropic.anthropicJson
-import com.xemantic.anthropic.cache.CacheControl
-import com.xemantic.anthropic.content.Content
-import com.xemantic.anthropic.content.ToolResult
+import com.xemantic.ai.anthropic.anthropicJson
+import com.xemantic.ai.anthropic.cache.CacheControl
+import com.xemantic.ai.anthropic.content.Content
+import com.xemantic.ai.anthropic.content.ToolResult
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer

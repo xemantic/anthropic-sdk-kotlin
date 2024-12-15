@@ -1,4 +1,4 @@
-package com.xemantic.anthropic
+package com.xemantic.ai.anthropic
 
 actual val envApiKey: String?
   get() = js("process.env.ANTHROPIC_API_KEY")

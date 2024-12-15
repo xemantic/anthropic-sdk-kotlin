@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.xemantic.anthropic.cache
+package com.xemantic.ai.anthropic.cache
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.xemantic.anthropic.message
+package com.xemantic.ai.anthropic.message
 
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should

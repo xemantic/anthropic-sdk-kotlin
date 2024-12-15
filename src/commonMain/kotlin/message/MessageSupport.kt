@@ -14,6 +14,6 @@
  * limitations under the License.
  */
 
-package com.xemantic.anthropic.message
+package com.xemantic.ai.anthropic.message
 
 fun <T> List<T>.toNullIfEmpty(): List<T>? = if (isEmpty()) null else this

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.xemantic.anthropic.tool.editor
+package com.xemantic.ai.anthropic.tool.editor
 
 object JvmTextEditorService : TextEditorService {
 

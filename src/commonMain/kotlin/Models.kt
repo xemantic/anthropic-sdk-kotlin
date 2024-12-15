@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package com.xemantic.anthropic
+package com.xemantic.ai.anthropic
 
 import com.xemantic.ai.money.Money
 import com.xemantic.ai.money.Ratio
-import com.xemantic.anthropic.usage.Cost
+import com.xemantic.ai.anthropic.usage.Cost
 
 /**
  * The model used by the API.

@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.xemantic.anthropic.tool.computer
+package com.xemantic.ai.anthropic.tool.computer
 
-import com.xemantic.anthropic.cache.CacheControl
-import com.xemantic.anthropic.content.Image
-import com.xemantic.anthropic.tool.BuiltInTool
-import com.xemantic.anthropic.tool.ToolInput
+import com.xemantic.ai.anthropic.cache.CacheControl
+import com.xemantic.ai.anthropic.content.Image
+import com.xemantic.ai.anthropic.tool.BuiltInTool
+import com.xemantic.ai.anthropic.tool.ToolInput
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

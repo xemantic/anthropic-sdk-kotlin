@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.xemantic.anthropic.usage
+package com.xemantic.ai.anthropic.usage
 
 import com.xemantic.ai.money.Money
 import com.xemantic.ai.money.Ratio
 import com.xemantic.ai.money.ZERO
-import com.xemantic.anthropic.Model
+import com.xemantic.ai.anthropic.Model
 import com.xemantic.kotlin.test.assert
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should

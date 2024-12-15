@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.xemantic.anthropic.content
+package com.xemantic.ai.anthropic.content
 
 @OptIn(ExperimentalUnsignedTypes::class)
 enum class MagicNumber(

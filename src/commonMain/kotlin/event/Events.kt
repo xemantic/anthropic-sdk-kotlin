@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.xemantic.anthropic.event
+package com.xemantic.ai.anthropic.event
 
-import com.xemantic.anthropic.message.MessageResponse
-import com.xemantic.anthropic.message.StopReason
+import com.xemantic.ai.anthropic.message.MessageResponse
+import com.xemantic.ai.anthropic.message.StopReason
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

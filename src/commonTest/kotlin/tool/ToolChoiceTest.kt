@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.xemantic.anthropic.tool
+package com.xemantic.ai.anthropic.tool
 
-import com.xemantic.anthropic.test.testJson
+import com.xemantic.ai.anthropic.test.testJson
 import io.kotest.assertions.json.shouldEqualJson
 import kotlinx.serialization.encodeToString
 import kotlin.test.Test

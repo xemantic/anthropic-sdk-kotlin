@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.xemantic.anthropic
+package com.xemantic.ai.anthropic
 
-import com.xemantic.anthropic.message.MessageRequest
-import com.xemantic.anthropic.message.MessageResponse
+import com.xemantic.ai.anthropic.message.MessageRequest
+import com.xemantic.ai.anthropic.message.MessageResponse
 import kotlinx.coroutines.runBlocking
 import java.util.function.Consumer
 

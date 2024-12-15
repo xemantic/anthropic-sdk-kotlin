@@ -14,23 +14,23 @@
  * limitations under the License.
  */
 
-package com.xemantic.anthropic
+package com.xemantic.ai.anthropic
 
-import com.xemantic.anthropic.batch.MessageBatchResponse
-import com.xemantic.anthropic.content.Content
-import com.xemantic.anthropic.content.Document
-import com.xemantic.anthropic.error.ErrorResponse
-import com.xemantic.anthropic.content.Image
-import com.xemantic.anthropic.content.Text
-import com.xemantic.anthropic.message.MessageResponse
-import com.xemantic.anthropic.content.ToolResult
-import com.xemantic.anthropic.content.ToolUse
-import com.xemantic.anthropic.tool.BuiltInTool
-import com.xemantic.anthropic.tool.DefaultTool
-import com.xemantic.anthropic.tool.Tool
-import com.xemantic.anthropic.tool.bash.Bash
-import com.xemantic.anthropic.tool.computer.Computer
-import com.xemantic.anthropic.tool.editor.TextEditor
+import com.xemantic.ai.anthropic.batch.MessageBatchResponse
+import com.xemantic.ai.anthropic.content.Content
+import com.xemantic.ai.anthropic.content.Document
+import com.xemantic.ai.anthropic.error.ErrorResponse
+import com.xemantic.ai.anthropic.content.Image
+import com.xemantic.ai.anthropic.content.Text
+import com.xemantic.ai.anthropic.message.MessageResponse
+import com.xemantic.ai.anthropic.content.ToolResult
+import com.xemantic.ai.anthropic.content.ToolUse
+import com.xemantic.ai.anthropic.tool.BuiltInTool
+import com.xemantic.ai.anthropic.tool.DefaultTool
+import com.xemantic.ai.anthropic.tool.Tool
+import com.xemantic.ai.anthropic.tool.bash.Bash
+import com.xemantic.ai.anthropic.tool.computer.Computer
+import com.xemantic.ai.anthropic.tool.editor.TextEditor
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -134,7 +134,7 @@ private object ToolSerializer : KSerializer<Tool> {
 
   @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
   override val descriptor: SerialDescriptor = buildSerialDescriptor(
-    serialName = "com.xemantic.anthropic.Tool",
+    serialName = "com.xemantic.ai.anthropic.Tool",
     kind = SerialKind.CONTEXTUAL
   )
 

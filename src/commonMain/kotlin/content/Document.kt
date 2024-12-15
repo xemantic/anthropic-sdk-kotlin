@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.xemantic.anthropic.content
+package com.xemantic.ai.anthropic.content
 
-import com.xemantic.anthropic.cache.CacheControl
+import com.xemantic.ai.anthropic.cache.CacheControl
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.io.encoding.ExperimentalEncodingApi

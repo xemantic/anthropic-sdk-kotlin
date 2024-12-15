@@ -1,4 +1,4 @@
-package com.xemantic.anthropic
+package com.xemantic.ai.anthropic
 
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.toKString

@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.xemantic.anthropic.error
+package com.xemantic.ai.anthropic.error
 
-import com.xemantic.anthropic.Response
-import com.xemantic.anthropic.test.testJson
+import com.xemantic.ai.anthropic.Response
+import com.xemantic.ai.anthropic.test.testJson
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
