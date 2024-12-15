@@ -53,7 +53,7 @@ jobs:
     - name: Update README
       run: sh .github/scripts/update-readme-version.sh
 
-    - name: Create Pull Request
+    - name: Commit README
       uses: stefanzweifel/git-auto-commit-action@v5.0.1
       with:
         commit_message: Dependency version in README.md updated to ${{ env.VERSION }}
