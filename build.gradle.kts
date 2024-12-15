@@ -7,6 +7,7 @@ import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
+import org.jetbrains.kotlin.gradle.swiftexport.ExperimentalSwiftExportDsl
 
 plugins {
   alias(libs.plugins.kotlin.multiplatform)
@@ -134,21 +135,21 @@ kotlin {
     mingwX64()
 //  watchosDeviceArm64()
 
-//  @OptIn(ExperimentalSwiftExportDsl::class)
-//  swiftExport {}
+    @OptIn(ExperimentalSwiftExportDsl::class)
+    swiftExport {}
   }
 
   sourceSets {
 
     commonMain {
       dependencies {
-        implementation(libs.kotlinx.datetime)
+        api(libs.xemantic.ai.tool.schema)
+        api(libs.xemantic.ai.money)
+        api(libs.kotlinx.datetime)
         implementation(libs.ktor.client.core)
         implementation(libs.ktor.client.content.negotiation)
         implementation(libs.ktor.client.logging)
         implementation(libs.ktor.serialization.kotlinx.json)
-        implementation(libs.xemantic.ai.tool.schema)
-        api(libs.xemantic.ai.money)
       }
     }
 
