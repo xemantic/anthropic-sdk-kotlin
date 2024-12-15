@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.xemantic.anthropic
+package com.xemantic.ai.anthropic
 
 import kotlinx.serialization.Serializable
 

@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.xemantic.anthropic.message
+package com.xemantic.ai.anthropic.message
 
-import com.xemantic.anthropic.Response
-import com.xemantic.anthropic.content.ToolUse
-import com.xemantic.anthropic.test.testJson
-import com.xemantic.anthropic.usage.Usage
+import com.xemantic.ai.anthropic.Response
+import com.xemantic.ai.anthropic.content.ToolUse
+import com.xemantic.ai.anthropic.test.testJson
+import com.xemantic.ai.anthropic.usage.Usage
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should

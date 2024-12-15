@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package com.xemantic.anthropic.content
+package com.xemantic.ai.anthropic.content
 
-import com.xemantic.anthropic.message.Message
-import com.xemantic.anthropic.message.MessageRequest
-import com.xemantic.anthropic.test.testJson
+import com.xemantic.ai.anthropic.message.Message
+import com.xemantic.ai.anthropic.message.MessageRequest
+import com.xemantic.ai.anthropic.test.testJson
 import io.kotest.assertions.json.shouldEqualJson
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.encodeToString

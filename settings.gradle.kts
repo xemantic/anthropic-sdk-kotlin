@@ -1,4 +1,4 @@
-val groupId = "com.xemantic.anthropic"
+val groupId = "com.xemantic.ai"
 val name = "anthropic-sdk-kotlin"
 
 rootProject.name = name

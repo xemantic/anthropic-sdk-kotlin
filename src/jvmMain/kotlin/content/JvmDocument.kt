@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.xemantic.anthropic.content
+package com.xemantic.ai.anthropic.content
 
 import java.io.File
 import kotlin.io.encoding.ExperimentalEncodingApi

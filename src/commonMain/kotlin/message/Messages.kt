@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-package com.xemantic.anthropic.message
+package com.xemantic.ai.anthropic.message
 
-import com.xemantic.anthropic.Model
-import com.xemantic.anthropic.Response
-import com.xemantic.anthropic.cache.CacheControl
-import com.xemantic.anthropic.content.Content
-import com.xemantic.anthropic.content.ContentBuilder
-import com.xemantic.anthropic.content.ToolUse
-import com.xemantic.anthropic.toPrettyJson
-import com.xemantic.anthropic.tool.Tool
-import com.xemantic.anthropic.tool.ToolChoice
-import com.xemantic.anthropic.tool.ToolInput
-import com.xemantic.anthropic.tool.toolName
-import com.xemantic.anthropic.usage.Usage
+import com.xemantic.ai.anthropic.Model
+import com.xemantic.ai.anthropic.Response
+import com.xemantic.ai.anthropic.cache.CacheControl
+import com.xemantic.ai.anthropic.content.Content
+import com.xemantic.ai.anthropic.content.ContentBuilder
+import com.xemantic.ai.anthropic.content.ToolUse
+import com.xemantic.ai.anthropic.toPrettyJson
+import com.xemantic.ai.anthropic.tool.Tool
+import com.xemantic.ai.anthropic.tool.ToolChoice
+import com.xemantic.ai.anthropic.tool.ToolInput
+import com.xemantic.ai.anthropic.tool.toolName
+import com.xemantic.ai.anthropic.usage.Usage
 import kotlinx.serialization.*
 import kotlin.collections.mutableListOf
 
@@ -93,7 +93,7 @@ data class MessageRequest(
 
     /**
      * Will fill [tools] with all the tools defined
-     * when creating this [com.xemantic.anthropic.Anthropic] client.
+     * when creating this [com.xemantic.ai.anthropic.Anthropic] client.
      */
     fun allTools() {
       tools = toolMap.values.toList()
@@ -106,7 +106,7 @@ data class MessageRequest(
 
     /**
      * Sets both, the [tools] list and the [toolChoice] with
-     * just one tool to use, forcing the API to respond with the [com.xemantic.anthropic.content.ToolUse].
+     * just one tool to use, forcing the API to respond with the [com.xemantic.ai.anthropic.content.ToolUse].
      */
     inline fun <reified T : ToolInput> singleTool() {
       val name = toolName<T>()
@@ -121,7 +121,7 @@ data class MessageRequest(
     /**
      * Sets both, the [tools] list and the [toolChoice] with
      * just one tool to use, forcing the API to respond with the
-     * [com.xemantic.anthropic.content.ToolUse] instance.
+     * [com.xemantic.ai.anthropic.content.ToolUse] instance.
      */
     fun chooseTool(name: String) {
       val tool = requireNotNull(toolMap[name]) {

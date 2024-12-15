@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.xemantic.anthropic.tool
+package com.xemantic.ai.anthropic.tool
 
 import com.xemantic.ai.tool.schema.meta.Description
-import com.xemantic.anthropic.cache.CacheControl
+import com.xemantic.ai.anthropic.cache.CacheControl
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
 import io.kotest.assertions.json.shouldEqualJson

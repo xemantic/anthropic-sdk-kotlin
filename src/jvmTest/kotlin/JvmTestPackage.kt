@@ -14,4 +14,4 @@
  * limitations under the License.
  */
 
-package com.xemantic.anthropic
+package com.xemantic.ai.anthropic

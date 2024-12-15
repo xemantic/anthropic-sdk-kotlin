@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package com.xemantic.anthropic.content
+package com.xemantic.ai.anthropic.content
 
-import com.xemantic.anthropic.Anthropic
-import com.xemantic.anthropic.message.Message
-import com.xemantic.anthropic.message.StopReason
+import com.xemantic.ai.anthropic.Anthropic
+import com.xemantic.ai.anthropic.message.Message
+import com.xemantic.ai.anthropic.message.StopReason
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should

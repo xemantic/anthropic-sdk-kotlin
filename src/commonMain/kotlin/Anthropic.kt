@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
-package com.xemantic.anthropic
+package com.xemantic.ai.anthropic
 
-import com.xemantic.anthropic.error.AnthropicException
-import com.xemantic.anthropic.error.ErrorResponse
-import com.xemantic.anthropic.event.Event
-import com.xemantic.anthropic.cache.CacheControl
-import com.xemantic.anthropic.content.ToolUse
-import com.xemantic.anthropic.message.MessageRequest
-import com.xemantic.anthropic.message.MessageResponse
-import com.xemantic.anthropic.tool.BuiltInTool
-import com.xemantic.anthropic.tool.Tool
-import com.xemantic.anthropic.tool.ToolInput
-import com.xemantic.anthropic.usage.Cost
-import com.xemantic.anthropic.usage.Usage
-import com.xemantic.anthropic.usage.UsageCollector
+import com.xemantic.ai.anthropic.error.AnthropicException
+import com.xemantic.ai.anthropic.error.ErrorResponse
+import com.xemantic.ai.anthropic.event.Event
+import com.xemantic.ai.anthropic.cache.CacheControl
+import com.xemantic.ai.anthropic.content.ToolUse
+import com.xemantic.ai.anthropic.message.MessageRequest
+import com.xemantic.ai.anthropic.message.MessageResponse
+import com.xemantic.ai.anthropic.tool.BuiltInTool
+import com.xemantic.ai.anthropic.tool.Tool
+import com.xemantic.ai.anthropic.tool.ToolInput
+import com.xemantic.ai.anthropic.usage.Cost
+import com.xemantic.ai.anthropic.usage.Usage
+import com.xemantic.ai.anthropic.usage.UsageCollector
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.*

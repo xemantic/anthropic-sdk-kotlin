@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.xemantic.anthropic.test
+package com.xemantic.ai.anthropic.test
 
-import com.xemantic.anthropic.anthropicJson
+import com.xemantic.ai.anthropic.anthropicJson
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 

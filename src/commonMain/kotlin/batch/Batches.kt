@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.xemantic.anthropic.batch
+package com.xemantic.ai.anthropic.batch
 
-import com.xemantic.anthropic.Response
-import com.xemantic.anthropic.message.Message
+import com.xemantic.ai.anthropic.Response
+import com.xemantic.ai.anthropic.message.Message
 import kotlinx.datetime.Instant
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

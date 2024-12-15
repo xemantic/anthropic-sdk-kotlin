@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.xemantic.anthropic.tool.computer
+package com.xemantic.ai.anthropic.tool.computer
 
-import com.xemantic.anthropic.content.Image
+import com.xemantic.ai.anthropic.content.Image
 import java.awt.Rectangle
 import java.awt.Robot
 import java.awt.Toolkit

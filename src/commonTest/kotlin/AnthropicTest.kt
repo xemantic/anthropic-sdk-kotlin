@@ -14,24 +14,24 @@
  * limitations under the License.
  */
 
-package com.xemantic.anthropic
+package com.xemantic.ai.anthropic
 
 import com.xemantic.ai.money.Money
 import com.xemantic.ai.money.ZERO
-import com.xemantic.anthropic.event.Delta.TextDelta
-import com.xemantic.anthropic.event.Event
-import com.xemantic.anthropic.message.Message
-import com.xemantic.anthropic.message.Role
-import com.xemantic.anthropic.message.StopReason
-import com.xemantic.anthropic.message.plusAssign
-import com.xemantic.anthropic.tool.Calculator
-import com.xemantic.anthropic.tool.DatabaseQuery
-import com.xemantic.anthropic.tool.FibonacciTool
-import com.xemantic.anthropic.tool.TestDatabase
-import com.xemantic.anthropic.content.Text
-import com.xemantic.anthropic.content.ToolUse
-import com.xemantic.anthropic.usage.Cost
-import com.xemantic.anthropic.usage.Usage
+import com.xemantic.ai.anthropic.event.Delta.TextDelta
+import com.xemantic.ai.anthropic.event.Event
+import com.xemantic.ai.anthropic.message.Message
+import com.xemantic.ai.anthropic.message.Role
+import com.xemantic.ai.anthropic.message.StopReason
+import com.xemantic.ai.anthropic.message.plusAssign
+import com.xemantic.ai.anthropic.tool.Calculator
+import com.xemantic.ai.anthropic.tool.DatabaseQuery
+import com.xemantic.ai.anthropic.tool.FibonacciTool
+import com.xemantic.ai.anthropic.tool.TestDatabase
+import com.xemantic.ai.anthropic.content.Text
+import com.xemantic.ai.anthropic.content.ToolUse
+import com.xemantic.ai.anthropic.usage.Cost
+import com.xemantic.ai.anthropic.usage.Usage
 import com.xemantic.kotlin.test.assert
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have

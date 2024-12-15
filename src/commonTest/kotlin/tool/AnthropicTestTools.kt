@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.xemantic.anthropic.tool
+package com.xemantic.ai.anthropic.tool
 
 import com.xemantic.ai.tool.schema.meta.Description
 import kotlinx.serialization.Transient

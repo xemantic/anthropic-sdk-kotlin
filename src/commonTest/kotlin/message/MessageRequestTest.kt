@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package com.xemantic.anthropic.message
+package com.xemantic.ai.anthropic.message
 
 import com.xemantic.ai.tool.schema.meta.Description
-import com.xemantic.anthropic.test.testJson
-import com.xemantic.anthropic.tool.AnthropicTool
-import com.xemantic.anthropic.tool.Tool
-import com.xemantic.anthropic.tool.ToolChoice
-import com.xemantic.anthropic.tool.ToolInput
-import com.xemantic.anthropic.tool.bash.Bash
-import com.xemantic.anthropic.tool.computer.Computer
-import com.xemantic.anthropic.tool.editor.TextEditor
+import com.xemantic.ai.anthropic.test.testJson
+import com.xemantic.ai.anthropic.tool.AnthropicTool
+import com.xemantic.ai.anthropic.tool.Tool
+import com.xemantic.ai.anthropic.tool.ToolChoice
+import com.xemantic.ai.anthropic.tool.ToolInput
+import com.xemantic.ai.anthropic.tool.bash.Bash
+import com.xemantic.ai.anthropic.tool.computer.Computer
+import com.xemantic.ai.anthropic.tool.editor.TextEditor
 import io.kotest.assertions.json.shouldEqualJson
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.encodeToString
