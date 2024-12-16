@@ -66,12 +66,10 @@ kotlin {
   jvm {
     // set up according to https://jakewharton.com/gradle-toolchains-are-rarely-a-good-idea/
     compilerOptions {
-      apiVersion = kotlinTarget
-      languageVersion = kotlinTarget
       jvmTarget = JvmTarget.fromTarget(javaTarget)
       freeCompilerArgs.add("-Xjdk-release=$javaTarget")
-      progressiveMode = true
     }
+    withJava()
   }
 
   if (!isJvmOnlyBuild) {
@@ -356,4 +354,9 @@ if (isReleaseBuild) {
     }
   }
 
+}
+
+tasks.withType(JavaCompile::class.java) {
+  targetCompatibility = javaTarget
+  sourceCompatibility = javaTarget
 }
