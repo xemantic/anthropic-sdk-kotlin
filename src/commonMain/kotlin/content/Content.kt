@@ -17,6 +17,10 @@
 package com.xemantic.ai.anthropic.content
 
 import com.xemantic.ai.anthropic.cache.CacheControl
+import com.xemantic.ai.file.magic.MediaType
+import com.xemantic.ai.file.magic.detectMediaType
+import com.xemantic.ai.file.magic.readBytes
+import kotlinx.io.files.Path
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -34,7 +38,13 @@ abstract class Content {
 
 }
 
-interface ContentBuilder {
+/**
+ * Allows to add [Content], via [unaryPlus] operator
+ * overloading, to the list of [Content] elements used during
+ * the [com.xemantic.ai.anthropic.message.Message] or the [ToolResult]
+ * building process.
+ */
+interface ContentListBuilder {
 
   val content: MutableList<Content>
 
@@ -52,20 +62,63 @@ interface ContentBuilder {
 
 }
 
-interface DataBuilder {
+/**
+ * Base class for builders of binary content, like
+ * [Image] or [Document].
+ *
+ * @param supportedMediaTypes
+ */
+abstract class BinaryContentBuilder(
+  val supportedMediaTypes: Set<MediaType>
+) {
 
-  var bytes: ByteArray?
+  /**
+   * The [Source] of the content.
+   *
+   * Note: if not set directly, it can be also automatically populated by
+   * setting the [path].
+   */
+  var source: Source? = null
 
-  fun magicNumber(): MagicNumber {
-    val bytes = requireNotNull(bytes) {
-      "bytes must be provided"
+  /**
+   * The path of this binary content being built.
+   *
+   * Note: setting up the [path] will populate the [source].
+   */
+  var path: Path? = null
+    set(value) {
+      val pathToSet = requireNotNull(value) {
+        "The path of binary content cannot be null"
+      }
+      val bytesToSet = pathToSet.readBytes()
+      try {
+        bytes = bytesToSet
+      } catch (e : IllegalArgumentException) {
+        throw IllegalArgumentException(
+          "Unsupported file at path \"$pathToSet\": ${e.message}"
+        )
+      }
+      field = pathToSet
     }
-    return requireNotNull(bytes.findMagicNumber()) {
-      "provided bytes do not contain any supported format"
-    }
-  }
 
-  @OptIn(ExperimentalEncodingApi::class)
-  fun toBase64(): String = Base64.encode(bytes!!)
+  var bytes: ByteArray? = null
+    set(value) {
+      val bytesToSet = requireNotNull(value) {
+        "The bytes of binary content cannot be null"
+      }
+      val type = requireNotNull(bytesToSet.detectMediaType()) {
+        "Cannot detect media type"
+      }
+      require(type in supportedMediaTypes) {
+        "Unsupported media type \"${type.mime}\", " +
+                "supported: ${supportedMediaTypes.map { "\"${it.mime}\"" }}"
+      }
+      source = Source.Base64 {
+        mediaType = type.mime
+        @OptIn(ExperimentalEncodingApi::class)
+        data = Base64.encode(bytesToSet)
+      }
+      field = bytesToSet
+    }
 
 }

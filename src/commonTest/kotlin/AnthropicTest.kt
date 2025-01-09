@@ -105,8 +105,8 @@ class AnthropicTest {
       usage should {
         have(inputTokens == 21)
         have(outputTokens > 0)
-        have(cacheCreationInputTokens == null)
-        have(cacheReadInputTokens == null)
+        have(cacheCreationInputTokens == 0)
+        have(cacheReadInputTokens == 0)
       }
     }
 

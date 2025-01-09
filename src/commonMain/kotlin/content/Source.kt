@@ -14,26 +14,40 @@
  * limitations under the License.
  */
 
-package com.xemantic.ai.anthropic.cache
+package com.xemantic.ai.anthropic.content
 
 import com.xemantic.ai.anthropic.json.WithAdditionalProperties
 import com.xemantic.ai.anthropic.json.toPrettyJson
+import com.xemantic.ai.file.magic.MediaType
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
 @Serializable
-abstract class CacheControl : WithAdditionalProperties {
+abstract class Source : WithAdditionalProperties { // TODO cross check with official API, spring AI
 
   @Serializable
-  @SerialName("ephemeral")
-  class Ephemeral private constructor(
+  @SerialName("base64")
+  class Base64 private constructor(
+    @SerialName("media_type")
+    val mediaType: String,
+    val data: String,
     override val additionalProperties: Map<String, JsonElement?>? = null
-  ): CacheControl() {
+  ) : Source() {
 
     class Builder : WithAdditionalProperties.Builder() {
 
-      fun build(): Ephemeral = Ephemeral(
+      var data: String? = null
+
+      var mediaType: String? = null
+
+      fun mediaType(type: MediaType) {
+        mediaType = type.mime
+      }
+
+      fun build(): Base64 = Base64(
+        mediaType = requireNotNull(mediaType) { "mediaType cannot be null" },
+        data = requireNotNull(data) { "data cannot be null" },
         additionalProperties = additionalProperties
       )
 
@@ -45,7 +59,7 @@ abstract class CacheControl : WithAdditionalProperties {
   class Unknown private constructor(
     val type: String,
     override val additionalProperties: Map<String, JsonElement?>? = null
-  ): CacheControl() {
+  ) : Source() {
 
     class Builder : WithAdditionalProperties.Builder() {
 
@@ -62,12 +76,12 @@ abstract class CacheControl : WithAdditionalProperties {
 
   companion object {
 
-    fun Ephemeral(
-      block: Ephemeral.Builder.() -> Unit = {}
-    ): Ephemeral = Ephemeral.Builder().apply(block).build()
+    fun Base64(
+      block: Base64.Builder.() -> Unit
+    ): Base64 = Base64.Builder().apply(block).build()
 
     fun Unknown(
-      block: Unknown.Builder.() -> Unit = {}
+      block: Unknown.Builder.() -> Unit
     ): Unknown = Unknown.Builder().apply(block).build()
 
   }

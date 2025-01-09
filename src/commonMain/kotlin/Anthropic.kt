@@ -21,6 +21,7 @@ import com.xemantic.ai.anthropic.error.ErrorResponse
 import com.xemantic.ai.anthropic.event.Event
 import com.xemantic.ai.anthropic.cache.CacheControl
 import com.xemantic.ai.anthropic.content.ToolUse
+import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.ai.anthropic.message.MessageRequest
 import com.xemantic.ai.anthropic.message.MessageResponse
 import com.xemantic.ai.anthropic.tool.BuiltInTool
@@ -184,14 +185,15 @@ class Anthropic internal constructor(
 
     suspend fun create(
       block: MessageRequest.Builder.() -> Unit
+    ): MessageResponse = create(request = MessageRequest.Builder(
+      defaultModel,
+      defaultMaxTokens,
+      toolMap
+    ).apply(block).build())
+
+    suspend fun create(
+      request: MessageRequest
     ): MessageResponse {
-
-      val request = MessageRequest.Builder(
-        defaultModel,
-        defaultMaxTokens,
-        toolMap
-      ).apply(block).build()
-
       val apiResponse = client.post("/v1/messages") {
         contentType(ContentType.Application.Json)
         setBody(request)

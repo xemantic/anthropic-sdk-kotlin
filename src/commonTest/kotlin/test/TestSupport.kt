@@ -16,17 +16,7 @@
 
 package com.xemantic.ai.anthropic.test
 
-import com.xemantic.ai.anthropic.anthropicJson
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.json.Json
+import com.xemantic.kotlin.test.gradleRootDir
+import kotlinx.io.files.Path
 
-/**
- * A pretty JSON printing for testing. It's derived from [anthropicJson],
- * therefore should use the same rules for serialization/deserialization, but
- * it has `prettyPrint` and 2 space tab enabled in addition.
- */
-val testJson = Json(from = anthropicJson) {
-  prettyPrint = true
-  @OptIn(ExperimentalSerializationApi::class)
-  prettyPrintIndent = "  "
-}
+val testDataDir: Path = Path(gradleRootDir, "test-data")

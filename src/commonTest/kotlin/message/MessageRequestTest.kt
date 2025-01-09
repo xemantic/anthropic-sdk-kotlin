@@ -16,8 +16,8 @@
 
 package com.xemantic.ai.anthropic.message
 
+import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.ai.tool.schema.meta.Description
-import com.xemantic.ai.anthropic.test.testJson
 import com.xemantic.ai.anthropic.tool.AnthropicTool
 import com.xemantic.ai.anthropic.tool.Tool
 import com.xemantic.ai.anthropic.tool.ToolChoice
@@ -46,7 +46,7 @@ class MessageRequestTest {
     }
 
     // when
-    val json = testJson.encodeToString(request)
+    val json = anthropicJson.encodeToString(request)
 
     // then
     json shouldEqualJson /* language=json */ """
@@ -116,7 +116,7 @@ class MessageRequestTest {
     }
 
     // when
-    val json = testJson.encodeToString(request)
+    val json = anthropicJson.encodeToString(request)
 
     // then
     json shouldEqualJson /* language=json */ """
@@ -191,7 +191,7 @@ class MessageRequestTest {
     }
 
     // when
-    val json = testJson.encodeToString(request)
+    val json = anthropicJson.encodeToString(request)
 
     // then
     json shouldEqualJson /* language=json */ """
@@ -297,7 +297,7 @@ class MessageRequestTest {
     """
 
     // when
-    val messageRequest = testJson.decodeFromString<MessageRequest>(request)
+    val messageRequest = anthropicJson.decodeFromString<MessageRequest>(request)
 
     // then
     messageRequest.toString() shouldEqualJson request

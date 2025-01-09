@@ -14,13 +14,16 @@
  * limitations under the License.
  */
 
-package com.xemantic.ai.anthropic
+package com.xemantic.ai.anthropic.json
 
+import com.xemantic.ai.anthropic.Response
 import com.xemantic.ai.anthropic.batch.MessageBatchResponse
+import com.xemantic.ai.anthropic.cache.CacheControl
 import com.xemantic.ai.anthropic.content.Content
 import com.xemantic.ai.anthropic.content.Document
 import com.xemantic.ai.anthropic.error.ErrorResponse
 import com.xemantic.ai.anthropic.content.Image
+import com.xemantic.ai.anthropic.content.Source
 import com.xemantic.ai.anthropic.content.Text
 import com.xemantic.ai.anthropic.message.MessageResponse
 import com.xemantic.ai.anthropic.content.ToolResult
@@ -37,7 +40,9 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.SerialKind
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.descriptors.buildSerialDescriptor
+import kotlinx.serialization.descriptors.elementNames
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
@@ -45,6 +50,9 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonContentPolymorphicSerializer
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonTransformingSerializer
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.modules.SerializersModule
@@ -70,6 +78,18 @@ private val anthropicSerializersModule = SerializersModule {
     ToolSerializer as KSerializer<BuiltInTool>
   }
   polymorphicDefaultSerializer(BuiltInTool::class) { ToolSerializer }
+
+  polymorphic(CacheControl::class) {
+    subclass(CacheControl.Ephemeral::class, AdditionalPropertiesSerializer(CacheControl.Ephemeral.serializer()))
+    subclass(CacheControl.Unknown::class, AdditionalPropertiesSerializer(CacheControl.Unknown.serializer(), removeTypeFromDescriptor = true))
+    defaultDeserializer { AdditionalPropertiesSerializer(CacheControl.Unknown.serializer()) }
+  }
+
+  polymorphic(Source::class) {
+    subclass(Source.Base64::class, AdditionalPropertiesSerializer(Source.Base64.serializer()))
+    subclass(Source.Unknown::class, AdditionalPropertiesSerializer(Source.Unknown.serializer(), removeTypeFromDescriptor = true))
+    defaultDeserializer { AdditionalPropertiesSerializer(Source.Unknown.serializer()) }
+  }
 }
 
 /**
@@ -80,11 +100,11 @@ val anthropicJson: Json = Json {
   allowSpecialFloatingPointValues = true
   explicitNulls = false
   encodeDefaults = true
+  ignoreUnknownKeys = true
 }
 
 @OptIn(ExperimentalSerializationApi::class)
-@PublishedApi
-internal val prettyAnthropicJson: Json = Json(from = anthropicJson) {
+val prettyAnthropicJson: Json = Json(from = anthropicJson) {
   prettyPrint = true
   prettyPrintIndent = "  "
 }
@@ -134,7 +154,7 @@ private object ToolSerializer : KSerializer<Tool> {
 
   @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
   override val descriptor: SerialDescriptor = buildSerialDescriptor(
-    serialName = "com.xemantic.ai.anthropic.Tool",
+    serialName = "com.xemantic.ai.anthropic.tool.Tool",
     kind = SerialKind.CONTEXTUAL
   )
 
@@ -176,3 +196,81 @@ private fun JsonElement.stringProperty(
 ) = (jsonObject[name] ?: throw SerializationException(
       "Missing '$name' attribute in element: $this"
 )).jsonPrimitive.content
+
+private class AdditionalPropertiesSerializer<T : WithAdditionalProperties>(
+  private val serializer: KSerializer<T>,
+  removeTypeFromDescriptor: Boolean = false
+) : KSerializer<T> {
+
+  @OptIn(ExperimentalSerializationApi::class)
+  override val descriptor: SerialDescriptor = if (removeTypeFromDescriptor) {
+    buildClassSerialDescriptor(
+      serialName = serializer.descriptor.serialName
+    ) {
+      val count = serializer.descriptor.elementsCount
+      repeat(count) {
+        serializer.descriptor.apply {
+          val name = getElementName(it)
+          if (name != "type") {
+            element(
+              elementName = name,
+              descriptor = getElementDescriptor(it),
+              annotations = getElementAnnotations(it),
+              isOptional = isElementOptional(it)
+            )
+          }
+        }
+      }
+    }
+  } else {
+    serializer.descriptor
+  }
+
+  private val transformingSerializer = object : JsonTransformingSerializer<T>(serializer) {
+
+    override fun transformSerialize(element: JsonElement): JsonElement {
+      return buildJsonObject {
+        element.jsonObject.filter { (name, _) ->
+          name != "additionalProperties"
+        }.forEach { (key, value) ->
+          put(key, value)
+        }
+        val props = element.jsonObject["additionalProperties"]
+        if (props != null && props.jsonObject.isNotEmpty()) {
+          props.jsonObject.forEach { (key, value) ->
+            put(key, value)
+          }
+        }
+      }
+    }
+
+    override fun transformDeserialize(element: JsonElement): JsonElement {
+      @OptIn(ExperimentalSerializationApi::class)
+      val knownProperties =
+        descriptor.elementNames.toMutableSet() - "additionalProperties" + "type"
+      val additionalProperties = JsonObject(
+        element.jsonObject.filter { (name, _) ->
+          !knownProperties.contains(name)
+        }.toMap()
+      )
+      return buildJsonObject {
+        element.jsonObject.forEach { (key, value) ->
+          put(key, value)
+        }
+        if (additionalProperties.isNotEmpty()) {
+          put("additionalProperties", additionalProperties)
+        }
+      }
+    }
+
+  }
+
+  override fun serialize(encoder: Encoder, value: T) {
+    transformingSerializer.serialize(encoder, value)
+  }
+
+  override fun deserialize(decoder: Decoder): T {
+    return transformingSerializer.deserialize(decoder)
+  }
+
+}

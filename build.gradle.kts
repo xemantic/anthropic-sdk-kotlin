@@ -3,11 +3,15 @@
 import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.swiftexport.ExperimentalSwiftExportDsl
+import org.jetbrains.kotlin.gradle.targets.js.testing.KotlinJsTest
+import org.jetbrains.kotlin.gradle.targets.jvm.tasks.KotlinJvmTest
+import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
 
 plugins {
   alias(libs.plugins.kotlin.multiplatform)
@@ -40,7 +44,8 @@ val sonatypePassword: String? by project
 // and everything should be tested anyway after merging to the main branch
 val skipTests = isReleaseBuild
 
-println("""
+println(
+"""
 +--------------------------------------------  
 | Project: ${project.name}
 | Version: ${project.version}
@@ -48,6 +53,30 @@ println("""
 +--------------------------------------------
 """
 )
+
+val gradleRootDir: String = rootDir.absolutePath
+
+val anthropicApiKey: String? = System.getenv("ANTHROPIC_API_KEY")
+
+tasks.withType<KotlinJvmTest>().configureEach {
+  environment("GRADLE_ROOT_DIR", gradleRootDir)
+}
+
+tasks.withType<KotlinJsTest>().configureEach {
+  environment("GRADLE_ROOT_DIR", gradleRootDir)
+  if (anthropicApiKey != null) {
+    environment("ANTHROPIC_API_KEY", anthropicApiKey)
+  }
+}
+
+tasks.withType<KotlinNativeTest>().configureEach {
+  environment("GRADLE_ROOT_DIR", gradleRootDir)
+  environment("SIMCTL_CHILD_GRADLE_ROOT_DIR", gradleRootDir)
+  if (anthropicApiKey != null) {
+    environment("ANTHROPIC_API_KEY", anthropicApiKey)
+    environment("SIMCTL_CHILD_ANTHROPIC_API_KEY", anthropicApiKey)
+  }
+}
 
 repositories {
   mavenCentral()
@@ -94,17 +123,18 @@ kotlin {
       binaries.library()
     }
 
-//  wasmJs {
-//    browser()
-//    nodejs()
-//    //d8()
-//    binaries.library()
-//  }
-
-//  wasmWasi {
-//    nodejs()
-//    binaries.library()
-//  }
+    // wasm targets are not supported by ktor and kotlin-datetime at the moment
+//    wasmJs {
+//      browser()
+//      nodejs()
+//      //d8()
+//      binaries.library()
+//    }
+//
+//    wasmWasi {
+//      nodejs()
+//      binaries.library()
+//    }
 
     // native, see https://kotlinlang.org/docs/native-target-support.html
     // tier 1
@@ -143,6 +173,7 @@ kotlin {
       dependencies {
         api(libs.xemantic.ai.tool.schema)
         api(libs.xemantic.ai.money)
+        api(libs.xemantic.ai.file.magic)
         api(libs.kotlinx.datetime)
         implementation(libs.ktor.client.core)
         implementation(libs.ktor.client.content.negotiation)
@@ -240,14 +271,24 @@ powerAssert {
   )
 }
 
-// maybe this one is not necessary?
-tasks.dokkaHtml.configure {
-  outputDirectory.set(layout.buildDirectory.dir("dokka"))
+// https://kotlinlang.org/docs/dokka-migration.html#adjust-configuration-options
+dokka {
+  pluginsConfiguration.html {
+    footerMessage.set("(c) 2024 Xemantic")
+  }
 }
 
-val javadocJar by tasks.registering(Jar::class) {
+val dokkaJavadocJar by tasks.registering(Jar::class) {
+  description = "A Javadoc JAR containing Dokka Javadoc"
+  dependsOn(tasks.dokkaGeneratePublicationHtml)
+  from(tasks.dokkaGeneratePublicationHtml.flatMap { it.outputDirectory })
   archiveClassifier.set("javadoc")
-  from(tasks.dokkaHtml)
+}
+
+val dokkaHtmlJar by tasks.registering(Jar::class) {
+  description = "A HTML Documentation JAR containing Dokka HTML"
+  from(tasks.dokkaGeneratePublicationHtml.flatMap { it.outputDirectory })
+  archiveClassifier.set("html-doc")
 }
 
 publishing {
@@ -265,7 +306,8 @@ publishing {
   }
   publications {
     withType<MavenPublication> {
-      artifact(javadocJar)
+      artifact(dokkaJavadocJar)
+      artifact(dokkaHtmlJar)
       pom {
         name = "anthropic-sdk-kotlin"
         description = "Kotlin multiplatform client for accessing Ahtropic APIs"

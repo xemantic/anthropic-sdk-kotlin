@@ -20,9 +20,9 @@ import com.xemantic.ai.anthropic.Model
 import com.xemantic.ai.anthropic.Response
 import com.xemantic.ai.anthropic.cache.CacheControl
 import com.xemantic.ai.anthropic.content.Content
-import com.xemantic.ai.anthropic.content.ContentBuilder
+import com.xemantic.ai.anthropic.content.ContentListBuilder
 import com.xemantic.ai.anthropic.content.ToolUse
-import com.xemantic.ai.anthropic.toPrettyJson
+import com.xemantic.ai.anthropic.json.toPrettyJson
 import com.xemantic.ai.anthropic.tool.Tool
 import com.xemantic.ai.anthropic.tool.ToolChoice
 import com.xemantic.ai.anthropic.tool.ToolInput
@@ -196,7 +196,7 @@ data class Message(
   val content: List<Content>
 ) {
 
-  class Builder : ContentBuilder {
+  class Builder : ContentListBuilder {
 
     override val content = mutableListOf<Content>()
 
