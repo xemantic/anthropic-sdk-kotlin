@@ -17,7 +17,7 @@
 package com.xemantic.ai.anthropic.error
 
 import com.xemantic.ai.anthropic.Response
-import com.xemantic.ai.anthropic.test.testJson
+import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
@@ -30,7 +30,7 @@ class ErrorResponseTest {
 
   @Test
   fun `Should deserialize ErrorResponse`() {
-    testJson.decodeFromString<Response>(/* language=json */ """
+    anthropicJson.decodeFromString<Response>(/* language=json */ """
       {
         "type": "error",
         "error": {

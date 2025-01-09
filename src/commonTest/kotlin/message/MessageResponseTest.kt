@@ -18,7 +18,7 @@ package com.xemantic.ai.anthropic.message
 
 import com.xemantic.ai.anthropic.Response
 import com.xemantic.ai.anthropic.content.ToolUse
-import com.xemantic.ai.anthropic.test.testJson
+import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.ai.anthropic.usage.Usage
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
@@ -64,7 +64,7 @@ class MessageResponseTest {
     """
 
     // when
-    val response = testJson.decodeFromString<Response>(jsonResponse)
+    val response = anthropicJson.decodeFromString<Response>(jsonResponse)
 
     // then
     response should {

@@ -19,7 +19,7 @@ package com.xemantic.ai.anthropic.tool
 import com.xemantic.ai.tool.schema.JsonSchema
 import com.xemantic.ai.tool.schema.generator.jsonSchemaOf
 import com.xemantic.ai.tool.schema.meta.Description
-import com.xemantic.ai.anthropic.anthropicJson
+import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.ai.anthropic.cache.CacheControl
 import com.xemantic.ai.anthropic.content.Content
 import com.xemantic.ai.anthropic.content.ToolResult

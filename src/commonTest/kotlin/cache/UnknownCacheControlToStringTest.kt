@@ -14,16 +14,25 @@
  * limitations under the License.
  */
 
-package com.xemantic.ai.anthropic.content
+package com.xemantic.ai.anthropic.cache
 
-import java.io.File
+import com.xemantic.ai.anthropic.json.set
+import io.kotest.assertions.json.shouldEqualJson
+import kotlin.test.Test
 
-fun Image(path: String): Image = Image {
-  path(path)
-}
+class UnknownCacheControlToStringTest {
 
-fun Image.Builder.path(path: String) = file(File(path))
+  @Test
+  fun `Should return pretty toString JSON of Unknown CacheControl`() {
+    CacheControl.Unknown {
+      type = "persistent"
+      additionalProperties["max_storage"] = 100000
+    }.toString() shouldEqualJson /* language=json */ """
+      {
+        "type": "persistent",
+        "max_storage": 100000
+      }
+    """
+  }
 
-fun Image.Builder.file(file: File) {
-  bytes = file.readBytes()
 }

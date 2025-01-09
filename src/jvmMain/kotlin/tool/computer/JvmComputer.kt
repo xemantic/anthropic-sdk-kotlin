@@ -25,9 +25,9 @@ import javax.imageio.ImageIO
 
 object JvmComputerService : ComputerService {
 
-  override fun screenshot() = Image {
+  override fun screenshot() = Image(
     bytes = takeScreenshot()
-  }
+  )
 
 }
 

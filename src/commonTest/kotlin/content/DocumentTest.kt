@@ -17,14 +17,21 @@
 package com.xemantic.ai.anthropic.content
 
 import com.xemantic.ai.anthropic.Anthropic
+import com.xemantic.ai.anthropic.cache.CacheControl
 import com.xemantic.ai.anthropic.message.Message
 import com.xemantic.ai.anthropic.message.StopReason
-import com.xemantic.kotlin.test.assert
+import com.xemantic.ai.anthropic.test.testDataDir
+import com.xemantic.ai.file.magic.MediaType
+import com.xemantic.ai.file.magic.readBytes
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
+import com.xemantic.kotlin.test.isBrowserPlatform
 import com.xemantic.kotlin.test.should
+import io.kotest.assertions.json.shouldEqualJson
 import kotlinx.coroutines.test.runTest
+import kotlinx.io.files.Path
 import kotlin.test.Test
+import kotlin.test.assertFailsWith
 
 const val testPdf = "JVBERi0xLjEKJcKlwrHDqwoKMSAwIG9iagogIDw8IC9UeXBlIC9DYXRhbG9nCiAgICAgL1BhZ2VzIDIgMCBSCiAgPj4KZW5" +
     "kb2JqCgoyIDAgb2JqCiAgPDwgL1R5cGUgL1BhZ2VzCiAgICAgL0tpZHMgWzMgMCBSXQogICAgIC9Db3VudCAxCiAgICAgL01lZGlhQm94IFswID" +
@@ -40,21 +47,19 @@ const val testPdf = "JVBERi0xLjEKJcKlwrHDqwoKMSAwIG9iagogIDw8IC9UeXBlIC9DYXRhbG9
 class DocumentTest {
 
   @Test
-  fun `Should read text FOO from test PDF`() = runTest {
+  fun `Should read text from test PDF`() = runTest {
     // given
-    val client = Anthropic {
-      anthropicBeta = "pdfs-2024-09-25"
-    }
+    val anthropic = Anthropic()
 
     // when
-    val response = client.messages.create {
+    val response = anthropic.messages.create {
       +Message {
-        +Document(
-          source = Document.Source(
-            mediaType = Document.MediaType.APPLICATION_PDF,
+        +Document {
+          source = Source.Base64 {
+            mediaType(MediaType.PDF)
             data = testPdf
-          )
-        )
+          }
+        }
         +"What's in the document?"
       }
     }
@@ -65,9 +70,133 @@ class DocumentTest {
       have(content.size == 1)
       content[0] should {
         be<Text>()
-        assert("HELLO WORLD" in text.uppercase())
+        have("HELLO WORLD" in text.uppercase())
       }
     }
+  }
+
+  @Test
+  fun `Should read text from test PDF file`() = runTest {
+    if (isBrowserPlatform) return@runTest // we cannot access files in the browser
+    // given
+    val anthropic = Anthropic()
+
+    // when
+    val response = anthropic.messages.create {
+      +Message {
+        // you can also submit the path string directly, relative to the current working dir,
+        // See JvmDocumentTest in jvmTest
+        +Document(Path(testDataDir, "test.pdf"))
+        +"What's in the document?"
+      }
+    }
+
+    // then
+    response should {
+      have(stopReason == StopReason.END_TURN)
+      have(content.size == 1)
+      content[0] should {
+        be<Text>()
+        have("FOO" in text.uppercase())
+      }
+    }
+  }
+
+  @Test
+  fun `Should create cacheable Document`() {
+    Document(Path(testDataDir, "test.pdf")) {
+      cacheControl = CacheControl.Ephemeral()
+    } should {
+      cacheControl should {
+        be<CacheControl.Ephemeral>()
+      }
+      source should {
+        be<Source.Base64>()
+        have(mediaType == MediaType.PDF.mime)
+        have(data.isNotEmpty())
+      }
+    }
+  }
+
+  @Test
+  fun `Should create Document from bytes`() {
+    Document(Path(testDataDir, "test.pdf").readBytes()).source should {
+      be<Source.Base64>()
+      have(mediaType == MediaType.PDF.mime)
+      have(data.isNotEmpty())
+    }
+  }
+
+  @Test
+  fun `Should fail to create Document from text file`() {
+    assertFailsWith<IllegalArgumentException> {
+      Document(Path(testDataDir, "zero.txt"))
+    } should {
+      have(
+        message != null && message!! matches Regex(
+          "Unsupported file at path \".*zero\\.txt\": Cannot detect media type"
+        )
+      )
+    }
+  }
+
+  @Test
+  fun `Should fail to create PDF Document from image file`() {
+    assertFailsWith<IllegalArgumentException> {
+      Document(Path(testDataDir, "foo.png"))
+    } should {
+      have(
+        message != null && message!! matches Regex(
+          "Unsupported file at path \".*foo\\.png\": " +
+              @Suppress("RegExpRedundantEscape") // it's not redundant since it's needed in JS
+              "Unsupported media type \"image/png\".*, supported: \\[\"application/pdf\"\\]"
+        )
+      )
+    }
+  }
+
+  @Test
+  fun `Should fail to create Document with null path specified in the builder`() {
+    assertFailsWith<IllegalArgumentException> {
+      Document {
+        path = null
+      }
+    } should {
+      have(message == "The path of binary content cannot be null")
+    }
+  }
+
+  @Test
+  fun `Should fail to create document with null bytes specified in the builder`() {
+    assertFailsWith<IllegalArgumentException> {
+      Document {
+        bytes = null
+      }
+    } should {
+      have(message == "The bytes of binary content cannot be null")
+    }
+  }
+
+  @Test
+  fun `Should return string representation of Document`() {
+    Document {
+      source = Source.Base64 {
+        mediaType(MediaType.PDF)
+        data = testPdf
+      }
+      cacheControl = CacheControl.Ephemeral()
+    }.toString() shouldEqualJson /* language=json */ """
+      {
+        "source": {
+          "type": "base64",
+          "media_type": "application/pdf",
+          "data": "$testPdf"
+        },
+        "cache_control": {
+          "type": "ephemeral"
+        }
+      }
+    """
   }
 
 }

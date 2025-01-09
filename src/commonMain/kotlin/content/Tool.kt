@@ -16,7 +16,7 @@
 
 package com.xemantic.ai.anthropic.content
 
-import com.xemantic.ai.anthropic.anthropicJson
+import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.ai.anthropic.cache.CacheControl
 import com.xemantic.ai.anthropic.tool.Tool
 import com.xemantic.ai.anthropic.tool.ToolInput
@@ -86,7 +86,7 @@ data class ToolResult private constructor(
   override val cacheControl: CacheControl? = null
 ) : Content() {
 
-  class Builder : ContentBuilder {
+  class Builder : ContentListBuilder {
 
     private class ToolResultList(
       private val list: MutableList<Content> = mutableListOf<Content>()

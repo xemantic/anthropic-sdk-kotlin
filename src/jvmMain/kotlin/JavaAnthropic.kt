@@ -16,8 +16,10 @@
 
 package com.xemantic.ai.anthropic
 
+import com.xemantic.ai.anthropic.message.Message
 import com.xemantic.ai.anthropic.message.MessageRequest
 import com.xemantic.ai.anthropic.message.MessageResponse
+import com.xemantic.ai.anthropic.message.System
 import kotlinx.coroutines.runBlocking
 import java.util.function.Consumer
 
@@ -31,8 +33,11 @@ class JavaAnthropic private constructor(
   companion object {
 
     @JvmStatic
+    @JvmOverloads
     fun create(
-      configurer: Consumer<Anthropic.Config>
+      configurer: Consumer<Anthropic.Config> = object : Consumer<Anthropic.Config> {
+        override fun accept(t: Anthropic.Config) { /* do nothing*/ }
+      }
     ): JavaAnthropic = JavaAnthropic(Anthropic { configurer.accept(this) })
 
   }
@@ -41,16 +46,42 @@ class JavaAnthropic private constructor(
   inner class Messages {
 
     fun createBlocking(
-      builder: Consumer<MessageRequest.Builder>
+      request: MessageRequest
     ): MessageResponse = runBlocking {
-      anthropic.messages.create {
-        builder.accept(this)
-      }
+      anthropic.messages.create(request)
     }
 
   }
 
   @JvmField
   val messages = Messages()
+
+}
+
+class MessageRequestBuilder() {
+
+  private var system: List<System>? = null
+
+  private var messages: List<Message>? = null
+
+  fun system(system: List<System>): MessageRequestBuilder {
+    this.system = system
+    return this
+  }
+
+  fun messages(messages: List<Message>): MessageRequestBuilder {
+    this.messages = messages
+    return this
+  }
+
+  fun build(): MessageRequest = MessageRequest {
+    this.system = system
+    this.messages = messages
+  }
+
+  companion object {
+    @JvmStatic
+    fun builder(): MessageRequestBuilder = MessageRequestBuilder()
+  }
 
 }

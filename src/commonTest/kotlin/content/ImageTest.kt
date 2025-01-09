@@ -17,13 +17,21 @@
 package com.xemantic.ai.anthropic.content
 
 import com.xemantic.ai.anthropic.Anthropic
+import com.xemantic.ai.anthropic.cache.CacheControl
 import com.xemantic.ai.anthropic.message.Message
 import com.xemantic.ai.anthropic.message.StopReason
+import com.xemantic.ai.anthropic.test.testDataDir
+import com.xemantic.ai.file.magic.MediaType
+import com.xemantic.ai.file.magic.readBytes
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
+import com.xemantic.kotlin.test.isBrowserPlatform
 import com.xemantic.kotlin.test.should
+import io.kotest.assertions.json.shouldEqualJson
 import kotlinx.coroutines.test.runTest
+import kotlinx.io.files.Path
 import kotlin.test.Test
+import kotlin.test.assertFailsWith
 
 const val testImage = "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAABOvAAATrwFj5o7DAAAAGXRFWHRTb2Z0d2FyZ" +
     "QB3d3cuaW5rc2NhcGUub3Jnm+48GgAAA61JREFUeJztmNtrFVcUxn/b+lYwxEuN8RKR1giiQmqxEomCghSU0krBUpqiTyraUn3oU+m/UPsoiD6J" +
@@ -42,19 +50,19 @@ const val testImage = "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAA
 class ImageTest {
 
   @Test
-  fun `Should read text FOO from test image`() = runTest {
+  fun `Should read text from test image`() = runTest {
     // given
-    val client = Anthropic()
+    val anthropic = Anthropic()
 
     // when
-    val response = client.messages.create {
+    val response = anthropic.messages.create {
       +Message {
-        +Image(
-          source = Image.Source(
-            data = testImage,
-            mediaType = Image.MediaType.IMAGE_PNG
-          )
-        )
+        +Image {
+          source = Source.Base64 {
+            mediaType(MediaType.PNG)
+            data = testImage
+          }
+        }
         +"What's on this picture?"
       }
     }
@@ -68,6 +76,136 @@ class ImageTest {
         have("FOO" in text.uppercase())
       }
     }
+  }
+
+  @Test
+  fun `Should read text from test image file`() = runTest {
+    if (isBrowserPlatform) return@runTest // we cannot access files in the browser
+    // given
+    val anthropic = Anthropic()
+
+    // when
+    val response = anthropic.messages.create {
+      +Message {
+        // you can also submit the path string directly, relative to the current working dir,
+        // See JvmImageTest in jvmTest
+        +Image(Path(testDataDir, "foo.png"))
+        +"What's on this picture?"
+      }
+    }
+
+    // then
+    response should {
+      have(stopReason == StopReason.END_TURN)
+      have(content.size == 1)
+      content[0] should {
+        be<Text>()
+        have("FOO" in text.uppercase())
+      }
+    }
+  }
+
+  @Test
+  fun `Should create cacheable Image`() {
+    if (isBrowserPlatform) return
+    Image(Path(testDataDir, "foo.png")) {
+      cacheControl = CacheControl.Ephemeral()
+    } should {
+      cacheControl should {
+        be<CacheControl.Ephemeral>()
+      }
+      source should {
+        be<Source.Base64>()
+        have(mediaType == MediaType.PNG.mime)
+        have(data.isNotEmpty())
+      }
+    }
+  }
+
+  @Test
+  fun `Should create Image from bytes`() {
+    if (isBrowserPlatform) return
+    Image(Path(testDataDir, "foo.png").readBytes()).source should {
+      be<Source.Base64>()
+      have(mediaType == MediaType.PNG.mime)
+      have(data.isNotEmpty())
+    }
+  }
+
+  @Test
+  fun `Should fail to create Image from text file`() {
+    if (isBrowserPlatform) return
+    assertFailsWith<IllegalArgumentException> {
+      Image(Path(testDataDir, "zero.txt"))
+    } should {
+      have(
+        message != null && message!! matches Regex(
+          "Unsupported file at path \".*zero\\.txt\": Cannot detect media type"
+        )
+      )
+    }
+  }
+
+  @Test
+  fun `Should fail to create Image from PDF document file`() {
+    if (isBrowserPlatform) return
+    assertFailsWith<IllegalArgumentException> {
+      Image(Path(testDataDir, "test.pdf"))
+    } should {
+      have(
+        message != null && message!! matches Regex(
+          "Unsupported file at path \".*test\\.pdf\": " +
+              "Unsupported media type \"application/pdf\", " +
+                  @Suppress("RegExpRedundantEscape") // it's not redundant since it's needed in JS
+                  "supported: \\[\"image/jpeg\", \"image/png\", \"image/gif\", \"image/webp\"\\]"
+        )
+      )
+    }
+  }
+
+  @Test
+  fun `Should fail to create Image with null path specified in the builder`() {
+    if (isBrowserPlatform) return
+    assertFailsWith<IllegalArgumentException> {
+      Image {
+        path = null
+      }
+    } should {
+      have(message == "The path of binary content cannot be null")
+    }
+  }
+
+  @Test
+  fun `Should fail to create image with null bytes specified in the builder`() {
+    assertFailsWith<IllegalArgumentException> {
+      Image {
+        bytes = null
+      }
+    } should {
+      have(message == "The bytes of binary content cannot be null")
+    }
+  }
+
+  @Test
+  fun `Should return string representation of Image`() {
+    Image {
+      source = Source.Base64 {
+        mediaType(MediaType.PNG)
+        data = testImage
+      }
+      cacheControl = CacheControl.Ephemeral()
+    }.toString() shouldEqualJson /* language=json */ """
+      {
+        "source": {
+          "type": "base64",
+          "media_type": "image/png",
+          "data": "$testImage"
+        },
+        "cache_control": {
+          "type": "ephemeral"
+        }
+      }
+    """
   }
 
 }

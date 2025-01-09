@@ -17,71 +17,72 @@
 package com.xemantic.ai.anthropic.content
 
 import com.xemantic.ai.anthropic.cache.CacheControl
+import com.xemantic.ai.anthropic.json.toPrettyJson
+import com.xemantic.ai.file.magic.MediaType
+import kotlinx.io.files.Path
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 @SerialName("image")
-data class Image(
+class Image private constructor(
   val source: Source,
   @SerialName("cache_control")
   override val cacheControl: CacheControl? = null
 ) : Content() {
 
-  enum class MediaType {
-    @SerialName("image/jpeg")
-    IMAGE_JPEG,
-    @SerialName("image/png")
-    IMAGE_PNG,
-    @SerialName("image/gif")
-    IMAGE_GIF,
-    @SerialName("image/webp")
-    IMAGE_WEBP
-  }
-
-  @Serializable
-  data class Source(
-    val type: Type = Type.BASE64,
-    @SerialName("media_type")
-    val mediaType: MediaType,
-    val data: String
+  class Builder : BinaryContentBuilder(
+    supportedMediaTypes = SUPPORTED_MEDIA_TYPES
   ) {
 
-    enum class Type {
-      @SerialName("base64")
-      BASE64
-    }
-
-  }
-
-  class Builder : DataBuilder {
-    override var bytes: ByteArray? = null
     var cacheControl: CacheControl? = null
-  }
 
-}
-
-val ByteArray.isImage get() = this.findMagicNumber()?.toImageMediaType() != null
-
-fun MagicNumber.toImageMediaType(): Image.MediaType? = when (this) {
-  MagicNumber.JPEG -> Image.MediaType.IMAGE_JPEG
-  MagicNumber.PNG -> Image.MediaType.IMAGE_PNG
-  MagicNumber.GIF -> Image.MediaType.IMAGE_GIF
-  MagicNumber.WEBP -> Image.MediaType.IMAGE_WEBP
-  else -> null
-}
-
-fun Image(block: Image.Builder.() -> Unit): Image {
-  val builder = Image.Builder()
-  block(builder)
-  val magicNumber = builder.magicNumber()
-  val mediaType = requireNotNull(magicNumber.toImageMediaType()) {
-    "provided bytes do not contain any supported Image format"
-  }
-  return Image(
-    source = Image.Source(
-      mediaType = mediaType,
-      data = builder.toBase64()
+    fun build(): Image = Image(
+      source = requireNotNull(source),
+      cacheControl = cacheControl
     )
-  )
+
+  }
+
+  companion object {
+
+    /**
+     * The set of [MediaType]s supported by the [Image].
+     */
+    val SUPPORTED_MEDIA_TYPES = setOf(
+      MediaType.JPEG,
+      MediaType.PNG,
+      MediaType.GIF,
+      MediaType.WEBP
+    )
+
+  }
+
+  override fun toString(): String = toPrettyJson()
+
+}
+
+fun Image(
+  block: Image.Builder.() -> Unit
+): Image = Image.Builder().apply(block).build()
+
+fun Image(
+  path: String,
+  block: Image.Builder.() -> Unit = {}
+): Image = Image(Path(path), block)
+
+fun Image(
+  path: Path,
+  block: Image.Builder.() -> Unit = {}
+): Image = Image {
+  this.path = path
+  block(this)
+}
+
+fun Image(
+  bytes: ByteArray,
+  block: Image.Builder.() -> Unit = {}
+): Image = Image {
+  this.bytes = bytes
+  block(this)
 }

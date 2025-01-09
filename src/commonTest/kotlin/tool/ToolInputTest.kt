@@ -16,8 +16,9 @@
 
 package com.xemantic.ai.anthropic.tool
 
-import com.xemantic.ai.tool.schema.meta.Description
 import com.xemantic.ai.anthropic.cache.CacheControl
+import com.xemantic.ai.tool.schema.meta.Description
+import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
 import io.kotest.assertions.json.shouldEqualJson
@@ -71,17 +72,19 @@ class ToolInputTest {
   }
 
   @Test
-  fun `Should create a tool instance from the test tool with given cacheControl`() {
+  fun `Should create a tool instance from the test tool with given CacheControl`() {
     // when
     // TODO we need a builder here?
     val tool = Tool<TestToolInput>(
-      cacheControl = CacheControl(type = CacheControl.Type.EPHEMERAL)
+      cacheControl = CacheControl.Ephemeral()
     )
 
     tool should  {
       have(name == "TestTool")
       have(description == "A test tool receiving a message and outputting it back")
-      have(cacheControl == CacheControl(type = CacheControl.Type.EPHEMERAL))
+      cacheControl should {
+        be<CacheControl.Ephemeral>()
+      }
       inputSchema.toString() shouldEqualJson /* language=json */ """
         {
           "type": "object",

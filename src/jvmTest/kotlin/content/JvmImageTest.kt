@@ -19,30 +19,24 @@ package com.xemantic.ai.anthropic.content
 import com.xemantic.ai.anthropic.Anthropic
 import com.xemantic.ai.anthropic.message.Message
 import com.xemantic.ai.anthropic.message.StopReason
-import com.xemantic.kotlin.test.assert
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
-class JvmDocumentTest {
+class JvmImageTest {
 
-  /**
-   * Note: This test would work with all the platforms supporting [kotlinx.io.files.SystemFileSystem],
-   * however the path of the working directory used by the test container is predictable only
-   * for JVM platform, therefore common tests cases are using relative path.
-   */
   @Test
-  fun `Should read test PDF with path specified as String`() = runTest {
+  fun `Should read test image file specified by String`() = runTest {
     // given
     val client = Anthropic()
 
     // when
     val response = client.messages.create {
       +Message {
-        +Document("test-data/test.pdf")
-        +"What's in the document?"
+        +Image("test-data/foo.png")
+        +"What's on this picture?"
       }
     }
 
@@ -52,8 +46,7 @@ class JvmDocumentTest {
       have(content.size == 1)
       content[0] should {
         be<Text>()
-        assert("FOO" in text.uppercase())
-        assert("BAR" in text.uppercase())
+        have("FOO" in text.uppercase())
       }
     }
   }

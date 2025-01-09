@@ -17,64 +17,69 @@
 package com.xemantic.ai.anthropic.content
 
 import com.xemantic.ai.anthropic.cache.CacheControl
+import com.xemantic.ai.anthropic.json.toPrettyJson
+import com.xemantic.ai.file.magic.MediaType
+import kotlinx.io.files.Path
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlin.io.encoding.ExperimentalEncodingApi
 
 @Serializable
 @SerialName("document")
-data class Document(
+class Document private constructor(
   val source: Source,
   @SerialName("cache_control")
   override val cacheControl: CacheControl? = null
 ) : Content() {
 
-  enum class MediaType {
-    @SerialName("application/pdf")
-    APPLICATION_PDF
-  }
-
-  @Serializable
-  data class Source(
-    val type: Type = Type.BASE64,
-    @SerialName("media_type")
-    val mediaType: MediaType,
-    val data: String
+  class Builder : BinaryContentBuilder(
+    supportedMediaTypes = SUPPORTED_MEDIA_TYPES
   ) {
 
-    enum class Type {
-      @SerialName("base64")
-      BASE64
-    }
-
-  }
-
-  class Builder : DataBuilder {
-    override var bytes: ByteArray? = null
     var cacheControl: CacheControl? = null
-  }
 
-}
-
-val ByteArray.isDocument get() = this.findMagicNumber()?.toDocumentMediaType() != null
-
-fun MagicNumber.toDocumentMediaType(): Document.MediaType? = when (this) {
-  MagicNumber.PDF -> Document.MediaType.APPLICATION_PDF
-  else -> null
-}
-
-fun Document(block: Document.Builder.() -> Unit): Document {
-  val builder = Document.Builder()
-  block(builder)
-  val magicNumber = builder.magicNumber()
-  val mediaType = requireNotNull(magicNumber.toDocumentMediaType()) {
-    "provided bytes do not contain supported Document format"
-  }
-  @OptIn(ExperimentalEncodingApi::class)
-  return Document(
-    source = Document.Source(
-      mediaType = mediaType,
-      data = builder.toBase64()
+    fun build(): Document = Document(
+      source = requireNotNull(source),
+      cacheControl = cacheControl
     )
-  )
+
+  }
+
+  companion object {
+
+    /**
+     * The set of [MediaType]s supported by the [Document].
+     */
+    val SUPPORTED_MEDIA_TYPES = setOf(
+      MediaType.PDF
+    )
+
+  }
+
+  override fun toString(): String = toPrettyJson()
+
+}
+
+fun Document(
+  block: Document.Builder.() -> Unit
+): Document = Document.Builder().apply(block).build()
+
+fun Document(
+  path: String,
+  block: Document.Builder.() -> Unit = {}
+): Document = Document(Path(path), block)
+
+fun Document(
+  path: Path,
+  block: Document.Builder.() -> Unit = {}
+): Document = Document {
+  this.path = path
+  block(this)
+}
+
+fun Document(
+  bytes: ByteArray,
+  block: Document.Builder.() -> Unit = {}
+): Document = Document {
+  this.bytes = bytes
+  block(this)
 }
