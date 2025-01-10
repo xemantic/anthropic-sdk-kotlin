@@ -285,11 +285,12 @@ val dokkaJavadocJar by tasks.registering(Jar::class) {
   archiveClassifier.set("javadoc")
 }
 
-val dokkaHtmlJar by tasks.registering(Jar::class) {
-  description = "A HTML Documentation JAR containing Dokka HTML"
-  from(tasks.dokkaGeneratePublicationHtml.flatMap { it.outputDirectory })
-  archiveClassifier.set("html-doc")
-}
+// HTML jar commented out, as it might be preventing release from landing in Maven Central
+//val dokkaHtmlJar by tasks.registering(Jar::class) {
+//  description = "A HTML Documentation JAR containing Dokka HTML"
+//  from(tasks.dokkaGeneratePublicationHtml.flatMap { it.outputDirectory })
+//  archiveClassifier.set("html-doc")
+//}
 
 publishing {
   repositories {
@@ -307,7 +308,7 @@ publishing {
   publications {
     withType<MavenPublication> {
       artifact(dokkaJavadocJar)
-      artifact(dokkaHtmlJar)
+      //artifact(dokkaHtmlJar)
       pom {
         name = "anthropic-sdk-kotlin"
         description = "Kotlin multiplatform client for accessing Ahtropic APIs"
