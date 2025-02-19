@@ -25,7 +25,6 @@ import com.xemantic.kotlin.test.assert
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
-import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlin.test.Test
@@ -147,7 +146,9 @@ class MessageResponseTest {
                 ToolUse(
                     id = "42",
                     name = "",
-                    input = JsonObject(mapOf("foo" to JsonPrimitive("bar")))
+                    input = buildJsonObject {
+                        put("foo", JsonPrimitive("bar"))
+                    }
                 )
             ),
             model = "claude-3-5-sonnet-20241022",
@@ -170,7 +171,9 @@ class MessageResponseTest {
                 ToolUse(
                     id = "42",
                     name = "tool42",
-                    input = JsonObject(mapOf("foo" to JsonPrimitive("bar")))
+                    input = buildJsonObject {
+                        put("foo", JsonPrimitive("bar"))
+                    }
                 )
             ),
             model = "claude-3-5-sonnet-20241022",
@@ -196,12 +199,16 @@ class MessageResponseTest {
                 ToolUse(
                     id = "42",
                     name = "tool42",
-                    input = JsonObject(mapOf("foo" to JsonPrimitive("bar")))
+                    input = buildJsonObject {
+                        put("foo", JsonPrimitive("bar"))
+                    }
                 ),
                 ToolUse(
                     id = "43",
                     name = "tool43",
-                    input = JsonObject(mapOf("foo" to JsonPrimitive("bar")))
+                    input = buildJsonObject {
+                        put("foo", JsonPrimitive("bar"))
+                    }
                 )
             ),
             model = "claude-3-5-sonnet-20241022",
@@ -247,12 +254,16 @@ class MessageResponseTest {
                 ToolUse(
                     id = "42",
                     name = "tool42",
-                    input = JsonObject(mapOf("foo" to JsonPrimitive("bar")))
+                    input = buildJsonObject {
+                        put("foo", JsonPrimitive("bar"))
+                    }
                 ),
                 ToolUse(
                     id = "43",
                     name = "tool43",
-                    input = JsonObject(mapOf("foo" to JsonPrimitive("bar")))
+                    input = buildJsonObject {
+                        put("foo", JsonPrimitive("bar"))
+                    }
                 )
             ),
             model = "claude-3-5-sonnet-20241022",
