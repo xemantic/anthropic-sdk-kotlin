@@ -123,8 +123,8 @@ class MessageResponseTest {
             id = "foo",
             role = Role.ASSISTANT,
             content = listOf(
-                Text("bar\n"),
-                Text("buzz\n")
+                Text("bar"),
+                Text("buzz")
             ),
             model = "claude-3-5-sonnet-20241022",
             stopReason = StopReason.END_TURN,
@@ -134,7 +134,7 @@ class MessageResponseTest {
                 outputTokens = 86
             )
         )
-        assert(response.text == "bar\nbuzz\n")
+        assert(response.text == "bar\nbuzz")
     }
 
     // most likely never happens, but let's check anyway
