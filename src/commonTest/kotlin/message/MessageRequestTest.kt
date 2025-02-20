@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,13 +18,11 @@ package com.xemantic.ai.anthropic.message
 
 import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.ai.tool.schema.meta.Description
-import com.xemantic.ai.anthropic.tool.AnthropicTool
 import com.xemantic.ai.anthropic.tool.Tool
 import com.xemantic.ai.anthropic.tool.ToolChoice
-import com.xemantic.ai.anthropic.tool.ToolInput
-import com.xemantic.ai.anthropic.tool.bash.Bash
-import com.xemantic.ai.anthropic.tool.computer.Computer
-import com.xemantic.ai.anthropic.tool.editor.TextEditor
+import com.xemantic.ai.anthropic.tool.computer.BashTool
+import com.xemantic.ai.anthropic.tool.computer.ComputerTool
+import com.xemantic.ai.anthropic.tool.computer.TextEditorTool
 import io.kotest.assertions.json.shouldEqualJson
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.encodeToString
@@ -71,19 +69,12 @@ class MessageRequestTest {
   }
 
   // now we need some test tool
-  @AnthropicTool("get_weather")
   @Description("Get the weather for a specific location")
   data class GetWeather(
     @Description("The city and state, e.g. San Francisco, CA")
     val location: String,
     val unit: TemperatureUnit? = null
-  ) : ToolInput() {
-    init {
-      use {
-        "42"
-      }
-    }
-  }
+  )
 
   @Description("The unit of temperature, either 'celsius' or 'fahrenheit'")
   @Suppress("unused") // it is used by the serializer
@@ -103,15 +94,17 @@ class MessageRequestTest {
       }
       tools = listOf(
         // built in tools
-        Computer(
-          displayWidthPx = 1024,
-          displayHeightPx = 768,
-          displayNumber = 1
-        ),
-        TextEditor(),
-        Bash(),
+        ComputerTool(
+          builder = {
+            displayWidthPx = 1024
+            displayHeightPx = 768
+            displayNumber = 1
+          }
+        ) {},
+        TextEditorTool {},
+        BashTool {},
         // custom tool
-        Tool<GetWeather>()
+        Tool<GetWeather>("get_weather")
       )
     }
 
@@ -143,11 +136,11 @@ class MessageRequestTest {
             "display_number": 1
           },
           {
-            "type": "text_editor_20241022",
+            "type": "text_editor_20250124",
             "name": "str_replace_editor"
           },
           {
-            "type": "bash_20241022",
+            "type": "bash_20250124",
             "name": "bash"
           },
           {
@@ -182,12 +175,11 @@ class MessageRequestTest {
         +"What's the weather in Berlin?"
       }
       tools = listOf(
-        Tool<GetWeather>()
+        Tool<GetWeather>("get_weather")
       )
-      toolChoice = ToolChoice.Tool(
-        name = "get_weather",
+      toolChoice = ToolChoice.Tool("get_weather") {
         disableParallelToolUse = true
-      )
+      }
     }
 
     // when
