@@ -139,8 +139,7 @@ fun main() = runBlocking {
         messages = conversation
         tools = myTools
     }
-    println("Initial response:")
-    println(initialResponse)
+    println("Initial response: ${initialResponse.text}")
 
     conversation += initialResponse
     conversation += initialResonse.useTools()
@@ -149,8 +148,7 @@ fun main() = runBlocking {
         messages = conversation
         tools = myTools
     }
-    println("Final response:")
-    println(finalResponse)
+    println("Final response: ${finalResponse.text}")
 }
 ```
 
