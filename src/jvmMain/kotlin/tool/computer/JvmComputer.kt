@@ -16,19 +16,20 @@
 
 package com.xemantic.ai.anthropic.tool.computer
 
-import com.xemantic.ai.anthropic.content.Image
+import com.xemantic.ai.anthropic.content.ToolResult
 import java.awt.Rectangle
 import java.awt.Robot
 import java.awt.Toolkit
 import java.io.ByteArrayOutputStream
 import javax.imageio.ImageIO
 
-object JvmComputerService : ComputerService {
 
-  override fun screenshot() = Image(
-    bytes = takeScreenshot()
-  )
-
+fun ComputerTool.Input.process(): ToolResult {
+  if (action == ComputerTool.Action.SCREENSHOT) {
+    takeScreenshot()
+  }
+  // TODO non-finished
+  return ToolResult()
 }
 
 fun takeScreenshot(): ByteArray {
