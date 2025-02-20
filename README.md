@@ -55,7 +55,7 @@ Otherwise, you need to add to your `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-  implementation("com.xemantic.ai:anthropic-sdk-kotlin:0.12")
+    implementation("com.xemantic.ai:anthropic-sdk-kotlin:0.12")
 }
 ```
 
@@ -63,10 +63,10 @@ dependencies {
 
 ```kotlin
 dependencies {
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
-  implementation("io.ktor:ktor-client-java:3.0.1") // or the latest ktor version
-  // and if you don't care about configuring logging
-  implementation("org.slf4j:slf4j-simple:2.0.16")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
+    implementation("io.ktor:ktor-client-java:3.0.1") // or the latest ktor version
+    // and if you don't care about configuring logging
+    implementation("org.slf4j:slf4j-simple:2.0.16")
 }
 ```
 
@@ -74,12 +74,12 @@ dependencies {
 
 ```kotlin
 plugins {
-  // ... other plugins like kotlin jvm or multiplatform
-  kotlin("plugin.serialization") version "2.0.21"
+    // ... other plugins like kotlin jvm or multiplatform
+    kotlin("plugin.serialization") version "2.1.10"
 }
 
 dependencies {
-  implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.7.3")
 }
 ```
 
@@ -87,15 +87,15 @@ The simplest code look like:
 
 ```kotlin
 fun main() {
-  val anthropic = Anthropic()
-  val response = runBlocking {
-    anthropic.messages.create {
-      +Message {
-        +"Hello, Claude"
-      }
+    val anthropic = Anthropic()
+    val response = runBlocking {
+        anthropic.messages.create {
+            +Message {
+                +"Hello, Claude"
+            }
+        }
     }
-  }
-  println(response)
+    println(response)
 }
 ```
 
@@ -104,127 +104,63 @@ fun main() {
 Streaming is also possible:
 
 ```kotlin
-fun main() {
-  val client = Anthropic()
-  runBlocking {
+fun main() = runBlocking {
+    val client = Anthropic()
     client.messages.stream {
-      +Message { +"Write me a poem." }
+        +Message { +"Write me a poem." }
     }
-      .filterIsInstance<ContentBlockDeltaEvent>()
-      .map { (it.delta as Delta.TextDelta).text }
-      .collect { delta -> print(delta) }
-  }
+        .filterIsInstance<ContentBlockDeltaEvent>()
+        .map { (it.delta as Delta.TextDelta).text }
+        .collect { delta -> print(delta) }
 }
 ```
 
 ### Using tools
 
-If you want to write AI agents, you need tools, and this is where this library shines:
+> [!NOTE]
+> Check [Tool Use conventions](docs/tool_use.md) document for full documentation.
+
+If you want to write AI agents, you need tools, and this is where this library shines, while removing any boilerplate code:
 
 ```kotlin
-@AnthropicTool("get_weather")
+@SerialName("get_weather")
 @Description("Get the weather for a specific location")
-data class WeatherTool(val location: String) : ToolInput() {
-  init {
-    use {
-      // in the real world it should use some external service
-      "The weather is 73f"
-    }
-  }
-}
+data class GetWeather(val location: String)
 
 fun main() = runBlocking {
+    val tool = Tool<GetWeather> { "The weather is 73f" }
+    val myTools = listOf(tool)
+    val anthropic = Anthropic()
 
-  val client = Anthropic {
-    tool<WeatherTool>()
-  }
+    val conversation = mutableListOf<Message>()
+    conversation += Message { +"What is the weather in SF?" }
 
-  val conversation = mutableListOf<Message>()
-  conversation += Message { +"What is the weather in SF?" }
+    val initialResponse = client.messages.create {
+        messages = conversation
+        tools = myTools
+    }
+    println("Initial response:")
+    println(initialResponse)
 
-  val initialResponse = client.messages.create {
-    messages = conversation
-    allTools()
-  }
-  println("Initial response:")
-  println(initialResponse)
+    conversation += initialResponse
+    conversation += initialResonse.useTools()
 
-  conversation += initialResponse
-  conversation += initialResonse.useTools()
-
-  val finalResponse = client.messages.create {
-    messages = conversation
-    allTools()
-  }
-  println("Final response:")
-  println(finalResponse)
+    val finalResponse = client.messages.create {
+        messages = conversation
+        tools = myTools
+    }
+    println("Final response:")
+    println(finalResponse)
 }
 ```
 
-The advantage comes no only from reduced verbosity, but also the class annotated with
-the `@AnthropicTool` will have its JSON schema automatically sent to the Anthropic API when
-defining the tool to use. For the reference check equivalent examples in the official
-Anthropic SDKs:
+The JSON schema of `get_weather` tool is automatically extracted from the class definition and sent to the Anthropic API when creating the message containing `tools`.
+
+For the reference check equivalent examples in the official Anthropic SDKs:
 
 * [TypeScript](https://github.com/anthropics/anthropic-sdk-typescript/blob/main/examples/tools.ts)
 * [Python](https://github.com/anthropics/anthropic-sdk-python/blob/main/examples/tools.py)
 * [Go](https://github.com/anthropics/anthropic-sdk-go/blob/main/examples/tools/main.go)
-
-None of them is taking the advantage of automatic schema generation, which becomes crucial
-for maintaining agents expecting more complex and structured input from the LLM.
-
-### Injecting dependencies to tools
-
-Tools can be provided with dependencies, for example singleton
-services providing some facilities, like HTTP client to connect to the
-internet or DB connection pool to access the database.
-
-```kotlin
-@AnthropicTool("query_database")
-@Description("Executes SQL on the database")
-data class QueryDatabase(val sql: String) : ToolInput() {
-
-  @Transient
-  internal lateinit var connection: Connection
-
-  init {
-    use {
-      connection.prepareStatement(sql).use { statement ->
-        statement.executeQuery().use { resultSet ->
-          resultSet.toString()
-        }
-      }
-    }
-  }
-
-}
-
-fun main() = runBlocking {
-
-  val client = Anthropic {
-    tool<QueryDatabase> {
-      connection = DriverManager.getConnection("jdbc:...")
-    }
-  }
-
-  val response = client.messages.create {
-    +Message { +"Select all the users who never logged in to the the system" }
-    singleTool<QueryDatabase>()
-  }
-
-  val tool = response.content.filterIsInstance<ToolUse>().first()
-  val toolResult = tool.use()
-  println(toolResult)
-}
-```
-
-After the `DatabaseQueryTool` is decoded from the API response, it can be processed
-by the lambda function passed to the tool definition. In case of the example above,
-the lambda will inject a JDBC connection to the tool.
-
-More sophisticated code examples targeting various Kotlin platforms can be found in the
-[anthropic-sdk-kotlin-demo](https://github.com/xemantic/anthropic-sdk-kotlin-demo)
-project.
 
 ## Projects using anthropic-sdk-kotlin
 
