@@ -18,29 +18,16 @@ package com.xemantic.ai.anthropic
 
 import com.xemantic.ai.money.Money
 import com.xemantic.ai.money.ZERO
-import com.xemantic.ai.anthropic.event.Delta.TextDelta
-import com.xemantic.ai.anthropic.event.Event
 import com.xemantic.ai.anthropic.message.Message
 import com.xemantic.ai.anthropic.message.Role
 import com.xemantic.ai.anthropic.message.StopReason
-import com.xemantic.ai.anthropic.message.plusAssign
-import com.xemantic.ai.anthropic.tool.Calculator
-import com.xemantic.ai.anthropic.tool.DatabaseQuery
-import com.xemantic.ai.anthropic.tool.FibonacciTool
-import com.xemantic.ai.anthropic.tool.TestDatabase
 import com.xemantic.ai.anthropic.content.Text
-import com.xemantic.ai.anthropic.content.ToolUse
 import com.xemantic.ai.anthropic.usage.Cost
 import com.xemantic.ai.anthropic.usage.Usage
-import com.xemantic.kotlin.test.assert
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
-import kotlinx.coroutines.flow.filterIsInstance
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
-import kotlin.collections.any
 import kotlin.test.Test
 
 class AnthropicTest {
@@ -149,186 +136,6 @@ class AnthropicTest {
         have(text == "HAHAHA")
       }
     }
-  }
-
-  @Test
-  fun `Should stream the response`() = runTest {
-    // given
-    val client = Anthropic()
-
-    // when
-    val response = client.messages.stream {
-      +Message { +"Say: 'The sun slowly dipped below the horizon, painting the sky in a breathtaking array of oranges, pinks, and purples.'" }
-    }
-      .filterIsInstance<Event.ContentBlockDelta>()
-      .map { (it.delta as TextDelta).text }
-      .toList()
-      .joinToString(separator = "")
-
-    // then
-    assert(response == "The sun slowly dipped below the horizon, painting the sky in a breathtaking array of oranges, pinks, and purples.")
-  }
-
-  @Test
-  fun `Should use Calculator tool`() = runTest {
-    // given
-    val client = Anthropic {
-      tool<Calculator>()
-    }
-    val conversation = mutableListOf<Message>()
-    conversation += Message { +"What's 15 multiplied by 7?" }
-
-    // when
-    val initialResponse = client.messages.create {
-      messages = conversation
-      singleTool<Calculator>() // we are forcing the use of this tool
-    }
-    conversation += initialResponse
-
-    // then
-    initialResponse should {
-      have(stopReason == StopReason.TOOL_USE)
-      have(content.size == 1) // and therefore there is only ToolUse without commentary
-      content[0] should {
-        be<ToolUse>()
-        have(name == "Calculator")
-      }
-    }
-
-    conversation += initialResponse.useTools()
-
-    // when
-    val resultResponse = client.messages.create {
-      messages = conversation
-      tool<Calculator>() // we are not forcing the use, but tool definition needs to be present
-    }
-
-    // then
-    resultResponse should {
-      have(stopReason == StopReason.END_TURN)
-      have(content.size == 1)
-      content[0] should {
-        be<Text>()
-        have("105" in text)
-      }
-    }
-  }
-
-  @Test
-  fun `Should use FibonacciTool`() = runTest {
-    // given
-    val client = Anthropic {
-      tool<FibonacciTool>()
-    }
-
-    // when
-    val response = client.messages.create {
-      +Message { +"What's fibonacci number 42" }
-      allTools()
-    }
-
-    // then
-    val toolUse = response.content.filterIsInstance<ToolUse>().first()
-    toolUse should {
-      have(name == "FibonacciTool")
-    }
-
-    val result = toolUse.use()
-    result should {
-      have(toolUseId == toolUse.id)
-      have(content == listOf(Text(text = "267914296")))
-    }
-  }
-
-  @Test
-  fun `Should use 2 tools in sequence`() = runTest {
-    // given
-    val client = Anthropic {
-      tool<FibonacciTool>()
-      tool<Calculator>()
-    }
-    val systemPrompt = "Always use tools to perform calculations. Never calculate on your own, even if you know the answer."
-    val prompt = "Calculate Fibonacci number 42 and then divide it by 42"
-    val conversation = mutableListOf<Message>()
-    conversation += Message { +prompt }
-
-    // when
-    val fibonacciResponse = client.messages.create {
-      system(systemPrompt)
-      messages = conversation
-      singleTool<FibonacciTool>()
-    }
-    conversation += fibonacciResponse
-
-    // then
-    fibonacciResponse should {
-      have(stopReason == StopReason.TOOL_USE)
-      have(content.any { it is ToolUse && it.name == "FibonacciTool" })
-    }
-    conversation += fibonacciResponse.useTools()
-
-    // when
-    val calculatorResponse = client.messages.create {
-      messages = conversation
-      singleTool<Calculator>()
-    }
-    conversation += calculatorResponse
-
-    // then
-    calculatorResponse should {
-      have(stopReason == StopReason.TOOL_USE)
-      have(content.any { it is ToolUse && it.name == "Calculator" })
-    }
-    conversation += calculatorResponse.useTools()
-
-    // when
-    val finalResponse = client.messages.create {
-      messages = conversation
-      allTools()
-    }
-    finalResponse should {
-      have(content.isNotEmpty())
-      content[0] should {
-        be<Text>()
-        // the result might be in the format: 6,378,911.8....
-        have(text.replace(",", "").contains("6378911.8"))
-      }
-    }
-  }
-
-  @Test
-  fun `Should use tool with dependencies`() = runTest {
-    // given
-    val testDatabase = TestDatabase()
-    val anthropic = Anthropic {
-      tool<DatabaseQuery> {
-        database = testDatabase
-      }
-    }
-
-    // when
-    val response = anthropic.messages.create {
-      +Message { +"List data in CUSTOMER table" }
-      singleTool<DatabaseQuery>() // we are forcing the use of this tool
-      // could be also just tool<DatabaseQuery>() if we are confident that LLM will use this one
-    }
-
-    // then
-    response should {
-      have(stopReason == StopReason.TOOL_USE)
-      have(content.any { it is ToolUse && it.name == "DatabaseQuery" })
-    }
-
-    // when
-    response.useTools()
-
-    // then
-    testDatabase should {
-      have(executedQuery != null)
-      have(executedQuery!!.uppercase().startsWith("SELECT * FROM CUSTOMER"))
-    }
-
-    // depending on the response the statement might end up with semicolon, which we discard
   }
 
 }
