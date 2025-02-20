@@ -31,9 +31,9 @@ import com.xemantic.ai.anthropic.content.ToolUse
 import com.xemantic.ai.anthropic.tool.BuiltInTool
 import com.xemantic.ai.anthropic.tool.DefaultTool
 import com.xemantic.ai.anthropic.tool.Tool
-import com.xemantic.ai.anthropic.tool.bash.Bash
-import com.xemantic.ai.anthropic.tool.computer.Computer
-import com.xemantic.ai.anthropic.tool.editor.TextEditor
+import com.xemantic.ai.anthropic.tool.computer.BashTool
+import com.xemantic.ai.anthropic.tool.computer.ComputerTool
+import com.xemantic.ai.anthropic.tool.computer.TextEditorTool
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -71,13 +71,6 @@ private val anthropicSerializersModule = SerializersModule {
     subclass(ToolResult::class)
     subclass(Document::class)
   }
-  polymorphicDefaultDeserializer(Tool::class) { ToolSerializer }
-  polymorphicDefaultSerializer(Tool::class) { ToolSerializer }
-  polymorphicDefaultDeserializer(BuiltInTool::class) {
-    @Suppress("UNCHECKED_CAST")
-    ToolSerializer as KSerializer<BuiltInTool>
-  }
-  polymorphicDefaultSerializer(BuiltInTool::class) { ToolSerializer }
 
   polymorphic(CacheControl::class) {
     subclass(CacheControl.Ephemeral::class, AdditionalPropertiesSerializer(CacheControl.Ephemeral.serializer()))
@@ -150,7 +143,7 @@ private object ContentSerializer : JsonContentPolymorphicSerializer<Content>(
 
 }
 
-private object ToolSerializer : KSerializer<Tool> {
+object ToolSerializer : KSerializer<Tool> {
 
   @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
   override val descriptor: SerialDescriptor = buildSerialDescriptor(
@@ -162,9 +155,9 @@ private object ToolSerializer : KSerializer<Tool> {
     val serializer = when (value) {
       is DefaultTool -> DefaultTool.serializer()
       is BuiltInTool -> when (value) {
-        is Computer -> Computer.serializer()
-        is TextEditor -> TextEditor.serializer()
-        is Bash -> Bash.serializer()
+        is ComputerTool -> ComputerTool.serializer()
+        is TextEditorTool -> TextEditorTool.serializer()
+        is BashTool -> BashTool.serializer()
         else -> throw SerializationException("Unsupported BuiltInTool type: $value")
       }
       else -> throw SerializationException("Unsupported Tool type: $value")
@@ -180,9 +173,9 @@ private object ToolSerializer : KSerializer<Tool> {
       DefaultTool.serializer()
     } else {
       when (val name = tree.stringProperty("name")) {
-        "computer" -> Computer.serializer()
-        "str_replace_editor" -> TextEditor.serializer()
-        "bash" -> Bash.serializer()
+        "computer" -> ComputerTool.serializer()
+        "str_replace_editor" -> TextEditorTool.serializer()
+        "bash" -> BashTool.serializer()
         else -> throw SerializationException("Unsupported Tool name: $name")
       }
     } as KSerializer<Tool>
