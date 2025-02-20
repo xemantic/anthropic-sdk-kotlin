@@ -21,12 +21,11 @@ import com.xemantic.ai.anthropic.Response
 import com.xemantic.ai.anthropic.cache.CacheControl
 import com.xemantic.ai.anthropic.content.Content
 import com.xemantic.ai.anthropic.content.ContentListBuilder
+import com.xemantic.ai.anthropic.content.Text
 import com.xemantic.ai.anthropic.content.ToolUse
 import com.xemantic.ai.anthropic.json.toPrettyJson
 import com.xemantic.ai.anthropic.tool.Tool
 import com.xemantic.ai.anthropic.tool.ToolChoice
-import com.xemantic.ai.anthropic.tool.ToolInput
-import com.xemantic.ai.anthropic.tool.toolName
 import com.xemantic.ai.anthropic.usage.Usage
 import kotlinx.serialization.*
 import kotlin.collections.mutableListOf
@@ -73,9 +72,7 @@ data class MessageRequest(
 
   class Builder internal constructor(
     defaultModel: String,
-    defaultMaxTokens: Int,
-    @PublishedApi
-    internal val toolMap: Map<String, Tool>
+    defaultMaxTokens: Int
   ) {
     var model: String = defaultModel
     var maxTokens: Int = defaultMaxTokens
@@ -90,46 +87,6 @@ data class MessageRequest(
     var tools: List<Tool> = emptyList()
     val topK: Int? = null
     val topP: Int? = null
-
-    /**
-     * Will fill [tools] with all the tools defined
-     * when creating this [com.xemantic.ai.anthropic.Anthropic] client.
-     */
-    fun allTools() {
-      tools = toolMap.values.toList()
-    }
-
-    inline fun <reified T : ToolInput> tool() {
-      val name = toolName<T>()
-      tools += listOf(toolMap[name]!!)
-    }
-
-    /**
-     * Sets both, the [tools] list and the [toolChoice] with
-     * just one tool to use, forcing the API to respond with the [com.xemantic.ai.anthropic.content.ToolUse].
-     */
-    inline fun <reified T : ToolInput> singleTool() {
-      val name = toolName<T>()
-      tools = listOf(toolMap[name]!!)
-      toolChoice = ToolChoice.Tool(name)
-    }
-
-//    inline fun <reified T : BuiltInTool<*>> useBuiltInTool() {
-//      this.name
-//    }
-
-    /**
-     * Sets both, the [tools] list and the [toolChoice] with
-     * just one tool to use, forcing the API to respond with the
-     * [com.xemantic.ai.anthropic.content.ToolUse] instance.
-     */
-    fun chooseTool(name: String) {
-      val tool = requireNotNull(toolMap[name]) {
-        "No tool with such name defined in Anthropic client: $name"
-      }
-      tools = listOf(tool)
-      toolChoice = ToolChoice.Tool(name = tool.name, disableParallelToolUse = true)
-    }
 
     fun messages(vararg messages: Message) {
       this.messages += messages.toList()
@@ -178,13 +135,11 @@ data class MessageRequest(
  */
 internal fun MessageRequest(
   model: Model = Model.DEFAULT,
-  toolMap: Map<String, Tool> = emptyMap(),
   block: MessageRequest.Builder.() -> Unit
 ): MessageRequest {
   val builder = MessageRequest.Builder(
     defaultModel = model.id,
-    defaultMaxTokens = model.maxOutput,
-    toolMap = toolMap
+    defaultMaxTokens = model.maxOutput
   )
   block(builder)
   return builder.build()
@@ -275,5 +230,15 @@ data class MessageResponse(
       this@Message.content += toolResults
     }
   }
+
+  val text: String? get() = content.filterIsInstance<Text>().run {
+    if (isEmpty()) null else joinToString("\n") { it.text }
+  }
+
+  val toolUse: ToolUse? get() = toolUses.run {
+    if (isEmpty()) null else first()
+  }
+
+  val toolUses: List<ToolUse> get() = content.filterIsInstance<ToolUse>()
 
 }

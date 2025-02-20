@@ -2,23 +2,23 @@
 kotlinTarget = "2.1"
 javaTarget = "17"
 
-kotlin = "2.1.0"
+kotlin = "2.1.10"
 kotlinxCoroutines = "1.10.1"
-kotlinxDatetime = "0.6.1"
+kotlinxDatetime = "0.6.2"
 kotlinxAtomicFu = "0.27.0"
-ktor = "3.0.3"
-kotest = "6.0.0.M1"
+ktor = "3.1.0"
+kotest = "6.0.0.M2"
 
-xemanticKotlinTest = "1.3"
-xemanticAiToolSchema = "0.1.4"
+xemanticKotlinTest = "1.8.10"
+xemanticAiToolSchema = "1.0.0"
 xemanticAiMoney = "0.2"
-xemanticAiFileMagic = "0.3"
+xemanticAiFileMagic = "0.3.1"
 
 # logging is not used at the moment, might be enabled later
 log4j = "2.24.3"
 jackson = "2.18.2"
 
-versionsPlugin = "0.51.0"
+versionsPlugin = "0.52.0"
 dokkaPlugin = "2.0.0"
 publishPlugin = "2.0.0"
 

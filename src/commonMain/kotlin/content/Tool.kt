@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,14 @@ package com.xemantic.ai.anthropic.content
 import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.ai.anthropic.cache.CacheControl
 import com.xemantic.ai.anthropic.tool.Tool
-import com.xemantic.ai.anthropic.tool.ToolInput
+import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.serializer
 import kotlinx.serialization.Transient
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.serializerOrNull
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
@@ -42,19 +45,45 @@ data class ToolUse(
   @PublishedApi
   internal lateinit var tool: Tool
 
-  @PublishedApi
-  internal fun decodeInput() = anthropicJson.decodeFromJsonElement(
-    deserializer = tool.inputSerializer,
-    element = input
-  ).apply(tool.inputInitializer)
+  inline fun <reified T> input(): T = anthropicJson.decodeFromJsonElement(
+    deserializer = serializer<T>(),
+    element = input,
+  )
 
-  inline fun <reified T : ToolInput> input(): T = (decodeInput() as T)
-
+  /**
+   * Executes the tool and returns the result.
+   *
+   * @return A [ToolResult] containing the outcome of executing the tool.
+   */
   suspend fun use(): ToolResult {
     return try {
       if (::tool.isInitialized) {
-        val toolInput = decodeInput()
-        toolInput.use(toolUseId = id)
+        val input = requireNotNull(
+          anthropicJson.decodeFromJsonElement(
+            deserializer = tool.inputSerializer,
+            element = input,
+          )
+        ) {
+          "Error message"
+        }
+        ToolResult {
+          toolUseId = id
+          val result = tool.runner(input)
+          if ((result != null) && (result !is Unit)) {
+            if (result is Content) {
+              +result
+            } else {
+              @OptIn(InternalSerializationApi::class)
+              val serializer = result::class.serializerOrNull() as KSerializer<Any>?
+              val value = if (serializer != null) {
+                anthropicJson.encodeToString(serializer, result)
+              } else {
+                result.toString()
+              }
+              +value
+            }
+          }
+        }
       } else {
         ToolResult {
           toolUseId = id

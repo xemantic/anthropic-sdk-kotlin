@@ -19,14 +19,11 @@ package com.xemantic.ai.anthropic
 import com.xemantic.ai.anthropic.error.AnthropicException
 import com.xemantic.ai.anthropic.error.ErrorResponse
 import com.xemantic.ai.anthropic.event.Event
-import com.xemantic.ai.anthropic.cache.CacheControl
 import com.xemantic.ai.anthropic.content.ToolUse
 import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.ai.anthropic.message.MessageRequest
 import com.xemantic.ai.anthropic.message.MessageResponse
-import com.xemantic.ai.anthropic.tool.BuiltInTool
-import com.xemantic.ai.anthropic.tool.Tool
-import com.xemantic.ai.anthropic.tool.ToolInput
+import com.xemantic.ai.anthropic.message.StopReason
 import com.xemantic.ai.anthropic.usage.Cost
 import com.xemantic.ai.anthropic.usage.Usage
 import com.xemantic.ai.anthropic.usage.UsageCollector
@@ -80,14 +77,13 @@ fun Anthropic(
   return Anthropic(
     apiKey = apiKey,
     anthropicVersion = config.anthropicVersion,
-    anthropicBeta = config.anthropicBeta,
+    anthropicBeta = if (config.anthropicBeta.isEmpty()) null else config.anthropicBeta.joinToString(","),
     apiBase = config.apiBase,
     defaultModel = config.defaultModel.id,
     defaultMaxTokens = config.defaultMaxTokens,
     directBrowserAccess = config.directBrowserAccess,
     logLevel = if (config.logHttp) LogLevel.ALL else LogLevel.NONE,
-    modelMap = config.modelMap,
-    toolMap = config.tools.associateBy { it.name },
+    modelMap = config.modelMap
   )
 } // TODO this can be a second constructor, then toolMap can be private
 
@@ -100,14 +96,13 @@ class Anthropic internal constructor(
   val defaultMaxTokens: Int,
   val directBrowserAccess: Boolean,
   val logLevel: LogLevel,
-  private val modelMap: Map<String, AnthropicModel>,
-  private val toolMap: Map<String, Tool>
+  private val modelMap: Map<String, AnthropicModel>
 ) {
 
   class Config {
     var apiKey: String? = null
     var anthropicVersion: String = DEFAULT_ANTHROPIC_VERSION
-    var anthropicBeta: String? = null
+    var anthropicBeta: List<String> = emptyList()
     var apiBase: String = ANTHROPIC_API_BASE
     var defaultModel: AnthropicModel = Model.DEFAULT
     var defaultMaxTokens: Int = defaultModel.maxOutput
@@ -115,27 +110,12 @@ class Anthropic internal constructor(
     var directBrowserAccess: Boolean = false
     var logHttp: Boolean = false
 
-    var tools: List<Tool> = emptyList()
-
     var modelMap: Map<String, AnthropicModel> = Model.entries.associateBy { it.id }
 
-    // TODO in the future this should be rather Tool builder
-    inline fun <reified T : ToolInput> tool(
-      cacheControl: CacheControl? = null,
-      noinline inputInitializer: T.() -> Unit = {}
-    ) {
-      tools += Tool<T>(cacheControl, initializer = inputInitializer)
-    }
+  }
 
-    inline fun <reified T : BuiltInTool> builtInTool(
-      tool: T,
-      noinline inputInitializer: T.() -> Unit = {}
-    ) {
-      @Suppress("UNCHECKED_CAST")
-      tool.inputInitializer = inputInitializer as ToolInput.() -> Unit
-      tools += tool
-    }
-
+  enum class Beta(val id: String) {
+    COMPUTER_USE_2024_10_22("computer-use-2024-10-22")
   }
 
   private val client = HttpClient {
@@ -187,8 +167,7 @@ class Anthropic internal constructor(
       block: MessageRequest.Builder.() -> Unit
     ): MessageResponse = create(request = MessageRequest.Builder(
       defaultModel,
-      defaultMaxTokens,
-      toolMap
+      defaultMaxTokens
     ).apply(block).build())
 
     suspend fun create(
@@ -202,17 +181,20 @@ class Anthropic internal constructor(
       when (response) {
         is MessageResponse -> response.apply {
           updateUsage(response)
-          content.filterIsInstance<ToolUse>()
-            .forEach { toolUse ->
-              val tool = toolMap[toolUse.name]
-              if (tool != null) {
-                toolUse.tool = tool
-              } else {
-                // Sometimes it happens that Claude is sending non-defined tool name in tool use
-                // TODO in the future it should go to the stderr
-                println("Error!!! Unexpected tool use: ${toolUse.name}")
+          if (response.stopReason == StopReason.TOOL_USE) {
+            val toolMap = request.tools!!.associateBy { it.name }
+            content.filterIsInstance<ToolUse>()
+              .forEach { toolUse ->
+                val tool = toolMap[toolUse.name]
+                if (tool != null) {
+                  toolUse.tool = tool
+                } else {
+                  // Sometimes it happens that Claude is sending non-defined tool name in tool use
+                  // TODO in the future it should go to the stderr
+                  println("Error!!! Unexpected tool use: ${toolUse.name}")
+                }
               }
-            }
+          }
         }
         is ErrorResponse -> throw AnthropicException(
           error = response.error,
@@ -231,8 +213,7 @@ class Anthropic internal constructor(
 
       val request = MessageRequest.Builder(
         defaultModel,
-        defaultMaxTokens,
-        toolMap
+        defaultMaxTokens
       ).apply {
         block(this)
         stream = true

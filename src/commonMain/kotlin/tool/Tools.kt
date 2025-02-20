@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,28 +16,20 @@
 
 package com.xemantic.ai.anthropic.tool
 
-import com.xemantic.ai.tool.schema.JsonSchema
 import com.xemantic.ai.tool.schema.generator.jsonSchemaOf
-import com.xemantic.ai.tool.schema.meta.Description
-import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.ai.anthropic.cache.CacheControl
-import com.xemantic.ai.anthropic.content.Content
-import com.xemantic.ai.anthropic.content.ToolResult
+import com.xemantic.ai.anthropic.json.ToolSerializer
+import com.xemantic.ai.anthropic.json.toPrettyJson
+import com.xemantic.ai.tool.schema.JsonSchema
+import com.xemantic.ai.tool.schema.ObjectSchema
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.MetaSerializable
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.SerializationException
 import kotlinx.serialization.Transient
-import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.serializer
-import kotlinx.serialization.serializerOrNull
 
-@Serializable
-@JsonClassDiscriminator("name")
-@OptIn(ExperimentalSerializationApi::class)
+@Serializable(with = ToolSerializer::class)
 abstract class Tool {
 
   abstract val name: String
@@ -47,177 +39,184 @@ abstract class Tool {
 
   @Transient
   @PublishedApi
-  internal lateinit var inputSerializer: KSerializer<out ToolInput>
+  internal lateinit var inputSerializer: KSerializer<*>
 
   @Transient
   @PublishedApi
-  internal lateinit var inputInitializer: ToolInput.() -> Unit
+  internal lateinit var runner: suspend (input: Any) -> Any?
+
+  override fun toString(): String = toPrettyJson()
 
 }
 
 @Serializable
-@PublishedApi
-internal data class DefaultTool(
+class DefaultTool private constructor(
   override val name: String,
   override val description: String? = null,
   @SerialName("input_schema")
   override val inputSchema: JsonSchema? = null,
   @SerialName("cache_control")
   override val cacheControl: CacheControl? = null
-) : Tool()
+) : Tool() {
+
+  class Builder {
+
+    var name: String? = null
+    var description: String? = null
+    var inputSchema: JsonSchema? = null
+    var cacheControl: CacheControl? = null
+
+    fun build(): DefaultTool = DefaultTool(
+      requireNotNull(name) { "Tool must have a 'name'" },
+      description,
+      inputSchema,
+      cacheControl
+    )
+
+  }
+
+}
 
 @Serializable
 abstract class BuiltInTool(
   override val name: String,
-  val type: String,
-  override val description: String? = null,
-  @SerialName("input_schema")
-  override val inputSchema: JsonSchema? = null,
+  val type: String
+) : Tool() {
+
   @SerialName("cache_control")
   override val cacheControl: CacheControl? = null
-) : Tool()
 
-/**
- * Interface for tools that can be used in the context of the Anthropic API.
- *
- * Classes implementing this interface represent tools that can be executed
- * with a given tool use ID. The implementation of the [use] method should
- * contain the logic for executing the tool and returning the [ToolResult].
- */
-@Serializable
-abstract class ToolInput {
+  @SerialName("input_schema")
+  override val inputSchema: JsonSchema? = null
 
-  @Transient
-  private var block: suspend ToolResult.Builder.() -> Any? = {}
-
-  fun use(block: suspend ToolResult.Builder.() -> Any?) {
-    this.block = block
-  }
-
-  /**
-   * Executes the tool and returns the result.
-   *
-   * @param toolUseId A unique identifier for this particular use of the tool.
-   * @return A [ToolResult] containing the outcome of executing the tool.
-   */
-  // TODO this needs a big test coverage
-  suspend fun use(toolUseId: String): ToolResult {
-    return ToolResult {
-      this.toolUseId = toolUseId
-      val result = block(this)
-      if ((result != null) && (result !is Unit)) {
-        if (result is Content) {
-          +result
-        } else {
-          @OptIn(InternalSerializationApi::class)
-          val serializer = result::class.serializerOrNull() as KSerializer<Any>?
-          val value = if (serializer != null) {
-            anthropicJson.encodeToString(serializer, result)
-          } else {
-            result.toString()
-          }
-          +value
-        }
-      }
-    }
-  }
+  override val description: String? = null
 
 }
 
-inline fun <reified T : ToolInput> toolName(): String = serializer<T>().name()
+@OptIn(ExperimentalSerializationApi::class)
+inline fun <reified T> toolName(): String =
+  serializer<T>().descriptor.serialName.normalizedToolName
 
 @OptIn(ExperimentalSerializationApi::class)
-@PublishedApi
-internal inline fun <reified T : ToolInput> KSerializer<T>.name() = (
-    descriptor
-      .annotations
-      .filterIsInstance<AnthropicTool>()
-      .firstOrNull() ?: throw SerializationException(
-        "The ${T::class} must be annotated with @AnthropicTool"
-      )
-).name
-
-/**
- * Annotation used to mark a class extending the [ToolInput].
- *
- * This annotation provides metadata for tools that can be serialized and used in the context
- * of the Anthropic API. It includes a name and description for the tool.
- *
- * @property name The name of the tool. This name is used during serialization and should be a unique identifier for the tool.
- */
-@OptIn(ExperimentalSerializationApi::class)
-@MetaSerializable
-@Target(AnnotationTarget.CLASS)
-annotation class AnthropicTool(
-  val name: String
-)
-
-@OptIn(ExperimentalSerializationApi::class)
-inline fun <reified T : ToolInput> Tool(
-  cacheControl: CacheControl? = null,
-  noinline initializer: T.() -> Unit = {}
+inline fun <reified T> Tool(
+  name: String? = toolName<T>(),
+  description: String? = null,
+  builder: DefaultTool.Builder.() -> Unit = {},
+  noinline run: suspend T.() -> Any? = { "ok" }
 ): Tool {
 
-  val serializer = try {
-    serializer<T>()
-  } catch (e: SerializationException) {
-    throw SerializationException(
-      "Cannot find serializer for ${T::class}, " +
-          "make sure that it is annotated with @AnthropicTool and " +
-          "kotlin.serialization plugin is enabled for the project",
-      e
-    )
+  val schema = jsonSchemaOf<T>()
+  require(schema is ObjectSchema) {
+    "Tool input class must be an object"
   }
 
-  val toolName = toolName<T>()
-  val description = serializer
-    .descriptor
-    .annotations
-    .filterIsInstance<Description>()
-    .firstOrNull()
-    ?.value
-
-  return DefaultTool(
-    name = toolName,
-    description = description,
-    inputSchema = jsonSchemaOf<T>(suppressDescription = true),
-    cacheControl = cacheControl
-  ).apply {
-    @Suppress("UNCHECKED_CAST")
-    inputSerializer = serializer as KSerializer<ToolInput>
-    @Suppress("UNCHECKED_CAST")
-    inputInitializer = initializer as ToolInput.() -> Unit
+  return DefaultTool.Builder().apply {
+    this.name = name
+    this.description = schema.description ?: description
+    inputSchema = schema.copy {
+      this.description = null
+    }
+  }.also(builder).build().apply {
+    inputSerializer = serializer<T>()
+    runner = { input -> run(input as T) }
   }
 
 }
 
 @Serializable
-@JsonClassDiscriminator("type")
-@OptIn(ExperimentalSerializationApi::class)
 sealed class ToolChoice {
 
   abstract val disableParallelToolUse: Boolean?
 
   @Serializable
   @SerialName("auto")
-  class Auto(
+  class Auto private constructor(
     @SerialName("disable_parallel_tool_use")
     override val disableParallelToolUse: Boolean? = null
-  ) : ToolChoice()
+  ) : ToolChoice() {
+
+    class Builder {
+
+      var disableParallelToolUse: Boolean? = null
+
+      fun build(): Auto = Auto(
+        disableParallelToolUse = disableParallelToolUse
+      )
+
+    }
+
+  }
 
   @Serializable
   @SerialName("any")
-  class Any(
+  class Any private constructor(
     @SerialName("disable_parallel_tool_use")
     override val disableParallelToolUse: Boolean? = null
-  ) : ToolChoice()
+  ) : ToolChoice() {
+
+    class Builder {
+
+      var disableParallelToolUse: Boolean? = null
+
+      fun build(): Any = Any(
+        disableParallelToolUse = disableParallelToolUse
+      )
+
+    }
+
+  }
 
   @Serializable
   @SerialName("tool")
-  class Tool(
+  class Tool private constructor(
     val name: String,
     @SerialName("disable_parallel_tool_use")
     override val disableParallelToolUse: Boolean? = null
-  ) : ToolChoice()
+  ) : ToolChoice() {
+
+    class Builder {
+
+      var name: String? = null
+      var disableParallelToolUse: Boolean? = null
+
+      fun build(): Tool = Tool(
+        name = requireNotNull(name) { "name cannot be null" },
+        disableParallelToolUse = disableParallelToolUse
+      )
+
+    }
+
+  }
+
+  companion object {
+
+    fun Auto(
+      block: Auto.Builder.() -> Unit = {}
+    ): Auto = Auto.Builder().also(block).build()
+
+    fun Any(
+      block: Any.Builder.() -> Unit = {}
+    ): Any = Any.Builder().also(block).build()
+
+    fun Tool(
+      name: String,
+      block: Tool.Builder.() -> Unit = {}
+    ): Tool = Tool.Builder().also {
+      it.name = name
+      block(it)
+    }.build()
+
+    inline fun <reified T> Tool(
+        noinline block: Tool.Builder.() -> Unit = {}
+    ): Tool = Tool(toolName<T>(), block)
+
+  }
 
 }
+
+@PublishedApi
+internal val String.normalizedToolName: String
+  get() = trimEnd { it == '$' }
+    .replace('.', '_')
+    .replace('$', '_')
+    .take(64)
