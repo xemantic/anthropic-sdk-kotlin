@@ -27,7 +27,6 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
-import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.serializer
 
 @Serializable(with = ToolSerializer::class)
