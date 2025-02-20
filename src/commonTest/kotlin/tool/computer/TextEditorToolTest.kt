@@ -73,20 +73,14 @@ class TextEditorToolTest {
 
     @Test
     fun `should deserialize TextEditorTool`() {
-        // given
-        /* language=json */
-        val json =  """
-           {
-             "name": "str_replace_editor",
-             "type": "text_editor_20250124"
-           }
-        """
-
-        // when
-        val tool = anthropicJson.decodeFromString<Tool>(json)
-
-        // then
-        tool should {
+        anthropicJson.decodeFromString<Tool>(
+           """
+          {
+            "name": "str_replace_editor",
+            "type": "text_editor_20250124"
+          }
+          """
+        ) should {
             have(name == "str_replace_editor")
             be<TextEditorTool>()
             have(type == "text_editor_20250124")
@@ -106,12 +100,11 @@ class TextEditorToolTest {
     @Test
     fun `should deserialize TextEditorTool Input`() {
         anthropicJson.decodeFromString<TextEditorTool.Input>(
-            /* language=json */
             """
-                {
-                  "command": "view",
-                  "path": "/tmp/foo.txt"
-                }
+            {
+              "command": "view",
+              "path": "/tmp/foo.txt"
+            }
             """
         ) should {
             have(command == TextEditorTool.Command.VIEW)

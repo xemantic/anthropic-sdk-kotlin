@@ -73,20 +73,14 @@ class BashToolTest {
 
     @Test
     fun `should deserialize BashTool`() {
-        // given
-        /* language=json */
-        val json =  """
-           {
-             "name": "bash",
-             "type": "bash_20250124"
-           }            
-        """
-
-        // when
-        val tool = anthropicJson.decodeFromString<Tool>(json)
-
-        // then
-        tool should {
+        anthropicJson.decodeFromString<Tool>(
+            """
+            {
+              "name": "bash",
+              "type": "bash_20250124"
+            }
+            """
+        ) should {
             have(name == "bash")
             be<BashTool>()
             have(type == "bash_20250124")
@@ -96,20 +90,20 @@ class BashToolTest {
     @Test
     fun `should return JSON for BashTool toString`() {
         BashTool {}.toString() shouldEqualJson /* language=json */ """
-           {
-             "name": "bash",
-             "type": "bash_20250124"
-           } 
+            {
+              "name": "bash",
+              "type": "bash_20250124"
+            } 
         """
     }
 
     @Test
     fun `should deserialize BashTool Input`() {
         anthropicJson.decodeFromString<BashTool.Input>(
-            /* language=json */ """
-                {
-                  "command": "ls"
-                }
+            """
+            {
+              "command": "ls"
+            }
             """
         ) should {
             have(command == "ls")
