@@ -104,6 +104,20 @@ class BashToolTest {
     }
 
     @Test
+    fun `should deserialize BashTool Input`() {
+        anthropicJson.decodeFromString<BashTool.Input>(
+            /* language=json */ """
+                {
+                  "command": "ls"
+                }
+            """
+        ) should {
+            have(command == "ls")
+            have(restart == null)
+        }
+    }
+
+    @Test
     fun `should serialize empty BashTool Input`() {
         anthropicJson.encodeToString(BashTool.Input {}) shouldEqualJson /* language=json */ """
             {}
