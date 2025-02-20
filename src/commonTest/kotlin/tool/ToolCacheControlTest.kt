@@ -22,7 +22,7 @@ import com.xemantic.ai.anthropic.message.Message
 import com.xemantic.ai.anthropic.message.plusAssign
 import com.xemantic.ai.anthropic.tool.test.Calculator
 import kotlinx.coroutines.test.runTest
-import org.junit.Test
+import kotlin.test.Test
 
 class ToolCacheControlTest {
 

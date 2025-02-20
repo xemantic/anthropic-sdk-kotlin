@@ -198,7 +198,6 @@ sealed class ToolChoice {
       block: Any.Builder.() -> Unit = {}
     ): Any = Any.Builder().also(block).build()
 
-    @JvmName("tool")
     fun Tool(
       name: String,
       block: Tool.Builder.() -> Unit = {}
@@ -207,7 +206,6 @@ sealed class ToolChoice {
       block(it)
     }.build()
 
-    @JvmName("toolOf")
     inline fun <reified T> Tool(
         noinline block: Tool.Builder.() -> Unit = {}
     ): Tool = Tool(toolName<T>(), block)

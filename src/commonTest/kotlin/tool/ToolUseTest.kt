@@ -28,13 +28,13 @@ import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
 import kotlinx.coroutines.test.runTest
-import org.junit.Test
 import kotlin.collections.plusAssign
+import kotlin.test.Test
 
 class ToolUseTest {
 
     @Test
-    fun `Should only use Calculator tool (non-named)`() = runTest {
+    fun `Should only use Calculator tool - non-named`() = runTest {
         // given
         val mathTools = listOf(
             Tool<Calculator> { calculate() }
@@ -81,7 +81,7 @@ class ToolUseTest {
     }
 
     @Test
-    fun `Should only use Calculator tool (named)`() = runTest {
+    fun `Should only use Calculator tool - named`() = runTest {
         // given
         val mathTools = listOf(
             Tool<Calculator>("my_calculator") { calculate() }

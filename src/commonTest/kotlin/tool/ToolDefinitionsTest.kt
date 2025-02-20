@@ -65,7 +65,7 @@ class ToolDefinitionsTest {
     }
 
     @Test
-    fun `should define 2 tools of the same type, with different names and runners`() = runTest {
+    fun `should define 2 tools of the same type with different names and runners`() = runTest {
         val tool1 = Tool<Foo>("tool1") {
             "tool1: $bar"
         }

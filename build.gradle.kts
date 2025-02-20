@@ -123,14 +123,19 @@ kotlin {
       binaries.library()
     }
 
-    // wasm targets are not supported by ktor and kotlin-datetime at the moment
+//    // wasm targets are still buggy
 //    wasmJs {
-//      browser()
+//      browser {
+//        testTask {
+//          // also these tests are stuck
+//          enabled = false
+//        }
+//      }
 //      nodejs()
 //      //d8()
 //      binaries.library()
 //    }
-//
+
 //    wasmWasi {
 //      nodejs()
 //      binaries.library()
@@ -226,6 +231,9 @@ kotlin {
 }
 
 if (!isJvmOnlyBuild) {
+
+  // skip tests for which system environment variable retrival is not implemented at the moment
+  //tasks.named("wasmWasiNodeTest") { enabled = false }
 //// skip test for certain targets which are not fully supported by kotest
 ////tasks.named("compileTestKotlinWasmWasi") { enabled = false}
   tasks.named("iosSimulatorArm64Test") { enabled = false }

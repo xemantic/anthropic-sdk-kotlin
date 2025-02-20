@@ -26,8 +26,7 @@ import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
 import io.kotest.assertions.json.shouldEqualJson
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.encodeToString
-import org.junit.Test
+import kotlin.test.Test
 
 class TextEditorToolTest {
 

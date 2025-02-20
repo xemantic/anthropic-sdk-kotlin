@@ -24,7 +24,7 @@ import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.SerialName
-import org.junit.Test
+import kotlin.test.Test
 
 /**
  * This test is showing how to use tools with external dependencies,
