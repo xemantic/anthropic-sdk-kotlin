@@ -17,7 +17,15 @@
 package com.xemantic.ai.anthropic.tool.test
 
 import com.xemantic.ai.tool.schema.meta.Description
+import kotlinx.serialization.SerialName
 
+/*
+ * LLMs are pretty bad at precise calculations, but traditional computing calculates
+ * with ease. The calculator and fibonacci_calculator tools are used across
+ * many test cases in this project.
+ */
+
+@SerialName("calculator")
 @Description("Calculates the arithmetic outcome of an operation when given the arguments a and b")
 data class Calculator(
     val operation: Operation,
@@ -45,6 +53,7 @@ tailrec fun fibonacci(
     0 -> a; 1 -> b; else -> fibonacci(n - 1, b, a + b)
 }
 
+@SerialName("fibonacci_calculator")
 @Description("Calculates the n-th fibonacci number")
 data class FibonacciCalculator(
     val n: Int
