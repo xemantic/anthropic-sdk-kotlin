@@ -42,7 +42,7 @@ class ComputerToolTest {
             }
         ) { actualInput = this }
         val anthropic = Anthropic {
-            anthropicBeta = "computer-use-2024-10-22"
+            anthropicBeta += Anthropic.Beta.COMPUTER_USE_2024_10_22.id
         }
 
         // when
