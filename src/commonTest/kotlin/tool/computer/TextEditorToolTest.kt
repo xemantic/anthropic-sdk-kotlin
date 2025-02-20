@@ -64,10 +64,10 @@ class TextEditorToolTest {
         anthropicJson.encodeToString(
             TextEditorTool {}
         ) shouldEqualJson /* language=json */ """
-           {
-             "name": "str_replace_editor",
-             "type": "text_editor_20250124"
-           }
+            {
+              "name": "str_replace_editor",
+              "type": "text_editor_20250124"
+            }
         """
     }
 
@@ -75,11 +75,11 @@ class TextEditorToolTest {
     fun `should deserialize TextEditorTool`() {
         anthropicJson.decodeFromString<Tool>(
            """
-          {
-            "name": "str_replace_editor",
-            "type": "text_editor_20250124"
-          }
-          """
+           {
+             "name": "str_replace_editor",
+             "type": "text_editor_20250124"
+           }
+           """
         ) should {
             have(name == "str_replace_editor")
             be<TextEditorTool>()
@@ -90,10 +90,10 @@ class TextEditorToolTest {
     @Test
     fun `should return JSON for TextEditorTool toString`() {
         TextEditorTool {}.toString() shouldEqualJson /* language=json */ """
-           {
-             "name": "str_replace_editor",
-             "type": "text_editor_20250124"
-           }
+            {
+              "name": "str_replace_editor",
+              "type": "text_editor_20250124"
+            }
         """
     }
 
@@ -127,7 +127,7 @@ class TextEditorToolTest {
               "command": "view",
               "path": "/tmp/foo.txt"
             }
-        """.trimIndent()
+        """
     }
 
 

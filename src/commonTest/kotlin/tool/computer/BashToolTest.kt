@@ -64,10 +64,10 @@ class BashToolTest {
         anthropicJson.encodeToString(
             BashTool {}
         ) shouldEqualJson /* language=json */ """
-           {
-             "name": "bash",
-             "type": "bash_20250124"
-           }            
+            {
+              "name": "bash",
+              "type": "bash_20250124"
+            }            
         """
     }
 
