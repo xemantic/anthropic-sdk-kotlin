@@ -1,7 +1,7 @@
 # anthropic-sdk-kotlin
 
 Unofficial Kotlin multiplatform variant of the
-[Antropic SDK](https://docs.anthropic.com/en/api/client-sdks).
+[Anthropic SDK](https://docs.anthropic.com/en/api/client-sdks).
 
 [<img alt="Maven Central Version" src="https://img.shields.io/maven-central/v/com.xemantic.ai/anthropic-sdk-kotlin">](https://central.sonatype.com/namespace/com.xemantic.ai/anthropic-sdk-kotlin)
 [<img alt="GitHub Release Date" src="https://img.shields.io/github/release-date/xemantic/anthropic-sdk-kotlin">](https://github.com/xemantic/anthropic-sdk-kotlin/releases)

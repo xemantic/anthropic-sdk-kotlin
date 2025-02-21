@@ -1,5 +1,6 @@
 @file:OptIn(ExperimentalKotlinGradlePluginApi::class, ExperimentalWasmDsl::class)
 
+import com.xemantic.gradle.conventions.License
 import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
@@ -8,10 +9,13 @@ import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.swiftexport.ExperimentalSwiftExportDsl
 import org.jetbrains.kotlin.gradle.targets.js.testing.KotlinJsTest
+import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
 import org.jetbrains.kotlin.gradle.targets.jvm.tasks.KotlinJvmTest
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
+import org.jreleaser.model.Active
 
 plugins {
   alias(libs.plugins.kotlin.multiplatform)
@@ -22,10 +26,32 @@ plugins {
   alias(libs.plugins.versions)
   `maven-publish`
   signing
-  alias(libs.plugins.publish)
+  alias(libs.plugins.jreleaser)
+  alias(libs.plugins.xemantic.conventions)
 }
 
-val githubAccount = "xemantic"
+group = "com.xemantic.ai"
+
+xemantic {
+  description = "Unofficial Kotlin multiplatform variant of the Anthropic SDK"
+  inceptionYear = 2024
+  license = License.APACHE
+  developer(
+    id = "morisil",
+    name = "Kazik Pogoda",
+    email = "morisil@xemantic.com"
+  )
+}
+
+val releaseAnnouncementSubject = """🚀 ${rootProject.name} $version has been released!"""
+
+val releaseAnnouncement = """
+$releaseAnnouncementSubject
+
+${xemantic.description}
+
+${xemantic.releasePageUrl}
+"""
 
 val javaTarget = libs.versions.javaTarget.get()
 val kotlinTarget = KotlinVersion.fromVersion(libs.versions.kotlinTarget.get())
@@ -33,26 +59,10 @@ val kotlinTarget = KotlinVersion.fromVersion(libs.versions.kotlinTarget.get())
 val isReleaseBuild = !project.version.toString().endsWith("-SNAPSHOT")
 val jvmOnlyBuild: String? by project
 val isJvmOnlyBuild: Boolean = (jvmOnlyBuild == null) || (jvmOnlyBuild!!.uppercase() == "true")
-val githubActor: String? by project
-val githubToken: String? by project
-val signingKey: String? by project
-val signingPassword: String? by project
-val sonatypeUser: String? by project
-val sonatypePassword: String? by project
 
 // we don't want to risk that a flaky test will crash the release build
 // and everything should be tested anyway after merging to the main branch
 val skipTests = isReleaseBuild
-
-println(
-"""
-+--------------------------------------------  
-| Project: ${project.name}
-| Version: ${project.version}
-| Release build: $isReleaseBuild
-+--------------------------------------------
-"""
-)
 
 val gradleRootDir: String = rootDir.absolutePath
 
@@ -95,8 +105,11 @@ kotlin {
   jvm {
     // set up according to https://jakewharton.com/gradle-toolchains-are-rarely-a-good-idea/
     compilerOptions {
+      apiVersion = kotlinTarget
+      languageVersion = kotlinTarget
       jvmTarget = JvmTarget.fromTarget(javaTarget)
       freeCompilerArgs.add("-Xjdk-release=$javaTarget")
+      progressiveMode = true
     }
     withJava()
   }
@@ -282,129 +295,99 @@ powerAssert {
 // https://kotlinlang.org/docs/dokka-migration.html#adjust-configuration-options
 dokka {
   pluginsConfiguration.html {
-    footerMessage.set("(c) 2024 Xemantic")
+    footerMessage.set(xemantic.copyright)
   }
 }
 
-val dokkaJavadocJar by tasks.registering(Jar::class) {
-  description = "A Javadoc JAR containing Dokka Javadoc"
-  dependsOn(tasks.dokkaGeneratePublicationHtml)
-  from(tasks.dokkaGeneratePublicationHtml.flatMap { it.outputDirectory })
+val javadocJar by tasks.registering(Jar::class) {
   archiveClassifier.set("javadoc")
+  from(tasks.dokkaGeneratePublicationHtml)
 }
-
-// HTML jar commented out, as it might be preventing release from landing in Maven Central
-//val dokkaHtmlJar by tasks.registering(Jar::class) {
-//  description = "A HTML Documentation JAR containing Dokka HTML"
-//  from(tasks.dokkaGeneratePublicationHtml.flatMap { it.outputDirectory })
-//  archiveClassifier.set("html-doc")
-//}
 
 publishing {
-  repositories {
-    if (!isReleaseBuild) {
-      maven {
-        name = "GitHubPackages"
-        setUrl("https://maven.pkg.github.com/$githubAccount/${rootProject.name}")
-        credentials {
-          username = githubActor
-          password = githubToken
-        }
-      }
-    }
-  }
   publications {
     withType<MavenPublication> {
-      artifact(dokkaJavadocJar)
-      //artifact(dokkaHtmlJar)
-      pom {
-        name = "anthropic-sdk-kotlin"
-        description = "Kotlin multiplatform client for accessing Ahtropic APIs"
-        url = "https://github.com/$githubAccount/${rootProject.name}"
-        inceptionYear = "2024"
-        organization {
-          name = "Xemantic"
-          url = "https://xemantic.com"
-        }
-        licenses {
-          license {
-            name = "The Apache Software License, Version 2.0"
-            url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
-            distribution = "repo"
-          }
-        }
-        scm {
-          url = "https://github.com/$githubAccount/${rootProject.name}"
-          connection = "scm:git:git:github.com/$githubAccount/${rootProject.name}.git"
-          developerConnection = "scm:git:https://github.com/$githubAccount/${rootProject.name}.git"
-        }
-        ciManagement {
-          system = "GitHub"
-          url = "https://github.com/$githubAccount/${rootProject.name}/actions"
-        }
-        issueManagement {
-          system = "GitHub"
-          url = "https://github.com/$githubAccount/${rootProject.name}/issues"
-        }
-        developers {
-          developer {
-            id = "morisil"
-            name = "Kazik Pogoda"
-            email = "morisil@xemantic.com"
-          }
-        }
-      }
+      artifact(javadocJar)
+      xemantic.configurePom(this)
     }
   }
 }
 
-if (isReleaseBuild) {
-
-  // workaround for KMP/gradle signing issue
-  // https://github.com/gradle/gradle/issues/26091
-  tasks {
-    withType<PublishToMavenRepository> {
-      dependsOn(withType<Sign>())
+jreleaser {
+  project {
+    description = xemantic.description
+    copyright = xemantic.copyright
+    license = xemantic.license!!.spxdx
+    links {
+      homepage = xemantic.homepageUrl
+      documentation = xemantic.documentationUrl
     }
+    authors = xemantic.authorIds
   }
-
-  // Resolves issues with .asc task output of the sign task of native targets.
-  // See: https://github.com/gradle/gradle/issues/26132
-  // And: https://youtrack.jetbrains.com/issue/KT-46466
-  tasks.withType<Sign>().configureEach {
-    val pubName = name.removePrefix("sign").removeSuffix("Publication")
-
-    // These tasks only exist for native targets, hence findByName() to avoid trying to find them for other targets
-
-    // Task ':linkDebugTest<platform>' uses this output of task ':sign<platform>Publication' without declaring an explicit or implicit dependency
-    tasks.findByName("linkDebugTest$pubName")?.let {
-      mustRunAfter(it)
-    }
-    // Task ':compileTestKotlin<platform>' uses this output of task ':sign<platform>Publication' without declaring an explicit or implicit dependency
-    tasks.findByName("compileTestKotlin$pubName")?.let {
-      mustRunAfter(it)
-    }
-  }
-
-  signing {
-    useInMemoryPgpKeys(
-      signingKey,
-      signingPassword
-    )
-    sign(publishing.publications)
-  }
-
-  nexusPublishing {
-    repositories {
-      sonatype {  //only for users registered in Sonatype after 24 Feb 2021
-        nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
-        snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
-        username.set(sonatypeUser)
-        password.set(sonatypePassword)
+  deploy {
+    maven {
+      mavenCentral {
+        create("maven-central") {
+          active = Active.ALWAYS
+          url = "https://central.sonatype.com/api/v1/publisher"
+          applyMavenCentralRules = false
+          maxRetries = 240
+          stagingRepository(xemantic.stagingDeployDir.path)
+          // workaround: https://github.com/jreleaser/jreleaser/issues/1784
+          kotlin.targets.forEach { target ->
+            if (target !is KotlinJvmTarget) {
+              val nonJarArtifactId = if (target.platformType == KotlinPlatformType.wasm) {
+                "${name}-wasm-${target.name.lowercase().substringAfter("wasm")}"
+              } else {
+                "${name}-${target.name.lowercase()}"
+              }
+              artifactOverride {
+                artifactId = nonJarArtifactId
+                jar = false
+                verifyPom = false
+                sourceJar = false
+                javadocJar = false
+              }
+            }
+          }
+        }
       }
     }
   }
-
+  release {
+    github {
+      skipRelease = true // we are releasing through GitHub UI
+      skipTag = true
+      token = "empty"
+      changelog {
+        enabled = false
+      }
+    }
+  }
+  checksum {
+    individual = false
+    artifacts = false
+    files = false
+  }
+  announce {
+    webhooks {
+      create("discord") {
+        active = Active.ALWAYS
+        message = releaseAnnouncement
+        messageProperty = "content"
+        structuredMessage = true
+      }
+    }
+    linkedin {
+      active = Active.ALWAYS
+      subject = releaseAnnouncementSubject
+      message = releaseAnnouncement
+    }
+    bluesky {
+      active = Active.ALWAYS
+      status = releaseAnnouncement
+    }
+  }
 }
 
 tasks.withType(JavaCompile::class.java) {

@@ -20,7 +20,8 @@ jackson = "2.18.2"
 
 versionsPlugin = "0.52.0"
 dokkaPlugin = "2.0.0"
-publishPlugin = "2.0.0"
+jreleaserPlugin = "1.16.0"
+xemanticConventionsPlugin = "0.3.1"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -56,4 +57,5 @@ kotlin-plugin-power-assert = { id = "org.jetbrains.kotlin.plugin.power-assert", 
 kotlinx-atomicfu = { id = "org.jetbrains.kotlinx.atomicfu", version.ref = "kotlinxAtomicFu" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokkaPlugin" }
 versions = { id = "com.github.ben-manes.versions", version.ref = "versionsPlugin" }
-publish = { id = "io.github.gradle-nexus.publish-plugin", version.ref = "publishPlugin" }
+jreleaser = { id = "org.jreleaser", version.ref = "jreleaserPlugin" }
+xemantic-conventions = { id = "com.xemantic.gradle.xemantic-conventions", version.ref = "xemanticConventionsPlugin" }
