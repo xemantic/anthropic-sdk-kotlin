@@ -1,4 +1,6 @@
+# Builds every branch other than main, so that any change pushed to GitHub in a feature branch can be built and tested
 name: Build branch
+
 on:
   push:
     branches-ignore:
@@ -11,22 +13,19 @@ jobs:
   build_branch:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout sources
-      uses: actions/checkout@v4.2.2
+      - name: Checkout sources
+        uses: actions/checkout@v4.2.2
 
-    - name: Setup Java
-      uses: actions/setup-java@v4.7.0
-      with:
-        distribution: 'temurin'
-        java-version: 23
+      - name: Setup Java
+        uses: actions/setup-java@v4.7.0
+        with:
+          distribution: 'temurin'
+          java-version: 23
 
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v4.3.0
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4.3.0
 
-    - name: Install libcurl4
-      run: sudo apt-get install -y libcurl4-gnutls-dev
-
-    - name: Build
-      run: ./gradlew -PjvmOnlyBuild=false build
-      env:
-        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      - name: Build
+        run: ./gradlew -PjvmOnlyBuild=false build
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}

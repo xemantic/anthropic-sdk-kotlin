@@ -1,35 +1,32 @@
+# Builds than main branch, and then deploys SNAPSHOT versions to GitHub Packages
 name: Build main
+
 on:
   push:
     branches:
       - main
+
 jobs:
   build_main:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout sources
-      uses: actions/checkout@v4.2.2
+      - name: Checkout sources
+        uses: actions/checkout@v4.2.2
 
-    - name: Setup Java
-      uses: actions/setup-java@v4.7.0
-      with:
-        distribution: 'temurin'
-        java-version: 23
+      - name: Setup Java
+        uses: actions/setup-java@v4.7.0
+        with:
+          distribution: 'temurin'
+          java-version: 23
 
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v4.3.0
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4.3.0
 
-    - name: Install libcurl4
-      run: sudo apt-get install -y libcurl4-gnutls-dev
-
-    - name: Build
-      run: ./gradlew -PjvmOnlyBuild=false build sourcesJar dokkaHtml publish
-      env:
-        ORG_GRADLE_PROJECT_githubActor: ${{ secrets.GITHUBACTOR }}
-        ORG_GRADLE_PROJECT_githubToken: ${{ secrets.GITHUBTOKEN }}
-        ORG_GRADLE_PROJECT_signingKey: ${{ secrets.SIGNING_KEY }}
-        ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.SIGNING_PASSWORD }}
-        ORG_GRADLE_PROJECT_sonatypeUser: ${{ secrets.SONATYPE_USER }}
-        ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.SONATYPE_PASSWORD }}
-        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        
+      - name: Build
+        run: ./gradlew -PjvmOnlyBuild=false build sourcesJar javadocJar publish
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ORG_GRADLE_PROJECT_signingKey: ${{ secrets.SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.SIGNING_PASSWORD }}
+          ORG_GRADLE_PROJECT_githubActor: ${{ secrets.GITHUBACTOR }}
+          ORG_GRADLE_PROJECT_githubToken: ${{ secrets.GITHUBTOKEN }}
