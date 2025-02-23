@@ -22,7 +22,6 @@ import com.xemantic.ai.anthropic.message.Message
 import com.xemantic.ai.anthropic.message.StopReason
 import com.xemantic.ai.anthropic.message.plusAssign
 import com.xemantic.ai.anthropic.test.testDataDir
-import com.xemantic.kotlin.test.assert
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.isBrowserPlatform
@@ -58,7 +57,7 @@ class DocumentCacheControlTest {
       have(content.size == 1)
       content[0] should {
         be<Text>()
-        assert("FOO" in text.uppercase())
+        have("FOO" in text.uppercase())
       }
       usage should {
         // it might have been already cached by the previous test run
@@ -82,7 +81,7 @@ class DocumentCacheControlTest {
       have(content.size == 1)
       content[0] should {
         be<Text>()
-        assert("BAR" in text.uppercase())
+        have("BAR" in text.uppercase())
       }
       usage should {
         have(cacheReadInputTokens!! > 0)
