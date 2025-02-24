@@ -129,7 +129,7 @@ class MessageRequestTest {
               "max_tokens": 8182,
               "tools": [
                 {
-                  "type": "computer_20241022",
+                  "type": "computer_20250124",
                   "name": "computer",
                   "display_width_px": 1024,
                   "display_height_px": 768,
@@ -251,7 +251,7 @@ class MessageRequestTest {
               "max_tokens": 8182,
               "tools": [
                 {
-                  "type": "computer_20241022",
+                  "type": "computer_20250124",
                   "name": "computer",
                   "display_width_px": 1024,
                   "display_height_px": 768,

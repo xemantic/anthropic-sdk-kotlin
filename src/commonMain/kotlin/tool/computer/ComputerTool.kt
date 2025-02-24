@@ -32,7 +32,7 @@ class ComputerTool private constructor(
     val displayNumber: Int? = null
 ) : BuiltInTool(
     name = "computer",
-    type = "computer_20241022"
+    type = "computer_20250124"
 ) {
 
     @Suppress("unused")

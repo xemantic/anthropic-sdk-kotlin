@@ -41,7 +41,7 @@ class ComputerToolTest {
             }
         ) { actualInput = this }
         val anthropic = Anthropic {
-            anthropicBeta += Anthropic.Beta.COMPUTER_USE_2024_10_22.id
+            anthropicBeta += Anthropic.Beta.COMPUTER_USE_2025_01_24.id
         }
 
         // when
@@ -79,7 +79,7 @@ class ComputerToolTest {
         ) shouldEqualJson /* language=json */ """
             {
               "name": "computer",
-              "type": "computer_20241022",
+              "type": "computer_20250124",
               "display_width_px": 1024,
               "display_height_px": 768,
               "display_number": 0
@@ -93,7 +93,7 @@ class ComputerToolTest {
             """
             {
               "name": "computer",
-              "type": "computer_20241022",
+              "type": "computer_20250124",
               "display_width_px": 1024,
               "display_height_px": 768,
               "display_number": 0
@@ -102,7 +102,7 @@ class ComputerToolTest {
         ) should {
             have(name == "computer")
             be<ComputerTool>()
-            have(type == "computer_20241022")
+            have(type == "computer_20250124")
             have(displayWidthPx == 1024)
             have(displayHeightPx == 768)
             have(displayNumber == 0)
@@ -120,7 +120,7 @@ class ComputerToolTest {
         ) {}.toString() shouldEqualJson /* language=json */ """
             {
               "name": "computer",
-              "type": "computer_20241022",
+              "type": "computer_20250124",
               "display_width_px": 1024,
               "display_height_px": 768,
               "display_number": 0

@@ -108,6 +108,7 @@ class Anthropic internal constructor(
     }
 
     enum class Beta(val id: String) {
+        COMPUTER_USE_2025_01_24("computer-use-2025-01-24"),
         COMPUTER_USE_2024_10_22("computer-use-2024-10-22")
     }
 
