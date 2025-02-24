@@ -31,7 +31,6 @@ interface AnthropicModel {
     val maxOutput: Int
     val messageBatchesApi: Boolean
     val cost: Cost
-
 }
 
 val ANTHROPIC_TOKEN_COST_RATIO = Money.Ratio("0.000001")
@@ -51,6 +50,28 @@ enum class Model(
     override val messageBatchesApi: Boolean,
     override val cost: Cost
 ) : AnthropicModel {
+
+    CLAUDE_3_7_SONNET(
+        id = "claude-3-7-sonnet-latest",
+        contextWindow = 200000,
+        maxOutput = 8182,
+        messageBatchesApi = true,
+        cost = Cost(
+            inputTokens = "3".dollarsPerMillion,
+            outputTokens = "15".dollarsPerMillion
+        )
+    ),
+
+    CLAUDE_3_7_SONNET_20250219(
+        id = "claude-3-7-sonnet-20250219",
+        contextWindow = 200000,
+        maxOutput = 8182,
+        messageBatchesApi = true,
+        cost = Cost(
+            inputTokens = "3".dollarsPerMillion,
+            outputTokens = "15".dollarsPerMillion
+        )
+    ),
 
     CLAUDE_3_5_SONNET(
         id = "claude-3-5-sonnet-latest",
@@ -153,7 +174,7 @@ enum class Model(
 
     companion object {
 
-        val DEFAULT: Model = CLAUDE_3_5_SONNET
+        val DEFAULT: Model = CLAUDE_3_7_SONNET
 
     }
 
