@@ -49,6 +49,7 @@ class ToolWithDependenciesTest {
             return listOf("foo", "bar", "buzz")
         }
     }
+
     // we create a test db instance
     val testDatabase = TestDatabase()
 

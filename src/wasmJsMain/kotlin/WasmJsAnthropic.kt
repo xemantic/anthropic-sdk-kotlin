@@ -1,7 +1,7 @@
 package com.xemantic.ai.anthropic
 
 actual val envApiKey: String?
-  get() = null
+    get() = null
 
 actual val missingApiKeyMessage: String
-  get() = "apiKey is missing, it has to be provided as a parameter."
+    get() = "apiKey is missing, it has to be provided as a parameter."

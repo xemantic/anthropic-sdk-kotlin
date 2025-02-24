@@ -26,24 +26,24 @@ import java.util.List;
 
 public class JavaAnthropicTest {
 
-  @Test
-  public void foo() {
-    JavaAnthropic anthropic = JavaAnthropic.create();
-    MessageResponse response = anthropic.messages.createBlocking(
-        MessageRequestBuilder.builder()
-            .messages(List.of(
-              new Message(
-                  Role.USER,
-                  List.of(
-                      new Text(
-                          "Hi Claude",
-                          null
-                      )
-                  )
-              ))
-            ).build()
-    );
-    System.out.println(response);
-  }
+    @Test
+    public void foo() {
+        JavaAnthropic anthropic = JavaAnthropic.create();
+        MessageResponse response = anthropic.messages.createBlocking(
+                MessageRequestBuilder.builder()
+                        .messages(List.of(
+                                new Message(
+                                        Role.USER,
+                                        List.of(
+                                                new Text(
+                                                        "Hi Claude",
+                                                        null
+                                                )
+                                        )
+                                ))
+                        ).build()
+        );
+        System.out.println(response);
+    }
 
 }

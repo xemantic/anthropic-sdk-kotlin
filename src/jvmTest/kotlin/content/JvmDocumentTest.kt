@@ -28,34 +28,34 @@ import org.junit.Test
 
 class JvmDocumentTest {
 
-  /**
-   * Note: This test would work with all the platforms supporting [kotlinx.io.files.SystemFileSystem],
-   * however the path of the working directory used by the test container is predictable only
-   * for JVM platform, therefore common tests cases are using relative path.
-   */
-  @Test
-  fun `Should read test PDF with path specified as String`() = runTest {
-    // given
-    val client = Anthropic()
+    /**
+     * Note: This test would work with all the platforms supporting [kotlinx.io.files.SystemFileSystem],
+     * however the path of the working directory used by the test container is predictable only
+     * for JVM platform, therefore common tests cases are using relative path.
+     */
+    @Test
+    fun `Should read test PDF with path specified as String`() = runTest {
+        // given
+        val client = Anthropic()
 
-    // when
-    val response = client.messages.create {
-      +Message {
-        +Document("test-data/test.pdf")
-        +"What's in the document?"
-      }
-    }
+        // when
+        val response = client.messages.create {
+            +Message {
+                +Document("test-data/test.pdf")
+                +"What's in the document?"
+            }
+        }
 
-    // then
-    response should {
-      have(stopReason == StopReason.END_TURN)
-      have(content.size == 1)
-      content[0] should {
-        be<Text>()
-        assert("FOO" in text.uppercase())
-        assert("BAR" in text.uppercase())
-      }
+        // then
+        response should {
+            have(stopReason == StopReason.END_TURN)
+            have(content.size == 1)
+            content[0] should {
+                be<Text>()
+                assert("FOO" in text.uppercase())
+                assert("BAR" in text.uppercase())
+            }
+        }
     }
-  }
 
 }

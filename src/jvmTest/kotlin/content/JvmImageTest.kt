@@ -27,28 +27,28 @@ import org.junit.Test
 
 class JvmImageTest {
 
-  @Test
-  fun `Should read test image file specified by String`() = runTest {
-    // given
-    val client = Anthropic()
+    @Test
+    fun `Should read test image file specified by String`() = runTest {
+        // given
+        val client = Anthropic()
 
-    // when
-    val response = client.messages.create {
-      +Message {
-        +Image("test-data/foo.png")
-        +"What's on this picture?"
-      }
-    }
+        // when
+        val response = client.messages.create {
+            +Message {
+                +Image("test-data/foo.png")
+                +"What's on this picture?"
+            }
+        }
 
-    // then
-    response should {
-      have(stopReason == StopReason.END_TURN)
-      have(content.size == 1)
-      content[0] should {
-        be<Text>()
-        have("FOO" in text.uppercase())
-      }
+        // then
+        response should {
+            have(stopReason == StopReason.END_TURN)
+            have(content.size == 1)
+            content[0] should {
+                be<Text>()
+                have("FOO" in text.uppercase())
+            }
+        }
     }
-  }
 
 }

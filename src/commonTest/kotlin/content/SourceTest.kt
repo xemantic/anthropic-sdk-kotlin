@@ -17,16 +17,15 @@
 package com.xemantic.ai.anthropic.content
 
 import com.xemantic.ai.anthropic.json.anthropicJson
-import kotlin.test.Test
 import com.xemantic.ai.anthropic.json.set
 import com.xemantic.ai.file.magic.MediaType
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
 import io.kotest.assertions.json.shouldEqualJson
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Ignore
+import kotlin.test.Test
 
 class SourceTest {
 
@@ -71,7 +70,7 @@ class SourceTest {
             be<Source.Base64>()
             have(mediaType == MediaType.PNG.mime)
             have(data == "foo")
-            have(additionalProperties!= null && additionalProperties.isNotEmpty())
+            have(additionalProperties != null && additionalProperties.isNotEmpty())
             have(additionalProperties!!["bar"] == JsonPrimitive("buzz"))
         }
     }

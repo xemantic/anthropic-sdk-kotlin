@@ -26,60 +26,60 @@ import kotlinx.serialization.Serializable
 @Serializable
 @SerialName("document")
 class Document private constructor(
-  val source: Source,
-  @SerialName("cache_control")
-  override val cacheControl: CacheControl? = null
+    val source: Source,
+    @SerialName("cache_control")
+    override val cacheControl: CacheControl? = null
 ) : Content() {
 
-  class Builder : BinaryContentBuilder(
-    supportedMediaTypes = SUPPORTED_MEDIA_TYPES
-  ) {
+    class Builder : BinaryContentBuilder(
+        supportedMediaTypes = SUPPORTED_MEDIA_TYPES
+    ) {
 
-    var cacheControl: CacheControl? = null
+        var cacheControl: CacheControl? = null
 
-    fun build(): Document = Document(
-      source = requireNotNull(source),
-      cacheControl = cacheControl
-    )
+        fun build(): Document = Document(
+            source = requireNotNull(source),
+            cacheControl = cacheControl
+        )
 
-  }
+    }
 
-  companion object {
+    companion object {
 
-    /**
-     * The set of [MediaType]s supported by the [Document].
-     */
-    val SUPPORTED_MEDIA_TYPES = setOf(
-      MediaType.PDF
-    )
+        /**
+         * The set of [MediaType]s supported by the [Document].
+         */
+        val SUPPORTED_MEDIA_TYPES = setOf(
+            MediaType.PDF
+        )
 
-  }
+    }
 
-  override fun toString(): String = toPrettyJson()
+    override fun toString(): String = toPrettyJson()
 
 }
 
 fun Document(
-  block: Document.Builder.() -> Unit
+    block: Document.Builder.() -> Unit
 ): Document = Document.Builder().apply(block).build()
 
 fun Document(
-  path: String,
-  block: Document.Builder.() -> Unit = {}
+    path: String,
+    block: Document.Builder.() -> Unit = {}
 ): Document = Document(Path(path), block)
 
 fun Document(
-  path: Path,
-  block: Document.Builder.() -> Unit = {}
+    path: Path,
+    block: Document.Builder.() -> Unit = {}
 ): Document = Document {
-  this.path = path
-  block(this)
+    this.path = path
+    block(this)
 }
 
 fun Document(
-  bytes: ByteArray,
-  block: Document.Builder.() -> Unit = {}
+    bytes: ByteArray,
+    block: Document.Builder.() -> Unit = {}
 ): Document = Document {
-  this.bytes = bytes
-  block(this)
+    this.bytes = bytes
+    block(this)
 }

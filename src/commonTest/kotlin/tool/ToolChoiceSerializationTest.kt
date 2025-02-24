@@ -19,7 +19,6 @@ package com.xemantic.ai.anthropic.tool
 import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.ai.anthropic.tool.test.Calculator
 import io.kotest.assertions.json.shouldEqualJson
-import kotlinx.serialization.encodeToString
 import kotlin.test.Test
 
 class ToolChoiceSerializationTest {

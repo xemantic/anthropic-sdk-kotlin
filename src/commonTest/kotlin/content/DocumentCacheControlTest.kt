@@ -32,63 +32,63 @@ import kotlin.test.Test
 
 class DocumentCacheControlTest {
 
-  @Test
-  fun `Should cache PDF document across conversation`() = runTest {
-    if (isBrowserPlatform) return@runTest // we cannot access files in the browser
-    // given
-    val client = Anthropic()
-    val conversation = mutableListOf<Message>()
-    conversation += Message {
-      +Document(Path(testDataDir, "test.pdf")) {
-        cacheControl = CacheControl.Ephemeral()
-      }
-      +"What's on the first page of the document?"
-    }
+    @Test
+    fun `Should cache PDF document across conversation`() = runTest {
+        if (isBrowserPlatform) return@runTest // we cannot access files in the browser
+        // given
+        val client = Anthropic()
+        val conversation = mutableListOf<Message>()
+        conversation += Message {
+            +Document(Path(testDataDir, "test.pdf")) {
+                cacheControl = CacheControl.Ephemeral()
+            }
+            +"What's on the first page of the document?"
+        }
 
-    // when
-    val response1 = client.messages.create {
-      messages = conversation
-    }
-    conversation += response1
+        // when
+        val response1 = client.messages.create {
+            messages = conversation
+        }
+        conversation += response1
 
-    // then
-    response1 should {
-      have(stopReason == StopReason.END_TURN)
-      have(content.size == 1)
-      content[0] should {
-        be<Text>()
-        have("FOO" in text.uppercase())
-      }
-      usage should {
-        // it might have been already cached by the previous test run
-        have(cacheCreationInputTokens!! > 0 || cacheReadInputTokens!! > 0)
-      }
-    }
+        // then
+        response1 should {
+            have(stopReason == StopReason.END_TURN)
+            have(content.size == 1)
+            content[0] should {
+                be<Text>()
+                have("FOO" in text.uppercase())
+            }
+            usage should {
+                // it might have been already cached by the previous test run
+                have(cacheCreationInputTokens!! > 0 || cacheReadInputTokens!! > 0)
+            }
+        }
 
-    // given
-    conversation += Message {
-      +"What's on the second page of the document?"
-    }
+        // given
+        conversation += Message {
+            +"What's on the second page of the document?"
+        }
 
-    // when
-    val response2 = client.messages.create {
-      messages = conversation
-    }
+        // when
+        val response2 = client.messages.create {
+            messages = conversation
+        }
 
-    // then
-    response2 should {
-      have(stopReason == StopReason.END_TURN)
-      have(content.size == 1)
-      content[0] should {
-        be<Text>()
-        have("BAR" in text.uppercase())
-      }
-      usage should {
-        have(cacheReadInputTokens!! > 0)
-        have(cacheCreationInputTokens == 0)
-      }
-    }
+        // then
+        response2 should {
+            have(stopReason == StopReason.END_TURN)
+            have(content.size == 1)
+            content[0] should {
+                be<Text>()
+                have("BAR" in text.uppercase())
+            }
+            usage should {
+                have(cacheReadInputTokens!! > 0)
+                have(cacheCreationInputTokens == 0)
+            }
+        }
 
-  }
+    }
 
 }

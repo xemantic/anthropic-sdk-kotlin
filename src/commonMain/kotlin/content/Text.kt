@@ -23,7 +23,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 @SerialName("text")
 data class Text(
-  val text: String,
-  @SerialName("cache_control")
-  override val cacheControl: CacheControl? = null,
+    val text: String,
+    @SerialName("cache_control")
+    override val cacheControl: CacheControl? = null,
 ) : Content()

@@ -28,7 +28,6 @@ import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
 import kotlinx.coroutines.test.runTest
-import kotlin.collections.plusAssign
 import kotlin.test.Test
 
 class ToolUseTest {

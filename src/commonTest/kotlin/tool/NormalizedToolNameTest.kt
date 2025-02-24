@@ -23,7 +23,7 @@ class NormalizedToolNameTest {
 
     @Test
     fun `should normalize tool name to meet Anthropic API requirements`() {
-        assert("simple.Name".normalizedToolName  == "simple_Name")
+        assert("simple.Name".normalizedToolName == "simple_Name")
         assert("ending.with.Dollar$".normalizedToolName == "ending_with_Dollar")
         assert($$"dollar.In$Between$".normalizedToolName == "dollar_In_Between")
         // max 64 characters

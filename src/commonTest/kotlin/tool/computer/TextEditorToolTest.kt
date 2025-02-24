@@ -73,7 +73,7 @@ class TextEditorToolTest {
     @Test
     fun `should deserialize TextEditorTool`() {
         anthropicJson.decodeFromString<Tool>(
-           """
+            """
            {
              "name": "str_replace_editor",
              "type": "text_editor_20250124"

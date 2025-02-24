@@ -30,76 +30,72 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 @OptIn(ExperimentalSerializationApi::class)
 sealed class Event {
 
-  @Serializable
-  @SerialName("message_start")
-  data class MessageStart(
-    val message: MessageResponse
-  ) : Event()
-
-  @Serializable
-  @SerialName("message_delta")
-  data class MessageDelta(
-    val delta: Delta,
-    val usage: Usage
-  ) : Event() {
+    @Serializable
+    @SerialName("message_start")
+    data class MessageStart(
+        val message: MessageResponse
+    ) : Event()
 
     @Serializable
-    data class Delta(
-      @SerialName("stop_reason")
-      val stopReason: StopReason,
-      @SerialName("stop_sequence")
-      val stopSequence: String? // TODO is that correct?
-    )
+    @SerialName("message_delta")
+    data class MessageDelta(
+        val delta: Delta,
+        val usage: Usage
+    ) : Event() {
+
+        @Serializable
+        data class Delta(
+            @SerialName("stop_reason")
+            val stopReason: StopReason,
+            @SerialName("stop_sequence")
+            val stopSequence: String? // TODO is that correct?
+        )
+
+        @Serializable
+        data class Usage(
+            @SerialName("output_tokens")
+            val outputTokens: Int
+        )
+
+    }
 
     @Serializable
-    data class Usage(
-      @SerialName("output_tokens")
-      val outputTokens: Int
-    )
+    @SerialName("message_stop")
+    class MessageStop : Event() {
+        override fun toString(): String = "MessageStop"
+    }
 
-  }
+    @Serializable
+    @SerialName("content_block_start")
+    data class ContentBlockStart(
+        val index: Int,
+        @SerialName("content_block")
+        val contentBlock: ContentBlock
+    ) : Event()
 
-  @Serializable
-  @SerialName("message_stop")
-  class MessageStop : Event() {
-    override fun toString(): String = "MessageStop"
-  }
+    @Serializable
+    @SerialName("content_block_stop")
+    data class ContentBlockStop(
+        val index: Int
+    ) : Event()
 
-  @Serializable
-  @SerialName("content_block_start")
-  data class ContentBlockStart(
-    val index: Int,
-    @SerialName("content_block")
-    val contentBlock: ContentBlock
-  ) : Event()
+    @Serializable
+    @SerialName("ping")
+    class Ping : Event() {
+        override fun toString(): String = "Ping"
+    }
 
-  @Serializable
-  @SerialName("content_block_stop")
-  data class ContentBlockStop(
-    val index: Int
-  ) : Event()
-
-  @Serializable
-  @SerialName("ping")
-  class Ping: Event() {
-    override fun toString(): String = "Ping"
-  }
-
-  @Serializable
-  @SerialName("content_block_delta")
-  data class ContentBlockDelta(
-    val index: Int,
-    val delta: Delta
-  ) : Event()
+    @Serializable
+    @SerialName("content_block_delta")
+    data class ContentBlockDelta(
+        val index: Int,
+        val delta: Delta
+    ) : Event()
 
 }
 
 
-
-
-
 // TODO error event is missing, should we rename all of these to events?
-
 
 
 @Serializable
@@ -107,20 +103,19 @@ sealed class Event {
 @OptIn(ExperimentalSerializationApi::class)
 sealed class ContentBlock {
 
-  @Serializable
-  @SerialName("text")
-  class Text(
-    val text: String
-  ) : ContentBlock()
+    @Serializable
+    @SerialName("text")
+    class Text(
+        val text: String
+    ) : ContentBlock()
 
-  @Serializable
-  @SerialName("tool_use")
-  class ToolUse(
-    val text: String // TODO tool_id
-  ) : ContentBlock()
+    @Serializable
+    @SerialName("tool_use")
+    class ToolUse(
+        val text: String // TODO tool_id
+    ) : ContentBlock()
 
 }
-
 
 
 @Serializable
@@ -128,11 +123,11 @@ sealed class ContentBlock {
 @OptIn(ExperimentalSerializationApi::class)
 sealed class Delta {
 
-  @Serializable
-  @SerialName("text_delta")
-  data class TextDelta(
-    val text: String
-  ) : Delta()
+    @Serializable
+    @SerialName("text_delta")
+    data class TextDelta(
+        val text: String
+    ) : Delta()
 
 }
 

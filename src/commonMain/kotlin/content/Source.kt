@@ -26,66 +26,66 @@ import kotlinx.serialization.json.JsonElement
 @Serializable
 abstract class Source : WithAdditionalProperties { // TODO cross check with official API, spring AI
 
-  @Serializable
-  @SerialName("base64")
-  class Base64 private constructor(
-    @SerialName("media_type")
-    val mediaType: String,
-    val data: String,
-    override val additionalProperties: Map<String, JsonElement?>? = null
-  ) : Source() {
+    @Serializable
+    @SerialName("base64")
+    class Base64 private constructor(
+        @SerialName("media_type")
+        val mediaType: String,
+        val data: String,
+        override val additionalProperties: Map<String, JsonElement?>? = null
+    ) : Source() {
 
-    class Builder : WithAdditionalProperties.Builder() {
+        class Builder : WithAdditionalProperties.Builder() {
 
-      var data: String? = null
+            var data: String? = null
 
-      var mediaType: String? = null
+            var mediaType: String? = null
 
-      fun mediaType(type: MediaType) {
-        mediaType = type.mime
-      }
+            fun mediaType(type: MediaType) {
+                mediaType = type.mime
+            }
 
-      fun build(): Base64 = Base64(
-        mediaType = requireNotNull(mediaType) { "mediaType cannot be null" },
-        data = requireNotNull(data) { "data cannot be null" },
-        additionalProperties = additionalProperties
-      )
+            fun build(): Base64 = Base64(
+                mediaType = requireNotNull(mediaType) { "mediaType cannot be null" },
+                data = requireNotNull(data) { "data cannot be null" },
+                additionalProperties = additionalProperties
+            )
 
-    }
-
-  }
-
-  @Serializable
-  class Unknown private constructor(
-    val type: String,
-    override val additionalProperties: Map<String, JsonElement?>? = null
-  ) : Source() {
-
-    class Builder : WithAdditionalProperties.Builder() {
-
-      var type: String? = null
-
-      fun build(): Unknown = Unknown(
-        type = requireNotNull(type),
-        additionalProperties = additionalProperties
-      )
+        }
 
     }
 
-  }
+    @Serializable
+    class Unknown private constructor(
+        val type: String,
+        override val additionalProperties: Map<String, JsonElement?>? = null
+    ) : Source() {
 
-  companion object {
+        class Builder : WithAdditionalProperties.Builder() {
 
-    fun Base64(
-      block: Base64.Builder.() -> Unit
-    ): Base64 = Base64.Builder().apply(block).build()
+            var type: String? = null
 
-    fun Unknown(
-      block: Unknown.Builder.() -> Unit
-    ): Unknown = Unknown.Builder().apply(block).build()
+            fun build(): Unknown = Unknown(
+                type = requireNotNull(type),
+                additionalProperties = additionalProperties
+            )
 
-  }
+        }
 
-  override fun toString(): String = toPrettyJson()
+    }
+
+    companion object {
+
+        fun Base64(
+            block: Base64.Builder.() -> Unit
+        ): Base64 = Base64.Builder().apply(block).build()
+
+        fun Unknown(
+            block: Unknown.Builder.() -> Unit
+        ): Unknown = Unknown.Builder().apply(block).build()
+
+    }
+
+    override fun toString(): String = toPrettyJson()
 
 }

@@ -33,8 +33,8 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 @OptIn(ExperimentalSerializationApi::class)
 abstract class Content {
 
-  @SerialName("cache_control")
-  abstract val cacheControl: CacheControl?
+    @SerialName("cache_control")
+    abstract val cacheControl: CacheControl?
 
 }
 
@@ -46,19 +46,19 @@ abstract class Content {
  */
 interface ContentListBuilder {
 
-  val content: MutableList<Content>
+    val content: MutableList<Content>
 
-  operator fun Content.unaryPlus() {
-    content += this
-  }
+    operator fun Content.unaryPlus() {
+        content += this
+    }
 
-  operator fun String.unaryPlus() {
-    content += Text(this)
-  }
+    operator fun String.unaryPlus() {
+        content += Text(this)
+    }
 
-  operator fun Collection<Content>.unaryPlus() {
-    content += this
-  }
+    operator fun Collection<Content>.unaryPlus() {
+        content += this
+    }
 
 }
 
@@ -69,56 +69,56 @@ interface ContentListBuilder {
  * @param supportedMediaTypes
  */
 abstract class BinaryContentBuilder(
-  val supportedMediaTypes: Set<MediaType>
+    val supportedMediaTypes: Set<MediaType>
 ) {
 
-  /**
-   * The [Source] of the content.
-   *
-   * Note: if not set directly, it can be also automatically populated by
-   * setting the [path].
-   */
-  var source: Source? = null
+    /**
+     * The [Source] of the content.
+     *
+     * Note: if not set directly, it can be also automatically populated by
+     * setting the [path].
+     */
+    var source: Source? = null
 
-  /**
-   * The path of this binary content being built.
-   *
-   * Note: setting up the [path] will populate the [source].
-   */
-  var path: Path? = null
-    set(value) {
-      val pathToSet = requireNotNull(value) {
-        "The path of binary content cannot be null"
-      }
-      val bytesToSet = pathToSet.readBytes()
-      try {
-        bytes = bytesToSet
-      } catch (e : IllegalArgumentException) {
-        throw IllegalArgumentException(
-          "Unsupported file at path \"$pathToSet\": ${e.message}"
-        )
-      }
-      field = pathToSet
-    }
+    /**
+     * The path of this binary content being built.
+     *
+     * Note: setting up the [path] will populate the [source].
+     */
+    var path: Path? = null
+        set(value) {
+            val pathToSet = requireNotNull(value) {
+                "The path of binary content cannot be null"
+            }
+            val bytesToSet = pathToSet.readBytes()
+            try {
+                bytes = bytesToSet
+            } catch (e: IllegalArgumentException) {
+                throw IllegalArgumentException(
+                    "Unsupported file at path \"$pathToSet\": ${e.message}"
+                )
+            }
+            field = pathToSet
+        }
 
-  var bytes: ByteArray? = null
-    set(value) {
-      val bytesToSet = requireNotNull(value) {
-        "The bytes of binary content cannot be null"
-      }
-      val type = requireNotNull(bytesToSet.detectMediaType()) {
-        "Cannot detect media type"
-      }
-      require(type in supportedMediaTypes) {
-        "Unsupported media type \"${type.mime}\", " +
-                "supported: ${supportedMediaTypes.map { "\"${it.mime}\"" }}"
-      }
-      source = Source.Base64 {
-        mediaType = type.mime
-        @OptIn(ExperimentalEncodingApi::class)
-        data = Base64.encode(bytesToSet)
-      }
-      field = bytesToSet
-    }
+    var bytes: ByteArray? = null
+        set(value) {
+            val bytesToSet = requireNotNull(value) {
+                "The bytes of binary content cannot be null"
+            }
+            val type = requireNotNull(bytesToSet.detectMediaType()) {
+                "Cannot detect media type"
+            }
+            require(type in supportedMediaTypes) {
+                "Unsupported media type \"${type.mime}\", " +
+                        "supported: ${supportedMediaTypes.map { "\"${it.mime}\"" }}"
+            }
+            source = Source.Base64 {
+                mediaType = type.mime
+                @OptIn(ExperimentalEncodingApi::class)
+                data = Base64.encode(bytesToSet)
+            }
+            field = bytesToSet
+        }
 
 }
