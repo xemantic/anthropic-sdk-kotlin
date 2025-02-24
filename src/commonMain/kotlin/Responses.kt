@@ -16,7 +16,12 @@
 
 package com.xemantic.ai.anthropic
 
+import com.xemantic.ai.anthropic.json.toPrettyJson
 import kotlinx.serialization.Serializable
 
 @Serializable
-abstract class Response(val type: String)
+abstract class Response(val type: String) {
+
+    override fun toString() = toPrettyJson()
+
+}
