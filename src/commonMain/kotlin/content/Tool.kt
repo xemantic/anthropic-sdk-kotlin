@@ -39,7 +39,7 @@ data class ToolUse(
     @PublishedApi
     internal lateinit var tool: Tool
 
-    fun input(): Any = anthropicJson.decodeFromJsonElement(
+    fun decodeInput(): Any = anthropicJson.decodeFromJsonElement(
         deserializer = tool.inputSerializer,
         element = input
     )!!
@@ -53,7 +53,7 @@ data class ToolUse(
         toolUseId = id
         try {
             if (::tool.isInitialized) {
-                val input = input()
+                val input = decodeInput()
                 val result = tool.runner(input)
                 if ((result != null) && (result !is Unit)) {
                     if (result is Content) {
