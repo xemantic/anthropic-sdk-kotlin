@@ -21,7 +21,6 @@ import com.xemantic.ai.anthropic.tool.test.FibonacciCalculator
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
 import io.kotest.assertions.json.shouldEqualJson
-import kotlinx.serialization.encodeToString
 import kotlin.test.Test
 
 class ToolSerializationTest {
@@ -66,7 +65,8 @@ class ToolSerializationTest {
                 ]
               }
             }
-        """) should {
+        """
+        ) should {
             have(name == "fibonacci_calculator")
             have(description == "Calculates the n-th fibonacci number")
             inputSchema.toString() shouldEqualJson """

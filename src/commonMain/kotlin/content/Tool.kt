@@ -16,16 +16,11 @@
 
 package com.xemantic.ai.anthropic.content
 
-import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.ai.anthropic.cache.CacheControl
+import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.ai.anthropic.tool.Tool
-import kotlinx.serialization.InternalSerializationApi
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
+import kotlinx.serialization.*
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.serializerOrNull
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
@@ -33,145 +28,145 @@ import kotlin.contracts.contract
 @Serializable
 @SerialName("tool_use")
 data class ToolUse(
-  val id: String,
-  val name: String,
-  val input: JsonObject,
-  @SerialName("cache_control")
-  override val cacheControl: CacheControl? = null
+    val id: String,
+    val name: String,
+    val input: JsonObject,
+    @SerialName("cache_control")
+    override val cacheControl: CacheControl? = null
 ) : Content() {
 
-  @Transient
-  @PublishedApi
-  internal lateinit var tool: Tool
+    @Transient
+    @PublishedApi
+    internal lateinit var tool: Tool
 
-  fun input(): Any = anthropicJson.decodeFromJsonElement(
-    deserializer = tool.inputSerializer,
-    element = input
-  )!!
+    fun input(): Any = anthropicJson.decodeFromJsonElement(
+        deserializer = tool.inputSerializer,
+        element = input
+    )!!
 
-  /**
-   * Executes the tool and returns the result.
-   *
-   * @return A [ToolResult] containing the outcome of executing the tool.
-   */
-  suspend fun use(): ToolResult = ToolResult {
-    toolUseId = id
-    try {
-      if (::tool.isInitialized) {
-        val input = input()
-        val result = tool.runner(input)
-        if ((result != null) && (result !is Unit)) {
-          if (result is Content) {
-            +result
-          } else {
-            @OptIn(InternalSerializationApi::class)
-            val serializer = result::class.serializerOrNull() as KSerializer<Any>?
-            val value = if (serializer != null) {
-              anthropicJson.encodeToString(serializer, result)
+    /**
+     * Executes the tool and returns the result.
+     *
+     * @return A [ToolResult] containing the outcome of executing the tool.
+     */
+    suspend fun use(): ToolResult = ToolResult {
+        toolUseId = id
+        try {
+            if (::tool.isInitialized) {
+                val input = input()
+                val result = tool.runner(input)
+                if ((result != null) && (result !is Unit)) {
+                    if (result is Content) {
+                        +result
+                    } else {
+                        @OptIn(InternalSerializationApi::class)
+                        val serializer = result::class.serializerOrNull() as KSerializer<Any>?
+                        val value = if (serializer != null) {
+                            anthropicJson.encodeToString(serializer, result)
+                        } else {
+                            result.toString()
+                        }
+                        +value
+                    }
+                }
             } else {
-              result.toString()
+                error("Cannot use unknown tool: $name")
             }
-            +value
-          }
+        } catch (e: Exception) {
+            // TODO a better way to log this exception
+            e.printStackTrace()
+            error(e.message ?: "Unknown error occurred")
         }
-      } else {
-        error("Cannot use unknown tool: $name")
-      }
-    } catch (e: Exception) {
-      // TODO a better way to log this exception
-      e.printStackTrace()
-      error(e.message ?: "Unknown error occurred")
     }
-  }
 }
 
 @ConsistentCopyVisibility
 @Serializable
 @SerialName("tool_result")
 data class ToolResult private constructor(
-  @SerialName("tool_use_id")
-  val toolUseId: String,
-  val content: List<Content>? = null,
-  @SerialName("is_error")
-  val isError: Boolean? = false,
-  @SerialName("cache_control")
-  override val cacheControl: CacheControl? = null
+    @SerialName("tool_use_id")
+    val toolUseId: String,
+    val content: List<Content>? = null,
+    @SerialName("is_error")
+    val isError: Boolean? = false,
+    @SerialName("cache_control")
+    override val cacheControl: CacheControl? = null
 ) : Content() {
 
-  class Builder : ContentListBuilder {
+    class Builder : ContentListBuilder {
 
-    private class ToolResultList(
-      private val list: MutableList<Content> = mutableListOf<Content>()
-    ) : MutableList<Content> by list {
+        private class ToolResultList(
+            private val list: MutableList<Content> = mutableListOf<Content>()
+        ) : MutableList<Content> by list {
 
-      override fun add(element: Content): Boolean {
-        require(element is Image || element is Text) {
-          "Only Image and Text content element is allowed"
+            override fun add(element: Content): Boolean {
+                require(element is Image || element is Text) {
+                    "Only Image and Text content element is allowed"
+                }
+                return list.add(element)
+            }
+
+            override fun add(index: Int, element: Content) {
+                require(element is Image || element is Text) {
+                    "Only Image and Text content element is allowed"
+                }
+                return list.add(index, element)
+            }
+
+            override fun addAll(elements: Collection<Content>): Boolean {
+                require(elements.all { it is Image || it is Text }) {
+                    "Only Image and Text content elements are allowed"
+                }
+                return list.addAll(elements)
+            }
+
+            override fun set(index: Int, element: Content): Content {
+                require(element is Image || element is Text) {
+                    "Only Image and Text content element is allowed"
+                }
+                return list.set(index, element)
+            }
         }
-        return list.add(element)
-      }
 
-      override fun add(index: Int, element: Content) {
-        require(element is Image || element is Text) {
-          "Only Image and Text content element is allowed"
+        var toolUseId: String? = null
+
+        override val content: MutableList<Content> = ToolResultList()
+
+        var isError: Boolean? = null
+        var cacheControl: CacheControl? = null
+
+        fun error(message: String) {
+            +message
+            isError = true
         }
-        return list.add(index, element)
-      }
 
-      override fun addAll(elements: Collection<Content>): Boolean {
-        require(elements.all { it is Image || it is Text}) {
-          "Only Image and Text content elements are allowed"
+        operator fun plus(text: Text) {
+            content += text
         }
-        return list.addAll(elements)
-      }
 
-      override fun set(index: Int, element: Content): Content {
-        require(element is Image || element is Text) {
-          "Only Image and Text content element is allowed"
+        operator fun plus(image: Image) {
+            content += image
         }
-        return list.set(index, element)
-      }
+
+        fun build(): ToolResult = ToolResult(
+            toolUseId = requireNotNull(toolUseId) {
+                "toolUseId cannot be null"
+            },
+            content = buildList { addAll(content) },
+            isError = isError,
+            cacheControl = cacheControl
+        )
+
     }
-
-    var toolUseId: String? = null
-
-    override val content: MutableList<Content> = ToolResultList()
-
-    var isError: Boolean? = null
-    var cacheControl: CacheControl? = null
-
-    fun error(message: String) {
-      +message
-      isError = true
-    }
-
-    operator fun plus(text: Text) {
-      content += text
-    }
-
-    operator fun plus(image: Image) {
-      content += image
-    }
-
-    fun build(): ToolResult = ToolResult(
-      toolUseId = requireNotNull(toolUseId) {
-        "toolUseId cannot be null"
-      },
-      content = buildList { addAll(content) },
-      isError = isError,
-      cacheControl = cacheControl
-    )
-
-  }
 
 }
 
 @OptIn(ExperimentalContracts::class)
 inline fun ToolResult(
-  block: ToolResult.Builder.() -> Unit = {}
+    block: ToolResult.Builder.() -> Unit = {}
 ): ToolResult {
-  contract {
-    callsInPlace(block, InvocationKind.EXACTLY_ONCE)
-  }
-  return ToolResult.Builder().also(block).build()
+    contract {
+        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+    }
+    return ToolResult.Builder().also(block).build()
 }

@@ -20,44 +20,43 @@ import com.xemantic.ai.anthropic.json.set
 import io.kotest.assertions.json.shouldEqualJson
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import kotlin.collections.set
 import kotlin.test.Test
 
 class EphemeralCacheControlToStringTest {
 
-  @Test
-  fun `Should return pretty toString JSON of Ephemeral CacheControl`() {
-    CacheControl.Ephemeral().toString() shouldEqualJson /* language=json */ """
-      {
-        "type": "ephemeral"
-      }
-    """
-  }
+    @Test
+    fun `Should return pretty toString JSON of Ephemeral CacheControl`() {
+        CacheControl.Ephemeral().toString() shouldEqualJson /* language=json */ """
+            {
+              "type": "ephemeral"
+            }
+        """
+    }
 
-  @Test
-  fun `Should return pretty toString JSON of Ephemeral CacheControl with additional properties`() {
-    CacheControl.Ephemeral {
-      additionalProperties["booleanProperty"] = true
-      additionalProperties["intProperty"] = 42
-      additionalProperties["doubleProperty"] = 1234.5678
-      additionalProperties["stringProperty"] = "foo"
-      additionalProperties["objectProperty"] = buildJsonObject {
-        put("foo", "bar")
-      }
-      additionalProperties["nullProperty"] = null
-    }.toString() shouldEqualJson /* language=json */ """
-      {
-        "type": "ephemeral",
-        "booleanProperty": true,
-        "intProperty": 42,
-        "doubleProperty": 1234.5678,
-        "stringProperty": "foo",
-        "objectProperty": {
-          "foo": "bar"
-        },
-        "nullProperty": null
-      }
-    """
-  }
+    @Test
+    fun `Should return pretty toString JSON of Ephemeral CacheControl with additional properties`() {
+        CacheControl.Ephemeral {
+            additionalProperties["booleanProperty"] = true
+            additionalProperties["intProperty"] = 42
+            additionalProperties["doubleProperty"] = 1234.5678
+            additionalProperties["stringProperty"] = "foo"
+            additionalProperties["objectProperty"] = buildJsonObject {
+                put("foo", "bar")
+            }
+            additionalProperties["nullProperty"] = null
+        }.toString() shouldEqualJson /* language=json */ """
+            {
+              "type": "ephemeral",
+              "booleanProperty": true,
+              "intProperty": 42,
+              "doubleProperty": 1234.5678,
+              "stringProperty": "foo",
+              "objectProperty": {
+                "foo": "bar"
+              },
+              "nullProperty": null
+            }
+        """
+    }
 
 }

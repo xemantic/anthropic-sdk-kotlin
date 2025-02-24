@@ -16,207 +16,202 @@
 
 package com.xemantic.ai.anthropic.tool
 
-import com.xemantic.ai.tool.schema.generator.jsonSchemaOf
 import com.xemantic.ai.anthropic.cache.CacheControl
 import com.xemantic.ai.anthropic.json.ToolSerializer
 import com.xemantic.ai.anthropic.json.toPrettyJson
 import com.xemantic.ai.tool.schema.JsonSchema
 import com.xemantic.ai.tool.schema.ObjectSchema
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
-import kotlinx.serialization.serializer
+import com.xemantic.ai.tool.schema.generator.jsonSchemaOf
+import kotlinx.serialization.*
 
 @Serializable(with = ToolSerializer::class)
 abstract class Tool {
 
-  abstract val name: String
-  abstract val description: String?
-  abstract val inputSchema: JsonSchema?
-  abstract val cacheControl: CacheControl?
+    abstract val name: String
+    abstract val description: String?
+    abstract val inputSchema: JsonSchema?
+    abstract val cacheControl: CacheControl?
 
-  @Transient
-  @PublishedApi
-  internal lateinit var inputSerializer: KSerializer<*>
+    @Transient
+    @PublishedApi
+    internal lateinit var inputSerializer: KSerializer<*>
 
-  @Transient
-  @PublishedApi
-  internal lateinit var runner: suspend (input: Any) -> Any?
+    @Transient
+    @PublishedApi
+    internal lateinit var runner: suspend (input: Any) -> Any?
 
-  override fun toString(): String = toPrettyJson()
+    override fun toString(): String = toPrettyJson()
 
 }
 
 @Serializable
 class DefaultTool private constructor(
-  override val name: String,
-  override val description: String? = null,
-  @SerialName("input_schema")
-  override val inputSchema: JsonSchema? = null,
-  @SerialName("cache_control")
-  override val cacheControl: CacheControl? = null
+    override val name: String,
+    override val description: String? = null,
+    @SerialName("input_schema")
+    override val inputSchema: JsonSchema? = null,
+    @SerialName("cache_control")
+    override val cacheControl: CacheControl? = null
 ) : Tool() {
 
-  class Builder {
+    class Builder {
 
-    var name: String? = null
-    var description: String? = null
-    var inputSchema: JsonSchema? = null
-    var cacheControl: CacheControl? = null
+        var name: String? = null
+        var description: String? = null
+        var inputSchema: JsonSchema? = null
+        var cacheControl: CacheControl? = null
 
-    fun build(): DefaultTool = DefaultTool(
-      requireNotNull(name) { "Tool must have a 'name'" },
-      description,
-      inputSchema,
-      cacheControl
-    )
+        fun build(): DefaultTool = DefaultTool(
+            requireNotNull(name) { "Tool must have a 'name'" },
+            description,
+            inputSchema,
+            cacheControl
+        )
 
-  }
+    }
 
 }
 
 @Serializable
 abstract class BuiltInTool(
-  override val name: String,
-  val type: String
+    override val name: String,
+    val type: String
 ) : Tool() {
 
-  @SerialName("cache_control")
-  override val cacheControl: CacheControl? = null
+    @SerialName("cache_control")
+    override val cacheControl: CacheControl? = null
 
-  @SerialName("input_schema")
-  override val inputSchema: JsonSchema? = null
+    @SerialName("input_schema")
+    override val inputSchema: JsonSchema? = null
 
-  override val description: String? = null
+    override val description: String? = null
 
 }
 
 @OptIn(ExperimentalSerializationApi::class)
 inline fun <reified T> toolName(): String =
-  serializer<T>().descriptor.serialName.normalizedToolName
+    serializer<T>().descriptor.serialName.normalizedToolName
 
 @OptIn(ExperimentalSerializationApi::class)
 inline fun <reified T> Tool(
-  name: String? = toolName<T>(),
-  description: String? = null,
-  builder: DefaultTool.Builder.() -> Unit = {},
-  noinline run: suspend T.() -> Any? = { "ok" }
+    name: String? = toolName<T>(),
+    description: String? = null,
+    builder: DefaultTool.Builder.() -> Unit = {},
+    noinline run: suspend T.() -> Any? = { "ok" }
 ): Tool {
 
-  val schema = jsonSchemaOf<T>()
-  require(schema is ObjectSchema) {
-    "Tool input class must be an object"
-  }
-
-  return DefaultTool.Builder().apply {
-    this.name = name
-    this.description = schema.description ?: description
-    inputSchema = schema.copy {
-      this.description = null
+    val schema = jsonSchemaOf<T>()
+    require(schema is ObjectSchema) {
+        "Tool input class must be an object"
     }
-  }.also(builder).build().apply {
-    inputSerializer = serializer<T>()
-    runner = { input -> run(input as T) }
-  }
+
+    return DefaultTool.Builder().apply {
+        this.name = name
+        this.description = schema.description ?: description
+        inputSchema = schema.copy {
+            this.description = null
+        }
+    }.also(builder).build().apply {
+        inputSerializer = serializer<T>()
+        runner = { input -> run(input as T) }
+    }
 
 }
 
 @Serializable
 sealed class ToolChoice {
 
-  abstract val disableParallelToolUse: Boolean?
+    abstract val disableParallelToolUse: Boolean?
 
-  @Serializable
-  @SerialName("auto")
-  class Auto private constructor(
-    @SerialName("disable_parallel_tool_use")
-    override val disableParallelToolUse: Boolean? = null
-  ) : ToolChoice() {
+    @Serializable
+    @SerialName("auto")
+    class Auto private constructor(
+        @SerialName("disable_parallel_tool_use")
+        override val disableParallelToolUse: Boolean? = null
+    ) : ToolChoice() {
 
-    class Builder {
+        class Builder {
 
-      var disableParallelToolUse: Boolean? = null
+            var disableParallelToolUse: Boolean? = null
 
-      fun build(): Auto = Auto(
-        disableParallelToolUse = disableParallelToolUse
-      )
+            fun build(): Auto = Auto(
+                disableParallelToolUse = disableParallelToolUse
+            )
 
-    }
-
-  }
-
-  @Serializable
-  @SerialName("any")
-  class Any private constructor(
-    @SerialName("disable_parallel_tool_use")
-    override val disableParallelToolUse: Boolean? = null
-  ) : ToolChoice() {
-
-    class Builder {
-
-      var disableParallelToolUse: Boolean? = null
-
-      fun build(): Any = Any(
-        disableParallelToolUse = disableParallelToolUse
-      )
+        }
 
     }
 
-  }
+    @Serializable
+    @SerialName("any")
+    class Any private constructor(
+        @SerialName("disable_parallel_tool_use")
+        override val disableParallelToolUse: Boolean? = null
+    ) : ToolChoice() {
 
-  @Serializable
-  @SerialName("tool")
-  class Tool private constructor(
-    val name: String,
-    @SerialName("disable_parallel_tool_use")
-    override val disableParallelToolUse: Boolean? = null
-  ) : ToolChoice() {
+        class Builder {
 
-    class Builder {
+            var disableParallelToolUse: Boolean? = null
 
-      var name: String? = null
-      var disableParallelToolUse: Boolean? = null
+            fun build(): Any = Any(
+                disableParallelToolUse = disableParallelToolUse
+            )
 
-      fun build(): Tool = Tool(
-        name = requireNotNull(name) { "name cannot be null" },
-        disableParallelToolUse = disableParallelToolUse
-      )
+        }
 
     }
 
-  }
+    @Serializable
+    @SerialName("tool")
+    class Tool private constructor(
+        val name: String,
+        @SerialName("disable_parallel_tool_use")
+        override val disableParallelToolUse: Boolean? = null
+    ) : ToolChoice() {
 
-  companion object {
+        class Builder {
 
-    fun Auto(
-      block: Auto.Builder.() -> Unit = {}
-    ): Auto = Auto.Builder().also(block).build()
+            var name: String? = null
+            var disableParallelToolUse: Boolean? = null
 
-    fun Any(
-      block: Any.Builder.() -> Unit = {}
-    ): Any = Any.Builder().also(block).build()
+            fun build(): Tool = Tool(
+                name = requireNotNull(name) { "name cannot be null" },
+                disableParallelToolUse = disableParallelToolUse
+            )
 
-    fun Tool(
-      name: String,
-      block: Tool.Builder.() -> Unit = {}
-    ): Tool = Tool.Builder().also {
-      it.name = name
-      block(it)
-    }.build()
+        }
 
-    inline fun <reified T> Tool(
-        noinline block: Tool.Builder.() -> Unit = {}
-    ): Tool = Tool(toolName<T>(), block)
+    }
 
-  }
+    companion object {
+
+        fun Auto(
+            block: Auto.Builder.() -> Unit = {}
+        ): Auto = Auto.Builder().also(block).build()
+
+        fun Any(
+            block: Any.Builder.() -> Unit = {}
+        ): Any = Any.Builder().also(block).build()
+
+        fun Tool(
+            name: String,
+            block: Tool.Builder.() -> Unit = {}
+        ): Tool = Tool.Builder().also {
+            it.name = name
+            block(it)
+        }.build()
+
+        inline fun <reified T> Tool(
+            noinline block: Tool.Builder.() -> Unit = {}
+        ): Tool = Tool(toolName<T>(), block)
+
+    }
 
 }
 
 @PublishedApi
 internal val String.normalizedToolName: String
-  get() = trimEnd { it == '$' }
-    .replace('.', '_')
-    .replace('$', '_')
-    .take(64)
+    get() = trimEnd { it == '$' }
+        .replace('.', '_')
+        .replace('$', '_')
+        .take(64)

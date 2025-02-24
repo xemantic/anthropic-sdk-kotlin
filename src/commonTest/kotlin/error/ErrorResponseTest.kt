@@ -28,23 +28,26 @@ import kotlin.test.Test
  */
 class ErrorResponseTest {
 
-  @Test
-  fun `Should deserialize ErrorResponse`() {
-    anthropicJson.decodeFromString<Response>(/* language=json */ """
-      {
-        "type": "error",
-        "error": {
-          "type": "not_found_error",
-          "message": "The requested resource could not be found."
+    @Test
+    fun `Should deserialize ErrorResponse`() {
+        anthropicJson.decodeFromString<Response>(/* language=json */ """
+            {
+              "type": "error",
+              "error": {
+                "type": "not_found_error",
+                "message": "The requested resource could not be found."
+              }
+            }
+        """
+        ) should {
+            be<ErrorResponse>()
+            have(
+                error == Error(
+                    type = "not_found_error",
+                    message = "The requested resource could not be found."
+                )
+            )
         }
-      }
-    """) should {
-      be<ErrorResponse>()
-      have(error == Error(
-        type = "not_found_error",
-        message = "The requested resource could not be found."
-      ))
     }
-  }
 
 }

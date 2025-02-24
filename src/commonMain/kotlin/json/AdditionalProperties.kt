@@ -19,34 +19,33 @@ package com.xemantic.ai.anthropic.json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonPrimitive
-import kotlin.collections.set
 
 // probably should be moved to a common project at some point
 
 interface WithAdditionalProperties {
 
-  val additionalProperties: Map<String, JsonElement?>?
+    val additionalProperties: Map<String, JsonElement?>?
 
-  abstract class Builder {
+    abstract class Builder {
 
-    var additionalProperties: MutableMap<String, JsonElement?> = mutableMapOf()
+        var additionalProperties: MutableMap<String, JsonElement?> = mutableMapOf()
 
-  }
+    }
 
 }
 
 operator fun MutableMap<String, JsonElement?>.set(
-  key: String, value: Boolean?
+    key: String, value: Boolean?
 ) = set(key, JsonPrimitive(value))
 
 operator fun MutableMap<String, JsonElement?>.set(
-  key: String, value: Number?
+    key: String, value: Number?
 ) = set(key, JsonPrimitive(value))
 
 operator fun MutableMap<String, JsonElement?>.set(
-  key: String, value: String?
+    key: String, value: String?
 ) = set(key, JsonPrimitive(value))
 
 operator fun MutableMap<String, JsonElement?>.set(
-  key: String, @Suppress("unused") value: Nothing?
+    key: String, @Suppress("unused") value: Nothing?
 ) = set(key, JsonNull)

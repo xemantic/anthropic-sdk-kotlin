@@ -16,10 +16,10 @@
 
 package com.xemantic.ai.anthropic
 
+import com.xemantic.ai.anthropic.content.ToolUse
 import com.xemantic.ai.anthropic.error.AnthropicException
 import com.xemantic.ai.anthropic.error.ErrorResponse
 import com.xemantic.ai.anthropic.event.Event
-import com.xemantic.ai.anthropic.content.ToolUse
 import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.ai.anthropic.message.MessageRequest
 import com.xemantic.ai.anthropic.message.MessageResponse
@@ -27,22 +27,15 @@ import com.xemantic.ai.anthropic.message.StopReason
 import com.xemantic.ai.anthropic.usage.Cost
 import com.xemantic.ai.anthropic.usage.Usage
 import com.xemantic.ai.anthropic.usage.UsageCollector
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
+import io.ktor.client.*
+import io.ktor.client.call.*
 import io.ktor.client.plugins.*
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.logging.LogLevel
-import io.ktor.client.plugins.logging.Logging
-import io.ktor.client.plugins.sse.SSE
-import io.ktor.client.plugins.sse.sse
-import io.ktor.client.request.header
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.http.ContentType
-import io.ktor.http.HttpMethod
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.contentType
-import io.ktor.serialization.kotlinx.json.json
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.logging.*
+import io.ktor.client.plugins.sse.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
@@ -69,202 +62,207 @@ expect val missingApiKeyMessage: String
  * @param block the config block to set up the API access.
  */
 fun Anthropic(
-  block: Anthropic.Config.() -> Unit = {}
+    block: Anthropic.Config.() -> Unit = {}
 ): Anthropic {
-  val config = Anthropic.Config().apply(block)
-  val apiKey = if (config.apiKey != null) config.apiKey else envApiKey
-  requireNotNull(apiKey) { missingApiKeyMessage }
-  return Anthropic(
-    apiKey = apiKey,
-    anthropicVersion = config.anthropicVersion,
-    anthropicBeta = if (config.anthropicBeta.isEmpty()) null else config.anthropicBeta.joinToString(","),
-    apiBase = config.apiBase,
-    defaultModel = config.defaultModel.id,
-    defaultMaxTokens = config.defaultMaxTokens,
-    directBrowserAccess = config.directBrowserAccess,
-    logLevel = if (config.logHttp) LogLevel.ALL else LogLevel.NONE,
-    modelMap = config.modelMap
-  )
+    val config = Anthropic.Config().apply(block)
+    val apiKey = if (config.apiKey != null) config.apiKey else envApiKey
+    requireNotNull(apiKey) { missingApiKeyMessage }
+    return Anthropic(
+        apiKey = apiKey,
+        anthropicVersion = config.anthropicVersion,
+        anthropicBeta = if (config.anthropicBeta.isEmpty()) null else config.anthropicBeta.joinToString(","),
+        apiBase = config.apiBase,
+        defaultModel = config.defaultModel.id,
+        defaultMaxTokens = config.defaultMaxTokens,
+        directBrowserAccess = config.directBrowserAccess,
+        logLevel = if (config.logHttp) LogLevel.ALL else LogLevel.NONE,
+        modelMap = config.modelMap
+    )
 } // TODO this can be a second constructor, then toolMap can be private
 
 class Anthropic internal constructor(
-  val apiKey: String,
-  val anthropicVersion: String,
-  val anthropicBeta: String?,
-  val apiBase: String,
-  val defaultModel: String,
-  val defaultMaxTokens: Int,
-  val directBrowserAccess: Boolean,
-  val logLevel: LogLevel,
-  private val modelMap: Map<String, AnthropicModel>
+    val apiKey: String,
+    val anthropicVersion: String,
+    val anthropicBeta: String?,
+    val apiBase: String,
+    val defaultModel: String,
+    val defaultMaxTokens: Int,
+    val directBrowserAccess: Boolean,
+    val logLevel: LogLevel,
+    private val modelMap: Map<String, AnthropicModel>
 ) {
 
-  class Config {
-    var apiKey: String? = null
-    var anthropicVersion: String = DEFAULT_ANTHROPIC_VERSION
-    var anthropicBeta: List<String> = emptyList()
-    var apiBase: String = ANTHROPIC_API_BASE
-    var defaultModel: AnthropicModel = Model.DEFAULT
-    var defaultMaxTokens: Int = defaultModel.maxOutput
+    class Config {
+        var apiKey: String? = null
+        var anthropicVersion: String = DEFAULT_ANTHROPIC_VERSION
+        var anthropicBeta: List<String> = emptyList()
+        var apiBase: String = ANTHROPIC_API_BASE
+        var defaultModel: AnthropicModel = Model.DEFAULT
+        var defaultMaxTokens: Int = defaultModel.maxOutput
 
-    var directBrowserAccess: Boolean = false
-    var logHttp: Boolean = false
+        var directBrowserAccess: Boolean = false
+        var logHttp: Boolean = false
 
-    var modelMap: Map<String, AnthropicModel> = Model.entries.associateBy { it.id }
+        var modelMap: Map<String, AnthropicModel> = Model.entries.associateBy { it.id }
 
-  }
-
-  enum class Beta(val id: String) {
-    COMPUTER_USE_2024_10_22("computer-use-2024-10-22")
-  }
-
-  private val client = HttpClient {
-
-    val retriableResponses = setOf<HttpStatusCode>(
-      HttpStatusCode.RequestTimeout,
-      HttpStatusCode.Conflict,
-      HttpStatusCode.TooManyRequests,
-      HttpStatusCode.InternalServerError
-    )
-
-    install(ContentNegotiation) {
-      json(anthropicJson)
     }
 
-    install(SSE)
-
-    if (logLevel != LogLevel.NONE) {
-      install(Logging) {
-        level = logLevel
-      }
+    enum class Beta(val id: String) {
+        COMPUTER_USE_2024_10_22("computer-use-2024-10-22")
     }
 
-    install(HttpRequestRetry) {
-      exponentialDelay()
-      maxRetries = 5
-      retryIf { _, response ->
-        response.status in retriableResponses || response.status.value >= 500
-      }
-    }
+    private val client = HttpClient {
 
-    defaultRequest {
-      url(apiBase)
-      header("x-api-key", apiKey)
-      header("anthropic-version", anthropicVersion)
-      if (anthropicBeta != null) {
-        header("anthropic-beta", anthropicBeta)
-      }
-      if (directBrowserAccess) {
-        header("anthropic-dangerous-direct-browser-access", true)
-      }
-    }
-
-  }
-
-  inner class Messages {
-
-    suspend fun create(
-      block: MessageRequest.Builder.() -> Unit
-    ): MessageResponse = create(request = MessageRequest.Builder(
-      defaultModel,
-      defaultMaxTokens
-    ).apply(block).build())
-
-    suspend fun create(
-      request: MessageRequest
-    ): MessageResponse {
-      val apiResponse = client.post("/v1/messages") {
-        contentType(ContentType.Application.Json)
-        setBody(request)
-      }
-      val response = apiResponse.body<Response>()
-      when (response) {
-        is MessageResponse -> response.apply {
-          updateUsage(response)
-          if (response.stopReason == StopReason.TOOL_USE) {
-            val toolMap = request.tools!!.associateBy { it.name }
-            content.filterIsInstance<ToolUse>()
-              .forEach { toolUse ->
-                val tool = toolMap[toolUse.name]
-                if (tool != null) {
-                  toolUse.tool = tool
-                } else {
-                  // Sometimes it happens that Claude is sending non-defined tool name in tool use
-                  // TODO in the future it should go to the stderr
-                  println("Error!!! Unexpected tool use: ${toolUse.name}")
-                }
-              }
-          }
-        }
-        is ErrorResponse -> throw AnthropicException(
-          error = response.error,
-          httpStatusCode = apiResponse.status
+        val retriableResponses = setOf<HttpStatusCode>(
+            HttpStatusCode.RequestTimeout,
+            HttpStatusCode.Conflict,
+            HttpStatusCode.TooManyRequests,
+            HttpStatusCode.InternalServerError
         )
-        else -> throw RuntimeException(
-          "Unsupported response: $response"
-        ) // should never happen
-      }
-      return response
-    }
 
-    fun stream(
-      block: MessageRequest.Builder.() -> Unit
-    ): Flow<Event> = flow {
-
-      val request = MessageRequest.Builder(
-        defaultModel,
-        defaultMaxTokens
-      ).apply {
-        block(this)
-        stream = true
-      }.build()
-
-      client.sse(
-        urlString = "/v1/messages",
-        request = {
-          method = HttpMethod.Post
-          contentType(ContentType.Application.Json)
-          setBody(request)
+        install(ContentNegotiation) {
+            json(anthropicJson)
         }
-      ) {
-        incoming
-          .map { it.data }
-          .filterNotNull()
-          .map { anthropicJson.decodeFromString<Event>(it) }
-          .collect { event ->
-            // TODO we need better way of handling subsequent deltas with usage
-            if (event is Event.MessageStart) {
-              // TODO more rules are needed here
-              updateUsage(event.message)
+
+        install(SSE)
+
+        if (logLevel != LogLevel.NONE) {
+            install(Logging) {
+                level = logLevel
             }
-            emit(event)
-          }
-      }
+        }
+
+        install(HttpRequestRetry) {
+            exponentialDelay()
+            maxRetries = 5
+            retryIf { _, response ->
+                response.status in retriableResponses || response.status.value >= 500
+            }
+        }
+
+        defaultRequest {
+            url(apiBase)
+            header("x-api-key", apiKey)
+            header("anthropic-version", anthropicVersion)
+            if (anthropicBeta != null) {
+                header("anthropic-beta", anthropicBeta)
+            }
+            if (directBrowserAccess) {
+                header("anthropic-dangerous-direct-browser-access", true)
+            }
+        }
+
     }
 
-  }
+    inner class Messages {
 
-  val messages = Messages()
+        suspend fun create(
+            block: MessageRequest.Builder.() -> Unit
+        ): MessageResponse = create(
+            request = MessageRequest.Builder(
+                defaultModel,
+                defaultMaxTokens
+            ).apply(block).build()
+        )
 
-  private val usageCollector = UsageCollector()
+        suspend fun create(
+            request: MessageRequest
+        ): MessageResponse {
+            val apiResponse = client.post("/v1/messages") {
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }
+            val response = apiResponse.body<Response>()
+            when (response) {
+                is MessageResponse -> response.apply {
+                    updateUsage(response)
+                    if (response.stopReason == StopReason.TOOL_USE) {
+                        val toolMap = request.tools!!.associateBy { it.name }
+                        content.filterIsInstance<ToolUse>()
+                            .forEach { toolUse ->
+                                val tool = toolMap[toolUse.name]
+                                if (tool != null) {
+                                    toolUse.tool = tool
+                                } else {
+                                    // Sometimes it happens that Claude is sending non-defined tool name in tool use
+                                    // TODO in the future it should go to the stderr
+                                    println("Error!!! Unexpected tool use: ${toolUse.name}")
+                                }
+                            }
+                    }
+                }
 
-  val usage: Usage get() = usageCollector.usage
+                is ErrorResponse -> throw AnthropicException(
+                    error = response.error,
+                    httpStatusCode = apiResponse.status
+                )
 
-  val cost: Cost get() = usageCollector.cost
+                else -> throw RuntimeException(
+                    "Unsupported response: $response"
+                ) // should never happen
+            }
+            return response
+        }
 
-  override fun toString(): String = "Anthropic($usage, $cost)"
+        fun stream(
+            block: MessageRequest.Builder.() -> Unit
+        ): Flow<Event> = flow {
 
-  private val MessageResponse.anthropicModel: AnthropicModel get() = requireNotNull(
-    modelMap[model]
-  ) {
-    "The model returned in the response is not known to Anthropic API client: $id"
-  }
+            val request = MessageRequest.Builder(
+                defaultModel,
+                defaultMaxTokens
+            ).apply {
+                block(this)
+                stream = true
+            }.build()
 
-  private fun updateUsage(response: MessageResponse) {
-    usageCollector.update(
-      modelCost = response.anthropicModel.cost,
-      usage = response.usage
-    )
-  }
+            client.sse(
+                urlString = "/v1/messages",
+                request = {
+                    method = HttpMethod.Post
+                    contentType(ContentType.Application.Json)
+                    setBody(request)
+                }
+            ) {
+                incoming
+                    .map { it.data }
+                    .filterNotNull()
+                    .map { anthropicJson.decodeFromString<Event>(it) }
+                    .collect { event ->
+                        // TODO we need better way of handling subsequent deltas with usage
+                        if (event is Event.MessageStart) {
+                            // TODO more rules are needed here
+                            updateUsage(event.message)
+                        }
+                        emit(event)
+                    }
+            }
+        }
+
+    }
+
+    val messages = Messages()
+
+    private val usageCollector = UsageCollector()
+
+    val usage: Usage get() = usageCollector.usage
+
+    val cost: Cost get() = usageCollector.cost
+
+    override fun toString(): String = "Anthropic($usage, $cost)"
+
+    private val MessageResponse.anthropicModel: AnthropicModel
+        get() = requireNotNull(
+            modelMap[model]
+        ) {
+            "The model returned in the response is not known to Anthropic API client: $id"
+        }
+
+    private fun updateUsage(response: MessageResponse) {
+        usageCollector.update(
+            modelCost = response.anthropicModel.cost,
+            usage = response.usage
+        )
+    }
 
 }

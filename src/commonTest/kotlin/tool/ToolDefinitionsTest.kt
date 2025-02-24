@@ -128,7 +128,7 @@ class ToolDefinitionsTest {
             /* no tool use */
         }
 
-        tool should  {
+        tool should {
             have(name == "message_repeater")
             have(description == "A test tool receiving a message and outputting it back")
             cacheControl should {

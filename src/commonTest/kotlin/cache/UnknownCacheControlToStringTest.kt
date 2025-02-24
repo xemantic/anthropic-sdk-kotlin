@@ -22,17 +22,17 @@ import kotlin.test.Test
 
 class UnknownCacheControlToStringTest {
 
-  @Test
-  fun `Should return pretty toString JSON of Unknown CacheControl`() {
-    CacheControl.Unknown {
-      type = "persistent"
-      additionalProperties["max_storage"] = 100000
-    }.toString() shouldEqualJson /* language=json */ """
-      {
-        "type": "persistent",
-        "max_storage": 100000
-      }
-    """
-  }
+    @Test
+    fun `Should return pretty toString JSON of Unknown CacheControl`() {
+        CacheControl.Unknown {
+            type = "persistent"
+            additionalProperties["max_storage"] = 100000
+        }.toString() shouldEqualJson /* language=json */ """
+            {
+              "type": "persistent",
+              "max_storage": 100000
+            }
+        """
+    }
 
 }

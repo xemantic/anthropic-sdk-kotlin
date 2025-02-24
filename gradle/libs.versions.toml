@@ -29,10 +29,10 @@ kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-t
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
 
 # xemantic
-xemantic-kotlin-test = { module = "com.xemantic.kotlin:xemantic-kotlin-test", version.ref = "xemanticKotlinTest"}
-xemantic-ai-tool-schema = { module = "com.xemantic.ai:xemantic-ai-tool-schema", version.ref = "xemanticAiToolSchema"}
-xemantic-ai-money = { module = "com.xemantic.ai:xemantic-ai-money", version.ref = "xemanticAiMoney"}
-xemantic-ai-file-magic = { module = "com.xemantic.ai:xemantic-ai-file-magic", version.ref = "xemanticAiFileMagic"}
+xemantic-kotlin-test = { module = "com.xemantic.kotlin:xemantic-kotlin-test", version.ref = "xemanticKotlinTest" }
+xemantic-ai-tool-schema = { module = "com.xemantic.ai:xemantic-ai-tool-schema", version.ref = "xemanticAiToolSchema" }
+xemantic-ai-money = { module = "com.xemantic.ai:xemantic-ai-money", version.ref = "xemanticAiMoney" }
+xemantic-ai-file-magic = { module = "com.xemantic.ai:xemantic-ai-file-magic", version.ref = "xemanticAiFileMagic" }
 
 # logging libs
 log4j-slf4j2 = { module = "org.apache.logging.log4j:log4j-slf4j2-impl", version.ref = "log4j" }

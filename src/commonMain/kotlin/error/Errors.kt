@@ -17,25 +17,25 @@
 package com.xemantic.ai.anthropic.error
 
 import com.xemantic.ai.anthropic.Response
-import io.ktor.http.HttpStatusCode
+import io.ktor.http.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 @SerialName("error")
 data class ErrorResponse(
-  val error: Error
+    val error: Error
 ) : Response(type = "error")
 
 @Serializable
 data class Error(
-  val type: String, val message: String
+    val type: String, val message: String
 )
 
 /**
  * An exception thrown when API requests returns error.
  */
 class AnthropicException(
-  error: Error,
-  httpStatusCode: HttpStatusCode
+    error: Error,
+    httpStatusCode: HttpStatusCode
 ) : RuntimeException(error.toString())

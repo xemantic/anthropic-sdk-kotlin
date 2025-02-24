@@ -16,9 +16,9 @@
 
 package com.xemantic.ai.anthropic
 
+import com.xemantic.ai.anthropic.usage.Cost
 import com.xemantic.ai.money.Money
 import com.xemantic.ai.money.Ratio
-import com.xemantic.ai.anthropic.usage.Cost
 
 /**
  * The model used by the API.
@@ -26,11 +26,11 @@ import com.xemantic.ai.anthropic.usage.Cost
  */
 interface AnthropicModel {
 
-  val id: String
-  val contextWindow: Int
-  val maxOutput: Int
-  val messageBatchesApi: Boolean
-  val cost: Cost
+    val id: String
+    val contextWindow: Int
+    val maxOutput: Int
+    val messageBatchesApi: Boolean
+    val cost: Cost
 
 }
 
@@ -45,116 +45,116 @@ val String.dollarsPerMillion: Money get() = Money(this) * ANTHROPIC_TOKEN_COST_R
  */
 // TODO model should be interface AnthropicApi models should be enum
 enum class Model(
-  override val id: String,
-  override val contextWindow: Int,
-  override val maxOutput: Int,
-  override val messageBatchesApi: Boolean,
-  override val cost: Cost
+    override val id: String,
+    override val contextWindow: Int,
+    override val maxOutput: Int,
+    override val messageBatchesApi: Boolean,
+    override val cost: Cost
 ) : AnthropicModel {
 
-  CLAUDE_3_5_SONNET(
-    id = "claude-3-5-sonnet-latest",
-    contextWindow = 200000,
-    maxOutput = 8182,
-    messageBatchesApi = true,
-    cost = Cost(
-      inputTokens = "3".dollarsPerMillion,
-      outputTokens = "15".dollarsPerMillion
-    )
-  ),
+    CLAUDE_3_5_SONNET(
+        id = "claude-3-5-sonnet-latest",
+        contextWindow = 200000,
+        maxOutput = 8182,
+        messageBatchesApi = true,
+        cost = Cost(
+            inputTokens = "3".dollarsPerMillion,
+            outputTokens = "15".dollarsPerMillion
+        )
+    ),
 
-  CLAUDE_3_5_SONNET_20241022(
-    id = "claude-3-5-sonnet-20241022",
-    contextWindow = 200000,
-    maxOutput = 8182,
-    messageBatchesApi = true,
-    cost = Cost(
-      inputTokens = "3".dollarsPerMillion,
-      outputTokens = "15".dollarsPerMillion
-    )
-  ),
+    CLAUDE_3_5_SONNET_20241022(
+        id = "claude-3-5-sonnet-20241022",
+        contextWindow = 200000,
+        maxOutput = 8182,
+        messageBatchesApi = true,
+        cost = Cost(
+            inputTokens = "3".dollarsPerMillion,
+            outputTokens = "15".dollarsPerMillion
+        )
+    ),
 
-  CLAUDE_3_5_HAIKU(
-    id = "claude-3-5-haiku-latest",
-    contextWindow = 200000,
-    maxOutput = 8182,
-    messageBatchesApi = true,
-    cost = Cost(
-      inputTokens = "0.80".dollarsPerMillion,
-      outputTokens = "4".dollarsPerMillion
-    )
-  ),
+    CLAUDE_3_5_HAIKU(
+        id = "claude-3-5-haiku-latest",
+        contextWindow = 200000,
+        maxOutput = 8182,
+        messageBatchesApi = true,
+        cost = Cost(
+            inputTokens = "0.80".dollarsPerMillion,
+            outputTokens = "4".dollarsPerMillion
+        )
+    ),
 
-  CLAUDE_3_5_HAIKU_20241022(
-    id = "claude-3-5-haiku-20241022",
-    contextWindow = 200000,
-    maxOutput = 8182,
-    messageBatchesApi = true,
-    cost = Cost(
-      inputTokens = "0.80".dollarsPerMillion,
-      outputTokens = "4".dollarsPerMillion
-    )
-  ),
+    CLAUDE_3_5_HAIKU_20241022(
+        id = "claude-3-5-haiku-20241022",
+        contextWindow = 200000,
+        maxOutput = 8182,
+        messageBatchesApi = true,
+        cost = Cost(
+            inputTokens = "0.80".dollarsPerMillion,
+            outputTokens = "4".dollarsPerMillion
+        )
+    ),
 
-  CLAUDE_3_5_SONNET_20240620(
-    id = "claude-3-5-sonnet-20240620",
-    contextWindow = 200000,
-    maxOutput = 8182,
-    messageBatchesApi = true,
-    cost = Cost(
-      inputTokens = "3".dollarsPerMillion,
-      outputTokens = "15".dollarsPerMillion
-    )
-  ),
+    CLAUDE_3_5_SONNET_20240620(
+        id = "claude-3-5-sonnet-20240620",
+        contextWindow = 200000,
+        maxOutput = 8182,
+        messageBatchesApi = true,
+        cost = Cost(
+            inputTokens = "3".dollarsPerMillion,
+            outputTokens = "15".dollarsPerMillion
+        )
+    ),
 
-  CLAUDE_3_OPUS(
-    id = "claude-3-opus-latest",
-    contextWindow = 200000,
-    maxOutput = 4096,
-    messageBatchesApi = true,
-    cost = Cost(
-      inputTokens = "15".dollarsPerMillion,
-      outputTokens = "75".dollarsPerMillion
-    )
-  ),
+    CLAUDE_3_OPUS(
+        id = "claude-3-opus-latest",
+        contextWindow = 200000,
+        maxOutput = 4096,
+        messageBatchesApi = true,
+        cost = Cost(
+            inputTokens = "15".dollarsPerMillion,
+            outputTokens = "75".dollarsPerMillion
+        )
+    ),
 
-  CLAUDE_3_OPUS_20240229(
-    id = "claude-3-opus-20240229",
-    contextWindow = 200000,
-    maxOutput = 4096,
-    messageBatchesApi = true,
-    cost = Cost(
-      inputTokens = "15".dollarsPerMillion,
-      outputTokens = "75".dollarsPerMillion
-    )
-  ),
+    CLAUDE_3_OPUS_20240229(
+        id = "claude-3-opus-20240229",
+        contextWindow = 200000,
+        maxOutput = 4096,
+        messageBatchesApi = true,
+        cost = Cost(
+            inputTokens = "15".dollarsPerMillion,
+            outputTokens = "75".dollarsPerMillion
+        )
+    ),
 
-  CLAUDE_3_SONNET_20240229(
-    id = "claude-3-sonnet-20240229",
-    contextWindow = 200000,
-    maxOutput = 4096,
-    messageBatchesApi = true,
-    cost = Cost(
-      inputTokens = "3".dollarsPerMillion,
-      outputTokens = "15".dollarsPerMillion
-    )
-  ),
+    CLAUDE_3_SONNET_20240229(
+        id = "claude-3-sonnet-20240229",
+        contextWindow = 200000,
+        maxOutput = 4096,
+        messageBatchesApi = true,
+        cost = Cost(
+            inputTokens = "3".dollarsPerMillion,
+            outputTokens = "15".dollarsPerMillion
+        )
+    ),
 
-  CLAUDE_3_HAIKU_20240307(
-    id = "claude-3-haiku-20240307",
-    contextWindow = 200000,
-    maxOutput = 4096,
-    messageBatchesApi = true,
-    cost = Cost(
-      inputTokens = "0.25".dollarsPerMillion,
-      outputTokens = "1.25".dollarsPerMillion
-    )
-  );
+    CLAUDE_3_HAIKU_20240307(
+        id = "claude-3-haiku-20240307",
+        contextWindow = 200000,
+        maxOutput = 4096,
+        messageBatchesApi = true,
+        cost = Cost(
+            inputTokens = "0.25".dollarsPerMillion,
+            outputTokens = "1.25".dollarsPerMillion
+        )
+    );
 
-  companion object {
+    companion object {
 
-    val DEFAULT: Model = CLAUDE_3_5_SONNET
+        val DEFAULT: Model = CLAUDE_3_5_SONNET
 
-  }
+    }
 
 }

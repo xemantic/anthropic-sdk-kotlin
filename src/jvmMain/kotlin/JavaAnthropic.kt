@@ -27,61 +27,63 @@ import java.util.function.Consumer
 // it might change a lot in the future
 
 class JavaAnthropic private constructor(
-  private val anthropic: Anthropic
+    private val anthropic: Anthropic
 ) {
 
-  companion object {
+    companion object {
 
-    @JvmStatic
-    @JvmOverloads
-    fun create(
-      configurer: Consumer<Anthropic.Config> = object : Consumer<Anthropic.Config> {
-        override fun accept(t: Anthropic.Config) { /* do nothing*/ }
-      }
-    ): JavaAnthropic = JavaAnthropic(Anthropic { configurer.accept(this) })
+        @JvmStatic
+        @JvmOverloads
+        fun create(
+            configurer: Consumer<Anthropic.Config> = object : Consumer<Anthropic.Config> {
+                override fun accept(t: Anthropic.Config) {
+                    /* do nothing*/
+                }
+            }
+        ): JavaAnthropic = JavaAnthropic(Anthropic { configurer.accept(this) })
 
-  }
-
-
-  inner class Messages {
-
-    fun createBlocking(
-      request: MessageRequest
-    ): MessageResponse = runBlocking {
-      anthropic.messages.create(request)
     }
 
-  }
 
-  @JvmField
-  val messages = Messages()
+    inner class Messages {
+
+        fun createBlocking(
+            request: MessageRequest
+        ): MessageResponse = runBlocking {
+            anthropic.messages.create(request)
+        }
+
+    }
+
+    @JvmField
+    val messages = Messages()
 
 }
 
 class MessageRequestBuilder() {
 
-  private var system: List<System>? = null
+    private var system: List<System>? = null
 
-  private var messages: List<Message>? = null
+    private var messages: List<Message>? = null
 
-  fun system(system: List<System>): MessageRequestBuilder {
-    this.system = system
-    return this
-  }
+    fun system(system: List<System>): MessageRequestBuilder {
+        this.system = system
+        return this
+    }
 
-  fun messages(messages: List<Message>): MessageRequestBuilder {
-    this.messages = messages
-    return this
-  }
+    fun messages(messages: List<Message>): MessageRequestBuilder {
+        this.messages = messages
+        return this
+    }
 
-  fun build(): MessageRequest = MessageRequest {
-    this.system = system
-    this.messages = messages
-  }
+    fun build(): MessageRequest = MessageRequest {
+        this.system = system
+        this.messages = messages
+    }
 
-  companion object {
-    @JvmStatic
-    fun builder(): MessageRequestBuilder = MessageRequestBuilder()
-  }
+    companion object {
+        @JvmStatic
+        fun builder(): MessageRequestBuilder = MessageRequestBuilder()
+    }
 
 }

@@ -25,53 +25,53 @@ import kotlinx.serialization.json.JsonElement
 @Serializable
 abstract class CacheControl : WithAdditionalProperties {
 
-  @Serializable
-  @SerialName("ephemeral")
-  class Ephemeral private constructor(
-    override val additionalProperties: Map<String, JsonElement?>? = null
-  ): CacheControl() {
+    @Serializable
+    @SerialName("ephemeral")
+    class Ephemeral private constructor(
+        override val additionalProperties: Map<String, JsonElement?>? = null
+    ) : CacheControl() {
 
-    class Builder : WithAdditionalProperties.Builder() {
+        class Builder : WithAdditionalProperties.Builder() {
 
-      fun build(): Ephemeral = Ephemeral(
-        additionalProperties = additionalProperties
-      )
+            fun build(): Ephemeral = Ephemeral(
+                additionalProperties = additionalProperties
+            )
 
-    }
-
-  }
-
-  @Serializable
-  class Unknown private constructor(
-    val type: String,
-    override val additionalProperties: Map<String, JsonElement?>? = null
-  ): CacheControl() {
-
-    class Builder : WithAdditionalProperties.Builder() {
-
-      var type: String? = null
-
-      fun build(): Unknown = Unknown(
-        type = requireNotNull(type),
-        additionalProperties = additionalProperties
-      )
+        }
 
     }
 
-  }
+    @Serializable
+    class Unknown private constructor(
+        val type: String,
+        override val additionalProperties: Map<String, JsonElement?>? = null
+    ) : CacheControl() {
 
-  companion object {
+        class Builder : WithAdditionalProperties.Builder() {
 
-    fun Ephemeral(
-      block: Ephemeral.Builder.() -> Unit = {}
-    ): Ephemeral = Ephemeral.Builder().apply(block).build()
+            var type: String? = null
 
-    fun Unknown(
-      block: Unknown.Builder.() -> Unit = {}
-    ): Unknown = Unknown.Builder().apply(block).build()
+            fun build(): Unknown = Unknown(
+                type = requireNotNull(type),
+                additionalProperties = additionalProperties
+            )
 
-  }
+        }
 
-  override fun toString(): String = toPrettyJson()
+    }
+
+    companion object {
+
+        fun Ephemeral(
+            block: Ephemeral.Builder.() -> Unit = {}
+        ): Ephemeral = Ephemeral.Builder().apply(block).build()
+
+        fun Unknown(
+            block: Unknown.Builder.() -> Unit = {}
+        ): Unknown = Unknown.Builder().apply(block).build()
+
+    }
+
+    override fun toString(): String = toPrettyJson()
 
 }

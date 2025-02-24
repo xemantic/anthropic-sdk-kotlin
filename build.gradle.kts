@@ -1,10 +1,9 @@
 @file:OptIn(ExperimentalKotlinGradlePluginApi::class, ExperimentalWasmDsl::class)
 
-import com.xemantic.gradle.conventions.License
 import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
+import com.xemantic.gradle.conventions.License
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
-import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -18,29 +17,29 @@ import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
 import org.jreleaser.model.Active
 
 plugins {
-  alias(libs.plugins.kotlin.multiplatform)
-  alias(libs.plugins.kotlin.plugin.serialization)
-  alias(libs.plugins.kotlinx.atomicfu)
-  alias(libs.plugins.kotlin.plugin.power.assert)
-  alias(libs.plugins.dokka)
-  alias(libs.plugins.versions)
-  `maven-publish`
-  signing
-  alias(libs.plugins.jreleaser)
-  alias(libs.plugins.xemantic.conventions)
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.kotlin.plugin.serialization)
+    alias(libs.plugins.kotlinx.atomicfu)
+    alias(libs.plugins.kotlin.plugin.power.assert)
+    alias(libs.plugins.dokka)
+    alias(libs.plugins.versions)
+    `maven-publish`
+    signing
+    alias(libs.plugins.jreleaser)
+    alias(libs.plugins.xemantic.conventions)
 }
 
 group = "com.xemantic.ai"
 
 xemantic {
-  description = "Unofficial Kotlin multiplatform variant of the Anthropic SDK"
-  inceptionYear = 2024
-  license = License.APACHE
-  developer(
-    id = "morisil",
-    name = "Kazik Pogoda",
-    email = "morisil@xemantic.com"
-  )
+    description = "Unofficial Kotlin multiplatform variant of the Anthropic SDK"
+    inceptionYear = 2024
+    license = License.APACHE
+    developer(
+        id = "morisil",
+        name = "Kazik Pogoda",
+        email = "morisil@xemantic.com"
+    )
 }
 
 val releaseAnnouncementSubject = """🚀 ${rootProject.name} $version has been released!"""
@@ -69,72 +68,72 @@ val gradleRootDir: String = rootDir.absolutePath
 val anthropicApiKey: String? = System.getenv("ANTHROPIC_API_KEY")
 
 tasks.withType<KotlinJvmTest>().configureEach {
-  environment("GRADLE_ROOT_DIR", gradleRootDir)
+    environment("GRADLE_ROOT_DIR", gradleRootDir)
 }
 
 tasks.withType<KotlinJsTest>().configureEach {
-  environment("GRADLE_ROOT_DIR", gradleRootDir)
-  if (anthropicApiKey != null) {
-    environment("ANTHROPIC_API_KEY", anthropicApiKey)
-  }
+    environment("GRADLE_ROOT_DIR", gradleRootDir)
+    if (anthropicApiKey != null) {
+        environment("ANTHROPIC_API_KEY", anthropicApiKey)
+    }
 }
 
 tasks.withType<KotlinNativeTest>().configureEach {
-  environment("GRADLE_ROOT_DIR", gradleRootDir)
-  environment("SIMCTL_CHILD_GRADLE_ROOT_DIR", gradleRootDir)
-  if (anthropicApiKey != null) {
-    environment("ANTHROPIC_API_KEY", anthropicApiKey)
-    environment("SIMCTL_CHILD_ANTHROPIC_API_KEY", anthropicApiKey)
-  }
+    environment("GRADLE_ROOT_DIR", gradleRootDir)
+    environment("SIMCTL_CHILD_GRADLE_ROOT_DIR", gradleRootDir)
+    if (anthropicApiKey != null) {
+        environment("ANTHROPIC_API_KEY", anthropicApiKey)
+        environment("SIMCTL_CHILD_ANTHROPIC_API_KEY", anthropicApiKey)
+    }
 }
 
 repositories {
-  mavenCentral()
+    mavenCentral()
 }
 
 kotlin {
 
-  compilerOptions {
-    apiVersion = kotlinTarget
-    languageVersion = kotlinTarget
-    freeCompilerArgs.add("-Xmulti-dollar-interpolation")
-    extraWarnings.set(true)
-    progressiveMode = true
-  }
-
-  jvm {
-    // set up according to https://jakewharton.com/gradle-toolchains-are-rarely-a-good-idea/
     compilerOptions {
-      apiVersion = kotlinTarget
-      languageVersion = kotlinTarget
-      jvmTarget = JvmTarget.fromTarget(javaTarget)
-      freeCompilerArgs.add("-Xjdk-release=$javaTarget")
-      progressiveMode = true
+        apiVersion = kotlinTarget
+        languageVersion = kotlinTarget
+        freeCompilerArgs.add("-Xmulti-dollar-interpolation")
+        extraWarnings.set(true)
+        progressiveMode = true
     }
-    withJava()
-  }
 
-  if (!isJvmOnlyBuild) {
-    js {
-      // browser tests switched off for a moment
-      browser {
-        testTask {
-          // for unknown reason browser tests are failing
-          enabled = false
-          useKarma {
-            useChromeHeadless()
-          }
+    jvm {
+        // set up according to https://jakewharton.com/gradle-toolchains-are-rarely-a-good-idea/
+        compilerOptions {
+            apiVersion = kotlinTarget
+            languageVersion = kotlinTarget
+            jvmTarget = JvmTarget.fromTarget(javaTarget)
+            freeCompilerArgs.add("-Xjdk-release=$javaTarget")
+            progressiveMode = true
         }
-      }
-      nodejs {
-        testTask {
-          useMocha {
-            timeout = "20s"
-          }
-        }
-      }
-      binaries.library()
+        withJava()
     }
+
+    if (!isJvmOnlyBuild) {
+        js {
+            // browser tests switched off for a moment
+            browser {
+                testTask {
+                    // for unknown reason browser tests are failing
+                    enabled = false
+                    useKarma {
+                        useChromeHeadless()
+                    }
+                }
+            }
+            nodejs {
+                testTask {
+                    useMocha {
+                        timeout = "20s"
+                    }
+                }
+            }
+            binaries.library()
+        }
 
 //    // wasm targets are still buggy
 //    wasmJs {
@@ -154,104 +153,104 @@ kotlin {
 //      binaries.library()
 //    }
 
-    // native, see https://kotlinlang.org/docs/native-target-support.html
-    // tier 1
-    macosX64()
-    macosArm64()
-    iosSimulatorArm64()
-    iosX64()
-    iosArm64()
+        // native, see https://kotlinlang.org/docs/native-target-support.html
+        // tier 1
+        macosX64()
+        macosArm64()
+        iosSimulatorArm64()
+        iosX64()
+        iosArm64()
 
-    // tier 2
-    linuxX64()
-    linuxArm64()
-    watchosSimulatorArm64()
-    watchosX64()
-    watchosArm32()
-    watchosArm64()
-    tvosSimulatorArm64()
-    tvosX64()
-    tvosArm64()
+        // tier 2
+        linuxX64()
+        linuxArm64()
+        watchosSimulatorArm64()
+        watchosX64()
+        watchosArm32()
+        watchosArm64()
+        tvosSimulatorArm64()
+        tvosX64()
+        tvosArm64()
 
 //  // tier 3
 //  androidNativeArm32()
 //  androidNativeArm64()
 //  androidNativeX86()
 //  androidNativeX64()
-    mingwX64()
+        mingwX64()
 //  watchosDeviceArm64()
 
-    @OptIn(ExperimentalSwiftExportDsl::class)
-    swiftExport {}
-  }
-
-  sourceSets {
-
-    commonMain {
-      dependencies {
-        api(libs.xemantic.ai.tool.schema)
-        api(libs.xemantic.ai.money)
-        api(libs.xemantic.ai.file.magic)
-        api(libs.kotlinx.datetime)
-        implementation(libs.ktor.client.core)
-        implementation(libs.ktor.client.content.negotiation)
-        implementation(libs.ktor.client.logging)
-        implementation(libs.ktor.serialization.kotlinx.json)
-      }
+        @OptIn(ExperimentalSwiftExportDsl::class)
+        swiftExport {}
     }
 
-    commonTest {
-      dependencies {
-        implementation(libs.kotlin.test)
-        implementation(libs.kotlinx.coroutines.test)
-        implementation(libs.xemantic.kotlin.test)
-        implementation(libs.kotest.assertions.json)
-      }
-    }
+    sourceSets {
 
-    jvmTest {
-      dependencies {
-        runtimeOnly(libs.log4j.slf4j2)
-        runtimeOnly(libs.log4j.core)
-        runtimeOnly(libs.jackson.databind)
-        runtimeOnly(libs.jackson.dataformat.yaml)
-        runtimeOnly(libs.ktor.client.java)
-      }
-    }
-
-    if (!isJvmOnlyBuild) {
-      linuxTest {
-        dependencies {
-          implementation(libs.ktor.client.curl)
+        commonMain {
+            dependencies {
+                api(libs.xemantic.ai.tool.schema)
+                api(libs.xemantic.ai.money)
+                api(libs.xemantic.ai.file.magic)
+                api(libs.kotlinx.datetime)
+                implementation(libs.ktor.client.core)
+                implementation(libs.ktor.client.content.negotiation)
+                implementation(libs.ktor.client.logging)
+                implementation(libs.ktor.serialization.kotlinx.json)
+            }
         }
-      }
 
-      mingwTest {
-        dependencies {
-          implementation(libs.ktor.client.curl)
+        commonTest {
+            dependencies {
+                implementation(libs.kotlin.test)
+                implementation(libs.kotlinx.coroutines.test)
+                implementation(libs.xemantic.kotlin.test)
+                implementation(libs.kotest.assertions.json)
+            }
         }
-      }
 
-      macosTest {
-        dependencies {
-          implementation(libs.ktor.client.darwin)
+        jvmTest {
+            dependencies {
+                runtimeOnly(libs.log4j.slf4j2)
+                runtimeOnly(libs.log4j.core)
+                runtimeOnly(libs.jackson.databind)
+                runtimeOnly(libs.jackson.dataformat.yaml)
+                runtimeOnly(libs.ktor.client.java)
+            }
         }
-      }
+
+        if (!isJvmOnlyBuild) {
+            linuxTest {
+                dependencies {
+                    implementation(libs.ktor.client.curl)
+                }
+            }
+
+            mingwTest {
+                dependencies {
+                    implementation(libs.ktor.client.curl)
+                }
+            }
+
+            macosTest {
+                dependencies {
+                    implementation(libs.ktor.client.darwin)
+                }
+            }
+        }
+
     }
-
-  }
 
 }
 
 if (!isJvmOnlyBuild) {
 
-  // skip tests for which system environment variable retrival is not implemented at the moment
-  //tasks.named("wasmWasiNodeTest") { enabled = false }
+    // skip tests for which system environment variable retrival is not implemented at the moment
+    //tasks.named("wasmWasiNodeTest") { enabled = false }
 //// skip test for certain targets which are not fully supported by kotest
 ////tasks.named("compileTestKotlinWasmWasi") { enabled = false}
-  tasks.named("iosSimulatorArm64Test") { enabled = false }
-  tasks.named("watchosSimulatorArm64Test") { enabled = false }
-  tasks.named("tvosSimulatorArm64Test") { enabled = false }
+    tasks.named("iosSimulatorArm64Test") { enabled = false }
+    tasks.named("watchosSimulatorArm64Test") { enabled = false }
+    tasks.named("tvosSimulatorArm64Test") { enabled = false }
 //tasks.named("androidNativeArm64Test") { enabled = false }
 //tasks.named("androidNativeX64Test") { enabled = false }
 //tasks.named("androidNativeX86Test") { enabled = false }
@@ -261,136 +260,136 @@ if (!isJvmOnlyBuild) {
 }
 
 fun isNonStable(version: String): Boolean {
-  val stableKeyword = listOf("RELEASE", "FINAL", "GA").any { version.uppercase().contains(it) }
-  val regex = "^[0-9,.v-]+(-r)?$".toRegex()
-  val isStable = stableKeyword || regex.matches(version)
-  return isStable.not()
+    val stableKeyword = listOf("RELEASE", "FINAL", "GA").any { version.uppercase().contains(it) }
+    val regex = "^[0-9,.v-]+(-r)?$".toRegex()
+    val isStable = stableKeyword || regex.matches(version)
+    return isStable.not()
 }
 
 tasks.withType<DependencyUpdatesTask> {
-  rejectVersionIf {
-    isNonStable(candidate.version) && !isNonStable(currentVersion)
-  }
+    rejectVersionIf {
+        isNonStable(candidate.version) && !isNonStable(currentVersion)
+    }
 }
 
 tasks.withType<Test> {
-  enabled = !skipTests
-  testLogging {
-    events(
-      TestLogEvent.SKIPPED,
-      TestLogEvent.FAILED
-    )
-    showStackTraces = true
-    exceptionFormat = TestExceptionFormat.FULL
-  }
+    enabled = !skipTests
+    testLogging {
+        events(
+            TestLogEvent.SKIPPED,
+            TestLogEvent.FAILED
+        )
+        showStackTraces = true
+        exceptionFormat = TestExceptionFormat.FULL
+    }
 }
 
 powerAssert {
-  functions = listOf(
-    "com.xemantic.kotlin.test.assert",
-    "com.xemantic.kotlin.test.have"
-  )
+    functions = listOf(
+        "com.xemantic.kotlin.test.assert",
+        "com.xemantic.kotlin.test.have"
+    )
 }
 
 // https://kotlinlang.org/docs/dokka-migration.html#adjust-configuration-options
 dokka {
-  pluginsConfiguration.html {
-    footerMessage.set(xemantic.copyright)
-  }
+    pluginsConfiguration.html {
+        footerMessage.set(xemantic.copyright)
+    }
 }
 
 val javadocJar by tasks.registering(Jar::class) {
-  archiveClassifier.set("javadoc")
-  from(tasks.dokkaGeneratePublicationHtml)
+    archiveClassifier.set("javadoc")
+    from(tasks.dokkaGeneratePublicationHtml)
 }
 
 publishing {
-  publications {
-    withType<MavenPublication> {
-      artifact(javadocJar)
-      xemantic.configurePom(this)
+    publications {
+        withType<MavenPublication> {
+            artifact(javadocJar)
+            xemantic.configurePom(this)
+        }
     }
-  }
 }
 
 jreleaser {
-  project {
-    description = xemantic.description
-    copyright = xemantic.copyright
-    license = xemantic.license!!.spxdx
-    links {
-      homepage = xemantic.homepageUrl
-      documentation = xemantic.documentationUrl
-    }
-    authors = xemantic.authorIds
-  }
-  deploy {
-    maven {
-      mavenCentral {
-        create("maven-central") {
-          active = Active.ALWAYS
-          url = "https://central.sonatype.com/api/v1/publisher"
-          applyMavenCentralRules = false
-          maxRetries = 240
-          stagingRepository(xemantic.stagingDeployDir.path)
-          // workaround: https://github.com/jreleaser/jreleaser/issues/1784
-          kotlin.targets.forEach { target ->
-            if (target !is KotlinJvmTarget) {
-              val nonJarArtifactId = if (target.platformType == KotlinPlatformType.wasm) {
-                "${name}-wasm-${target.name.lowercase().substringAfter("wasm")}"
-              } else {
-                "${name}-${target.name.lowercase()}"
-              }
-              artifactOverride {
-                artifactId = nonJarArtifactId
-                jar = false
-                verifyPom = false
-                sourceJar = false
-                javadocJar = false
-              }
-            }
-          }
+    project {
+        description = xemantic.description
+        copyright = xemantic.copyright
+        license = xemantic.license!!.spxdx
+        links {
+            homepage = xemantic.homepageUrl
+            documentation = xemantic.documentationUrl
         }
-      }
+        authors = xemantic.authorIds
     }
-  }
-  release {
-    github {
-      skipRelease = true // we are releasing through GitHub UI
-      skipTag = true
-      token = "empty"
-      changelog {
-        enabled = false
-      }
+    deploy {
+        maven {
+            mavenCentral {
+                create("maven-central") {
+                    active = Active.ALWAYS
+                    url = "https://central.sonatype.com/api/v1/publisher"
+                    applyMavenCentralRules = false
+                    maxRetries = 240
+                    stagingRepository(xemantic.stagingDeployDir.path)
+                    // workaround: https://github.com/jreleaser/jreleaser/issues/1784
+                    kotlin.targets.forEach { target ->
+                        if (target !is KotlinJvmTarget) {
+                            val nonJarArtifactId = if (target.platformType == KotlinPlatformType.wasm) {
+                                "${name}-wasm-${target.name.lowercase().substringAfter("wasm")}"
+                            } else {
+                                "${name}-${target.name.lowercase()}"
+                            }
+                            artifactOverride {
+                                artifactId = nonJarArtifactId
+                                jar = false
+                                verifyPom = false
+                                sourceJar = false
+                                javadocJar = false
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
-  }
-  checksum {
-    individual = false
-    artifacts = false
-    files = false
-  }
-  announce {
-    webhooks {
-      create("discord") {
-        active = Active.ALWAYS
-        message = releaseAnnouncement
-        messageProperty = "content"
-        structuredMessage = true
-      }
+    release {
+        github {
+            skipRelease = true // we are releasing through GitHub UI
+            skipTag = true
+            token = "empty"
+            changelog {
+                enabled = false
+            }
+        }
     }
-    linkedin {
-      active = Active.ALWAYS
-      subject = releaseAnnouncementSubject
-      message = releaseAnnouncement
+    checksum {
+        individual = false
+        artifacts = false
+        files = false
     }
-    bluesky {
-      active = Active.ALWAYS
-      status = releaseAnnouncement
+    announce {
+        webhooks {
+            create("discord") {
+                active = Active.ALWAYS
+                message = releaseAnnouncement
+                messageProperty = "content"
+                structuredMessage = true
+            }
+        }
+        linkedin {
+            active = Active.ALWAYS
+            subject = releaseAnnouncementSubject
+            message = releaseAnnouncement
+        }
+        bluesky {
+            active = Active.ALWAYS
+            status = releaseAnnouncement
+        }
     }
-  }
 }
 
 tasks.withType(JavaCompile::class.java) {
-  targetCompatibility = javaTarget
-  sourceCompatibility = javaTarget
+    targetCompatibility = javaTarget
+    sourceCompatibility = javaTarget
 }

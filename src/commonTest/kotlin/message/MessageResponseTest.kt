@@ -108,8 +108,8 @@ class MessageResponseTest {
             stopReason = StopReason.END_TURN,
             stopSequence = null,
             usage = Usage(
-              inputTokens = 419,
-              outputTokens = 86
+                inputTokens = 419,
+                outputTokens = 86
             )
         )
         assert(response.text == "bar")

@@ -26,63 +26,63 @@ import kotlinx.serialization.Serializable
 @Serializable
 @SerialName("image")
 class Image private constructor(
-  val source: Source,
-  @SerialName("cache_control")
-  override val cacheControl: CacheControl? = null
+    val source: Source,
+    @SerialName("cache_control")
+    override val cacheControl: CacheControl? = null
 ) : Content() {
 
-  class Builder : BinaryContentBuilder(
-    supportedMediaTypes = SUPPORTED_MEDIA_TYPES
-  ) {
+    class Builder : BinaryContentBuilder(
+        supportedMediaTypes = SUPPORTED_MEDIA_TYPES
+    ) {
 
-    var cacheControl: CacheControl? = null
+        var cacheControl: CacheControl? = null
 
-    fun build(): Image = Image(
-      source = requireNotNull(source),
-      cacheControl = cacheControl
-    )
+        fun build(): Image = Image(
+            source = requireNotNull(source),
+            cacheControl = cacheControl
+        )
 
-  }
+    }
 
-  companion object {
+    companion object {
 
-    /**
-     * The set of [MediaType]s supported by the [Image].
-     */
-    val SUPPORTED_MEDIA_TYPES = setOf(
-      MediaType.JPEG,
-      MediaType.PNG,
-      MediaType.GIF,
-      MediaType.WEBP
-    )
+        /**
+         * The set of [MediaType]s supported by the [Image].
+         */
+        val SUPPORTED_MEDIA_TYPES = setOf(
+            MediaType.JPEG,
+            MediaType.PNG,
+            MediaType.GIF,
+            MediaType.WEBP
+        )
 
-  }
+    }
 
-  override fun toString(): String = toPrettyJson()
+    override fun toString(): String = toPrettyJson()
 
 }
 
 fun Image(
-  block: Image.Builder.() -> Unit
+    block: Image.Builder.() -> Unit
 ): Image = Image.Builder().apply(block).build()
 
 fun Image(
-  path: String,
-  block: Image.Builder.() -> Unit = {}
+    path: String,
+    block: Image.Builder.() -> Unit = {}
 ): Image = Image(Path(path), block)
 
 fun Image(
-  path: Path,
-  block: Image.Builder.() -> Unit = {}
+    path: Path,
+    block: Image.Builder.() -> Unit = {}
 ): Image = Image {
-  this.path = path
-  block(this)
+    this.path = path
+    block(this)
 }
 
 fun Image(
-  bytes: ByteArray,
-  block: Image.Builder.() -> Unit = {}
+    bytes: ByteArray,
+    block: Image.Builder.() -> Unit = {}
 ): Image = Image {
-  this.bytes = bytes
-  block(this)
+    this.bytes = bytes
+    block(this)
 }

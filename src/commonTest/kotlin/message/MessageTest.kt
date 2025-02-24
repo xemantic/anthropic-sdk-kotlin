@@ -22,11 +22,11 @@ import kotlin.test.Test
 
 class MessageTest {
 
-  @Test
-  fun `Default Message should have Role USER`() {
-    Message {} should {
-      have(role == Role.USER)
+    @Test
+    fun `Default Message should have Role USER`() {
+        Message {} should {
+            have(role == Role.USER)
+        }
     }
-  }
 
 }
