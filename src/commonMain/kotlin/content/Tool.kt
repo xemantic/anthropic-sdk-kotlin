@@ -23,7 +23,6 @@ import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.serializer
 import kotlinx.serialization.Transient
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.serializerOrNull
@@ -45,61 +44,45 @@ data class ToolUse(
   @PublishedApi
   internal lateinit var tool: Tool
 
-  inline fun <reified T> input(): T = anthropicJson.decodeFromJsonElement(
-    deserializer = serializer<T>(),
-    element = input,
-  )
+  fun input(): Any = anthropicJson.decodeFromJsonElement(
+    deserializer = tool.inputSerializer,
+    element = input
+  )!!
 
   /**
    * Executes the tool and returns the result.
    *
    * @return A [ToolResult] containing the outcome of executing the tool.
    */
-  suspend fun use(): ToolResult {
-    return try {
+  suspend fun use(): ToolResult = ToolResult {
+    toolUseId = id
+    try {
       if (::tool.isInitialized) {
-        val input = requireNotNull(
-          anthropicJson.decodeFromJsonElement(
-            deserializer = tool.inputSerializer,
-            element = input,
-          )
-        ) {
-          "Error message"
-        }
-        ToolResult {
-          toolUseId = id
-          val result = tool.runner(input)
-          if ((result != null) && (result !is Unit)) {
-            if (result is Content) {
-              +result
+        val input = input()
+        val result = tool.runner(input)
+        if ((result != null) && (result !is Unit)) {
+          if (result is Content) {
+            +result
+          } else {
+            @OptIn(InternalSerializationApi::class)
+            val serializer = result::class.serializerOrNull() as KSerializer<Any>?
+            val value = if (serializer != null) {
+              anthropicJson.encodeToString(serializer, result)
             } else {
-              @OptIn(InternalSerializationApi::class)
-              val serializer = result::class.serializerOrNull() as KSerializer<Any>?
-              val value = if (serializer != null) {
-                anthropicJson.encodeToString(serializer, result)
-              } else {
-                result.toString()
-              }
-              +value
+              result.toString()
             }
+            +value
           }
         }
       } else {
-        ToolResult {
-          toolUseId = id
-          error("Cannot use unknown tool: $name")
-        }
+        error("Cannot use unknown tool: $name")
       }
     } catch (e: Exception) {
       // TODO a better way to log this exception
       e.printStackTrace()
-      ToolResult {
-        toolUseId = id
-        error(e.message ?: "Unknown error occurred")
-      }
+      error(e.message ?: "Unknown error occurred")
     }
   }
-
 }
 
 @ConsistentCopyVisibility
