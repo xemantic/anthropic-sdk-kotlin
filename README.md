@@ -139,7 +139,7 @@ fun main() = runBlocking {
     println("Initial response: ${initialResponse.text}")
 
     conversation += initialResponse
-    conversation += initialResonse.useTools()
+    conversation += initialResponse.useTools()
 
     val finalResponse = client.messages.create {
         messages = conversation
