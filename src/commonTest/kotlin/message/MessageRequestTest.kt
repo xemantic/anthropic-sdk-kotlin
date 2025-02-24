@@ -48,7 +48,7 @@ class MessageRequestTest {
         // then
         json shouldEqualJson /* language=json */ """
             {
-              "model": "claude-3-5-sonnet-latest",
+              "model": "claude-3-7-sonnet-latest",
               "messages": [
                 {
                   "role": "user",
@@ -64,7 +64,7 @@ class MessageRequestTest {
             }
         """
         // Note: max_tokens value will default to the max for a given model
-        // claude-3-5-sonnet-latest ist the default model
+        // claude-3-7-sonnet-latest ist the default model
     }
 
     // now we need some test tool
@@ -114,7 +114,7 @@ class MessageRequestTest {
         // then
         json shouldEqualJson /* language=json */ """
             {
-              "model": "claude-3-5-sonnet-latest",
+              "model": "claude-3-7-sonnet-latest",
               "messages": [
                 {
                   "role": "user",
@@ -188,7 +188,7 @@ class MessageRequestTest {
         // then
         json shouldEqualJson /* language=json */ """
             {
-              "model": "claude-3-5-sonnet-latest",
+              "model": "claude-3-7-sonnet-latest",
               "messages": [
                 {
                   "role": "user",
@@ -236,7 +236,7 @@ class MessageRequestTest {
         // given
         val request = /* language=json */ """
             {
-              "model": "claude-3-5-sonnet-latest",
+              "model": "claude-3-7-sonnet-latest",
               "messages": [
                 {
                   "role": "user",
