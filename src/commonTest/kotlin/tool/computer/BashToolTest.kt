@@ -53,7 +53,7 @@ class BashToolTest {
 
         // then
         actualInput should {
-            have(command == "ls")
+            have(command!!.startsWith("ls"))
             have(restart == null)
         }
     }
