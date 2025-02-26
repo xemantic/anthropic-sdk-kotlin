@@ -57,16 +57,11 @@ data class ToolUse(
                 val result = tool.runner(input)
                 if ((result != null) && (result !is Unit)) {
                     if (result is Content) {
-                        +result
+                        content += result
+                    } else if (result is List<*>) {
+                        content += result.map { it!!.toContent() }
                     } else {
-                        @OptIn(InternalSerializationApi::class)
-                        val serializer = result::class.serializerOrNull() as KSerializer<Any>?
-                        val value = if (serializer != null) {
-                            anthropicJson.encodeToString(serializer, result)
-                        } else {
-                            result.toString()
-                        }
-                        +value
+                        content += result.toContent()
                     }
                 }
             } else {
@@ -78,6 +73,21 @@ data class ToolUse(
             error(e.message ?: "Unknown error occurred")
         }
     }
+
+    private fun Any.toContent(): Content = this as? Content
+        ?: if (this is String) {
+            Text(this)
+        } else {
+            @OptIn(InternalSerializationApi::class)
+            val serializer = this::class.serializerOrNull() as KSerializer<Any>?
+            val value = if (serializer != null) {
+                anthropicJson.encodeToString(serializer, this)
+            } else {
+                this.toString()
+            }
+            Text(value)
+        }
+
 }
 
 @ConsistentCopyVisibility
