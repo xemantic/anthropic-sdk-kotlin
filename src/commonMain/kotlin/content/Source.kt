@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,6 +56,26 @@ abstract class Source : WithAdditionalProperties { // TODO cross check with offi
     }
 
     @Serializable
+    @SerialName("url")
+    class Url private constructor(
+        val url: String,
+        override val additionalProperties: Map<String, JsonElement?>? = null
+    ) : Source() {
+
+        class Builder : WithAdditionalProperties.Builder() {
+
+            var url: String? = null
+
+            fun build(): Url = Url(
+                url = requireNotNull(url) { "url cannot be null" },
+                additionalProperties = additionalProperties
+            )
+
+        }
+
+    }
+
+    @Serializable
     class Unknown private constructor(
         val type: String,
         override val additionalProperties: Map<String, JsonElement?>? = null
@@ -79,6 +99,10 @@ abstract class Source : WithAdditionalProperties { // TODO cross check with offi
         fun Base64(
             block: Base64.Builder.() -> Unit
         ): Base64 = Base64.Builder().apply(block).build()
+
+        fun Url(
+            block: Url.Builder.() -> Unit
+        ): Url = Url.Builder().apply(block).build()
 
         fun Unknown(
             block: Unknown.Builder.() -> Unit

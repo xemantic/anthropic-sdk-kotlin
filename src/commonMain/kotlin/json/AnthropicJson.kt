@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -64,6 +64,7 @@ private val anthropicSerializersModule = SerializersModule {
 
     polymorphic(Source::class) {
         subclass(Source.Base64::class, AdditionalPropertiesSerializer(Source.Base64.serializer()))
+        subclass(Source.Url::class, AdditionalPropertiesSerializer(Source.Url.serializer()))
         subclass(
             Source.Unknown::class,
             AdditionalPropertiesSerializer(Source.Unknown.serializer(), removeTypeFromDescriptor = true)
