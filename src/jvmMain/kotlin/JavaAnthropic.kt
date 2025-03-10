@@ -33,11 +33,7 @@ class JavaAnthropic private constructor(
         @JvmStatic
         @JvmOverloads
         fun create(
-            configurer: Consumer<Anthropic.Config> = object : Consumer<Anthropic.Config> {
-                override fun accept(t: Anthropic.Config) {
-                    /* do nothing*/
-                }
-            }
+            configurer: Consumer<Anthropic.Config> = noOpConsumer()
         ): JavaAnthropic = JavaAnthropic(Anthropic { configurer.accept(this) })
 
     }
