@@ -32,8 +32,8 @@ public class JavaAnthropicTest {
         var response = anthropic.messages.createBlocking(builder -> {
             builder.messages(
                     message($ -> {
-                        $.role = Role.USER;
-                        $.content = List.of(text("Hi Claude"));
+                        $.setRole(Role.USER);
+                        $.setContent(List.of(text("Hi Claude")));
                     })
             );
         });

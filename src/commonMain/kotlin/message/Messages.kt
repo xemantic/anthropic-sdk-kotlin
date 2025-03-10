@@ -69,7 +69,6 @@ data class MessageRequest(
     class Builder() {
         var model: String? = null
         var maxTokens: Int? = null
-        @JvmField
         var messages: List<Message> = emptyList()
         var metadata = null
         var stopSequences: List<String> = emptyList()
@@ -153,7 +152,6 @@ class Message private constructor(
 
     class Builder : ContentListBuilder() {
 
-        @JvmField
         var role = Role.USER
 
         fun build() = Message(

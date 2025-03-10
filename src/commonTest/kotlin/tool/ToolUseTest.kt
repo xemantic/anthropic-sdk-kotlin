@@ -149,7 +149,11 @@ class ToolUseTest {
         val result = toolUse.use()
         result should {
             have(toolUseId == toolUse.id)
-            have(content == listOf(Text(text = "267914296")))
+            have(content != null && content.size == 1)
+            content!![0] should {
+                be<Text>()
+                have(text == "267914296")
+            }
         }
     }
 

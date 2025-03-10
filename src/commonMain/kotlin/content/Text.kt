@@ -30,9 +30,7 @@ class Text private constructor(
 
     class Builder {
 
-        @JvmField
         var text: String? = null
-        @JvmField
         var cacheControl: CacheControl? = null
 
         fun build(): Text = Text(
@@ -48,8 +46,6 @@ fun Text(
     block: Text.Builder.() -> Unit
 ): Text = Text.Builder().apply(block).build()
 
-@JvmOverloads
-@JvmName("text2")
 fun Text(
     text: String,
     block: Text.Builder.() -> Unit = {}

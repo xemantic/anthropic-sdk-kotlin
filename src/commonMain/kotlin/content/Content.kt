@@ -49,7 +49,6 @@ abstract class Content {
  */
 abstract class ContentListBuilder {
 
-    @JvmField
     var content: List<Content> = emptyList()
 
     operator fun Content.unaryPlus() {

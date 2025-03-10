@@ -17,13 +17,7 @@
 package com.xemantic.ai.anthropic.message
 
 import com.xemantic.ai.anthropic.Model
-import com.xemantic.ai.anthropic.content.Document
-import com.xemantic.ai.anthropic.content.Image
-import com.xemantic.ai.anthropic.content.Source
-import com.xemantic.ai.anthropic.content.TEST_IMAGE
-import com.xemantic.ai.anthropic.content.Text
-import com.xemantic.ai.anthropic.content.ToolResult
-import com.xemantic.ai.anthropic.content.ToolUse
+import com.xemantic.ai.anthropic.content.*
 import com.xemantic.ai.anthropic.tool.Tool
 import com.xemantic.ai.anthropic.usage.Usage
 import com.xemantic.ai.file.magic.MediaType
@@ -50,7 +44,7 @@ class MessageResponseUseToolsTest {
                 have(isError == null)
                 content!![0] should {
                     be<Text>()
-                    assert(text == "ok")
+                    have(text == "ok")
                 }
             }
         }
@@ -69,7 +63,7 @@ class MessageResponseUseToolsTest {
                 have(isError == null)
                 content!![0] should {
                     be<Text>()
-                    assert(text == "buzz")
+                    have(text == "buzz")
                 }
             }
         }
@@ -88,7 +82,7 @@ class MessageResponseUseToolsTest {
                 have(isError == true)
                 content!![0] should {
                     be<Text>()
-                    assert(text == "error was thrown")
+                    have(text == "error was thrown")
                 }
             }
         }
@@ -107,7 +101,7 @@ class MessageResponseUseToolsTest {
                 have(isError == null)
                 content!![0] should {
                     be<Text>()
-                    assert(text == "1.12345")
+                    have(text == "1.12345")
                 }
             }
         }
@@ -126,7 +120,7 @@ class MessageResponseUseToolsTest {
                 have(isError == null)
                 content!![0] should {
                     be<Text>()
-                    assert(text == "(foo, bar)")
+                    have(text == "(foo, bar)")
                 }
             }
         }
