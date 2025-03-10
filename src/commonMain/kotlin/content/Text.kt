@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,8 +22,38 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 @SerialName("text")
-data class Text(
+class Text private constructor(
     val text: String,
     @SerialName("cache_control")
     override val cacheControl: CacheControl? = null,
-) : Content()
+) : Content() {
+
+    class Builder {
+
+        @JvmField
+        var text: String? = null
+        @JvmField
+        var cacheControl: CacheControl? = null
+
+        fun build(): Text = Text(
+            requireNotNull(text) { "text must be provided" },
+            cacheControl
+        )
+
+    }
+
+}
+
+fun Text(
+    block: Text.Builder.() -> Unit
+): Text = Text.Builder().apply(block).build()
+
+@JvmOverloads
+@JvmName("text2")
+fun Text(
+    text: String,
+    block: Text.Builder.() -> Unit = {}
+): Text = Text {
+    this.text = text
+    block(this)
+}

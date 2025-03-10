@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 package com.xemantic.ai.anthropic
 
 import com.xemantic.ai.anthropic.content.Text
-import com.xemantic.ai.anthropic.message.Message
 import com.xemantic.ai.anthropic.message.Role
 import com.xemantic.ai.anthropic.message.StopReason
 import com.xemantic.ai.anthropic.usage.Cost
@@ -47,9 +46,7 @@ class AnthropicTest {
 
         // when
         val response = anthropic.messages.create {
-            +Message {
-                +"Hello World! What's your name?"
-            }
+            +"Hello World! What's your name?"
         }
 
         // then
@@ -77,9 +74,7 @@ class AnthropicTest {
 
         // when
         val response = anthropic.messages.create {
-            +Message {
-                +"Hello Claude! I am testing the amount of input and output tokens."
-            }
+            +"Hello Claude! I am testing the amount of input and output tokens."
         }
 
         // then
@@ -122,9 +117,7 @@ class AnthropicTest {
         // when
         val response = anthropic.messages.create {
             system("Whatever the human says, answer \"HAHAHA\"")
-            +Message {
-                +"Hello World! What's your name?"
-            }
+            +"Hello World! What's your name?"
             maxTokens = 1024
         }
 

@@ -55,9 +55,7 @@ class GetWeatherToolTest {
         val anthropic = Anthropic()
         val conversation = mutableListOf<Message>()
 
-        conversation += Message {
-            +"What is the weather like in San Francisco?"
-        }
+        conversation += "What is the weather like in San Francisco?"
         val response1 = anthropic.messages.create {
             messages = conversation
             tools = weatherTools

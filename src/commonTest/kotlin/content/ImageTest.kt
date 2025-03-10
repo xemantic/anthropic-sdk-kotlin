@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ import kotlinx.io.files.Path
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 
-const val testImage = "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAABOvAAATrwFj5o7DAAAAGXRFWHRTb2Z0d2FyZ" +
+const val TEST_IMAGE = "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAABOvAAATrwFj5o7DAAAAGXRFWHRTb2Z0d2FyZ" +
         "QB3d3cuaW5rc2NhcGUub3Jnm+48GgAAA61JREFUeJztmNtrFVcUxn/b+lYwxEuN8RKR1giiQmqxEomCghSU0krBUpqiTyraUn3oU+m/UPsoiD6J" +
         "iiBeW4T64P1FKBSLGlBDjE21NV7r/SwfZp1zhmHPmRnjnPWQ/cFmcfZe69tfvuyZWTNORBjNGGMtwBrBAGsB1ggGWAuwRjDAWoA1ggHWAqwRDLA" +
         "WYI1ggLUAawQDrAVYIxhgLcAawQBrAdYIBlgLsMbYZm/onGsBJhOZPyQi90bINw5oA94B/hGRu4Xq0z6LO+d2AT0FuM6IyDcpXJOArcBnQGdi+T" +
@@ -60,7 +60,7 @@ class ImageTest {
                 +Image {
                     source = Source.Base64 {
                         mediaType(MediaType.PNG)
-                        data = testImage
+                        data = TEST_IMAGE
                     }
                 }
                 +"What's on this picture?"
@@ -191,7 +191,7 @@ class ImageTest {
         Image {
             source = Source.Base64 {
                 mediaType(MediaType.PNG)
-                data = testImage
+                data = TEST_IMAGE
             }
             cacheControl = CacheControl.Ephemeral()
         }.toString() shouldEqualJson /* language=json */ """
@@ -199,7 +199,7 @@ class ImageTest {
               "source": {
                 "type": "base64",
                 "media_type": "image/png",
-                "data": "$testImage"
+                "data": "$TEST_IMAGE"
               },
               "cache_control": {
                 "type": "ephemeral"

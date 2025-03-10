@@ -19,7 +19,9 @@ package com.xemantic.ai.anthropic.content
 import com.xemantic.ai.anthropic.cache.CacheControl
 import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.ai.anthropic.tool.Tool
-import kotlinx.serialization.*
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import kotlinx.serialization.json.JsonObject
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
@@ -56,6 +58,7 @@ data class ToolUse(
                 val input = decodeInput()
                 val result = tool.runner(input)
                 if ((result != null) && (result !is Unit)) {
+                    // TODO maybe we should also support ByteArray?
                     if (result is Content) {
                         content += result
                     } else if (result is List<*>) {
@@ -74,26 +77,13 @@ data class ToolUse(
         }
     }
 
-    private fun Any.toContent(): Content = this as? Content
-        ?: if (this is String) {
-            Text(this)
-        } else {
-            @OptIn(InternalSerializationApi::class)
-            val serializer = this::class.serializerOrNull() as KSerializer<Any>?
-            val value = if (serializer != null) {
-                anthropicJson.encodeToString(serializer, this)
-            } else {
-                this.toString()
-            }
-            Text(value)
-        }
+    private fun Any.toContent(): Content = this as? Content ?: Text(this.toString())
 
 }
 
-@ConsistentCopyVisibility
 @Serializable
 @SerialName("tool_result")
-data class ToolResult private constructor(
+class ToolResult private constructor(
     @SerialName("tool_use_id")
     val toolUseId: String,
     val content: List<Content>? = null,
@@ -103,44 +93,9 @@ data class ToolResult private constructor(
     override val cacheControl: CacheControl? = null
 ) : Content() {
 
-    class Builder : ContentListBuilder {
-
-        private class ToolResultList(
-            private val list: MutableList<Content> = mutableListOf<Content>()
-        ) : MutableList<Content> by list {
-
-            override fun add(element: Content): Boolean {
-                require(element is Image || element is Text) {
-                    "Only Image and Text content element is allowed"
-                }
-                return list.add(element)
-            }
-
-            override fun add(index: Int, element: Content) {
-                require(element is Image || element is Text) {
-                    "Only Image and Text content element is allowed"
-                }
-                return list.add(index, element)
-            }
-
-            override fun addAll(elements: Collection<Content>): Boolean {
-                require(elements.all { it is Image || it is Text }) {
-                    "Only Image and Text content elements are allowed"
-                }
-                return list.addAll(elements)
-            }
-
-            override fun set(index: Int, element: Content): Content {
-                require(element is Image || element is Text) {
-                    "Only Image and Text content element is allowed"
-                }
-                return list.set(index, element)
-            }
-        }
+    class Builder : ContentListBuilder() {
 
         var toolUseId: String? = null
-
-        override val content: MutableList<Content> = ToolResultList()
 
         var isError: Boolean? = null
         var cacheControl: CacheControl? = null
@@ -167,6 +122,16 @@ data class ToolResult private constructor(
             cacheControl = cacheControl
         )
 
+    }
+
+    fun copy(block: Builder.() -> Unit = {}): ToolResult {
+        val builder = Builder()
+        builder.toolUseId = toolUseId
+        builder.content = content!!.toMutableList()
+        builder.isError = isError
+        builder.cacheControl = cacheControl
+        block(builder)
+        return builder.build()
     }
 
 }

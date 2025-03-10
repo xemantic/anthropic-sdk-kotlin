@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,7 @@ package com.xemantic.ai.anthropic.message
 import com.xemantic.ai.anthropic.Model
 import com.xemantic.ai.anthropic.Response
 import com.xemantic.ai.anthropic.cache.CacheControl
-import com.xemantic.ai.anthropic.content.Content
-import com.xemantic.ai.anthropic.content.ContentListBuilder
-import com.xemantic.ai.anthropic.content.Text
-import com.xemantic.ai.anthropic.content.ToolUse
+import com.xemantic.ai.anthropic.content.*
 import com.xemantic.ai.anthropic.json.toPrettyJson
 import com.xemantic.ai.anthropic.tool.Tool
 import com.xemantic.ai.anthropic.tool.ToolChoice
@@ -69,12 +66,10 @@ data class MessageRequest(
     val topP: Int?
 ) {
 
-    class Builder internal constructor(
-        defaultModel: String,
-        defaultMaxTokens: Int
-    ) {
-        var model: String = defaultModel
-        var maxTokens: Int = defaultMaxTokens
+    class Builder() {
+        var model: String? = null
+        var maxTokens: Int? = null
+        @JvmField
         var messages: List<Message> = emptyList()
         var metadata = null
         var stopSequences: List<String> = emptyList()
@@ -99,6 +94,12 @@ data class MessageRequest(
             messages += this
         }
 
+        operator fun String.unaryPlus() {
+            messages += Message {
+                +this@unaryPlus
+            }
+        }
+
         fun stopSequences(vararg stopSequences: String) {
             this.stopSequences += stopSequences.toList()
         }
@@ -110,8 +111,8 @@ data class MessageRequest(
         }
 
         fun build(): MessageRequest = MessageRequest(
-            model = model,
-            maxTokens = maxTokens,
+            model = requireNotNull(model) { "model must be specified" },
+            maxTokens = requireNotNull(maxTokens) { "maxTokens must be specified" },
             messages = messages,
             metadata = metadata,
             stopSequences = stopSequences.toNullIfEmpty(),
@@ -123,6 +124,7 @@ data class MessageRequest(
             topK = topK,
             topP = topP
         )
+
     }
 
     override fun toString(): String = toPrettyJson()
@@ -136,24 +138,22 @@ internal fun MessageRequest(
     model: Model = Model.DEFAULT,
     block: MessageRequest.Builder.() -> Unit
 ): MessageRequest {
-    val builder = MessageRequest.Builder(
-        defaultModel = model.id,
-        defaultMaxTokens = model.maxOutput
-    )
+    val builder = MessageRequest.Builder()
+    builder.model = model.id
+    builder.maxTokens = model.maxOutput
     block(builder)
     return builder.build()
 }
 
 @Serializable
-data class Message(
+class Message private constructor(
     val role: Role,
     val content: List<Content>
 ) {
 
-    class Builder : ContentListBuilder {
+    class Builder : ContentListBuilder() {
 
-        override val content = mutableListOf<Content>()
-
+        @JvmField
         var role = Role.USER
 
         fun build() = Message(
@@ -161,6 +161,8 @@ data class Message(
             content = content
         )
     }
+
+    override fun toString(): String = toPrettyJson()
 
 }
 
@@ -205,6 +207,12 @@ operator fun MutableCollection<in Message>.plusAssign(
     this += response.asMessage()
 }
 
+operator fun MutableCollection<Message>.plusAssign(
+    text: String
+) {
+    this += Message { +text }
+}
+
 @Serializable
 @SerialName("message")
 data class MessageResponse(
@@ -225,11 +233,22 @@ data class MessageResponse(
     }
 
     suspend fun useTools(): Message {
-        val toolResults = content.filterIsInstance<ToolUse>().map {
-            it.use()
+        val documents = mutableListOf<Document>()
+        val toolResults = content.filterIsInstance<ToolUse>().map { toolUse ->
+            val result = toolUse.use()
+            result.copy {
+                content = content.map { contentElement ->
+                    if (contentElement is Document) {
+                        documents += contentElement
+                        Text("Document tool_result added as separate content to the message")
+                    } else {
+                        contentElement
+                    }
+                }
+            }
         }
         return Message {
-            this@Message.content += toolResults
+            this@Message.content += (toolResults + documents)
         }
     }
 
