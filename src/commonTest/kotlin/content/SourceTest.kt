@@ -108,4 +108,43 @@ class SourceTest {
         }
     }
 
+    @Test
+    fun `Should created Unknown Source like if it was URL source`() {
+        val source = Source.Unknown {
+            type = "url"
+            additionalProperties["url"] = "https://example.com/image.png"
+        }
+        anthropicJson.encodeToString<Source>(source) shouldEqualJson /* language=json */ """
+            {
+              "type": "url",
+              "url": "https://example.com/image.png"
+            }
+        """
+    }
+
+    @Test
+    fun `Should deserialize Unknown Source like if it was URL2 source`() {
+        // given
+        val json = /* language=json */ """
+            {
+              "type": "url2",
+              "url": "https://example.com/image.png"
+            }
+        """
+
+        // when
+        val source = anthropicJson.decodeFromString<Source>(json)
+
+        // then
+        source should {
+            be<Source.Unknown>()
+            have(type == "url2")
+            additionalProperties should {
+                have(isNotEmpty())
+                have(get("url") == JsonPrimitive("https://example.com/image.png"))
+            }
+            have(additionalProperties != null && additionalProperties.isNotEmpty())
+        }
+    }
+
 }
