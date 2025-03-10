@@ -42,8 +42,7 @@ jobs:
           JRELEASER_DEPLOY_MAVEN_MAVENCENTRAL_MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
           JRELEASER_DISCORD_WEBHOOK: ${{ secrets.DISCORD_ANNOUCEMENTS_WEBHOOK }}
           JRELEASER_LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
-#          in the future, once https://github.com/jreleaser/jreleaser/issues/1796 is fix, it should be xemantic page on LinkedIn, right now the owner is taken from the profile
-#          JRELEASER_LINKEDIN_OWNER: ${{ secrets.LINKEDIN_OWNER }}
+          JRELEASER_LINKEDIN_OWNER: ${{ secrets.LINKEDIN_OWNER }}
           JRELEASER_BLUESKY_HOST: ${{ vars.BLUESKY_HOST }}
           JRELEASER_BLUESKY_HANDLE: ${{ vars.BLUESKY_HANDLE }}
           JRELEASER_BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}

@@ -6,7 +6,7 @@ kotlin = "2.1.10"
 kotlinxCoroutines = "1.10.1"
 kotlinxDatetime = "0.6.2"
 kotlinxAtomicFu = "0.27.0"
-ktor = "3.1.0"
+ktor = "3.1.1"
 kotest = "6.0.0.M2"
 
 xemanticKotlinTest = "1.8.10"
@@ -16,12 +16,12 @@ xemanticAiFileMagic = "0.3.1"
 
 # logging is not used at the moment, might be enabled later
 log4j = "2.24.3"
-jackson = "2.18.2"
+jackson = "2.18.3"
 
 versionsPlugin = "0.52.0"
 dokkaPlugin = "2.0.0"
-jreleaserPlugin = "1.16.0"
-xemanticConventionsPlugin = "0.3.1"
+jreleaserPlugin = "1.17.0"
+xemanticConventionsPlugin = "0.3.3"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
