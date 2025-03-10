@@ -87,9 +87,7 @@ fun main() {
     val anthropic = Anthropic()
     val response = runBlocking {
         anthropic.messages.create {
-            +Message {
-                +"Hello, Claude"
-            }
+            +"Hello, Claude"
         }
     }
     println(response)
@@ -104,7 +102,7 @@ Streaming is also possible:
 fun main() = runBlocking {
     val client = Anthropic()
     client.messages.stream {
-        +Message { +"Write me a poem." }
+        +"Write me a poem."
     }
         .filterIsInstance<ContentBlockDeltaEvent>()
         .map { (it.delta as Delta.TextDelta).text }
@@ -130,7 +128,7 @@ fun main() = runBlocking {
     val anthropic = Anthropic()
 
     val conversation = mutableListOf<Message>()
-    conversation += Message { +"What is the weather in SF?" }
+    conversation += "What is the weather in SF?"
 
     val initialResponse = client.messages.create {
         messages = conversation

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Kazimierz Pogoda / Xemantic
+ * Copyright 2025 Kazimierz Pogoda / Xemantic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,21 @@
  * limitations under the License.
  */
 
-package com.xemantic.ai.anthropic
+package com.xemantic.ai.anthropic.content
 
-actual val envApiKey: String?
-    get() = System.getenv("ANTHROPIC_API_KEY")
+import io.kotest.assertions.json.shouldEqualJson
+import kotlin.test.Test
 
-actual val missingApiKeyMessage: String
-    get() = "apiKey is missing, it has to be provided as a parameter or as an ANTHROPIC_API_KEY environment variable."
+class TextTest {
+
+    @Test
+    fun `should return string representation of Text`() {
+        Text("foo").toString() shouldEqualJson /* language=json */ """
+            {
+              "type": "text",
+              "text": "foo"
+            }
+        """.trimIndent()
+    }
+
+}

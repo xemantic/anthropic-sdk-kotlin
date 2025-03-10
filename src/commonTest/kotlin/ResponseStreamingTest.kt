@@ -18,7 +18,6 @@ package com.xemantic.ai.anthropic
 
 import com.xemantic.ai.anthropic.event.Delta.TextDelta
 import com.xemantic.ai.anthropic.event.Event
-import com.xemantic.ai.anthropic.message.Message
 import com.xemantic.kotlin.test.assert
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
@@ -35,7 +34,7 @@ class ResponseStreamingTest {
 
         // when
         val chunkedResponse = client.messages.stream {
-            +Message { +"Say: 'The sun slowly dipped below the horizon, painting the sky in a breathtaking array of oranges, pinks, and purples.'" }
+            +"Say: 'The sun slowly dipped below the horizon, painting the sky in a breathtaking array of oranges, pinks, and purples.'"
         }
             .filterIsInstance<Event.ContentBlockDelta>()
             .map { (it.delta as TextDelta).text }

@@ -40,7 +40,7 @@ class ToolUseTest {
         )
         val client = Anthropic()
         val conversation = mutableListOf<Message>()
-        conversation += Message { +"What's 15 multiplied by 7?" }
+        conversation += "What's 15 multiplied by 7?"
 
         // when
         val initialResponse = client.messages.create {
@@ -87,7 +87,7 @@ class ToolUseTest {
         )
         val client = Anthropic()
         val conversation = mutableListOf<Message>()
-        conversation += Message { +"What's 15 multiplied by 7?" }
+        conversation += "What's 15 multiplied by 7?"
 
         // when
         val initialResponse = client.messages.create {
@@ -136,7 +136,7 @@ class ToolUseTest {
 
         // when
         val response = client.messages.create {
-            +Message { +"What's fibonacci number 42" }
+            +"What's fibonacci number 42"
             tools = mathTools
         }
 
@@ -149,7 +149,11 @@ class ToolUseTest {
         val result = toolUse.use()
         result should {
             have(toolUseId == toolUse.id)
-            have(content == listOf(Text(text = "267914296")))
+            have(content != null && content.size == 1)
+            content!![0] should {
+                be<Text>()
+                have(text == "267914296")
+            }
         }
     }
 

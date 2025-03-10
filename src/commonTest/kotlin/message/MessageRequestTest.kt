@@ -16,6 +16,7 @@
 
 package com.xemantic.ai.anthropic.message
 
+import com.xemantic.ai.anthropic.content.Text
 import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.ai.anthropic.tool.Tool
 import com.xemantic.ai.anthropic.tool.ToolChoice
@@ -34,11 +35,77 @@ import kotlin.test.Test
 class MessageRequestTest {
 
     @Test
-    fun `Should create simple MessageRequest`() {
+    fun `Should create simple MessageRequest with implicit message`() {
+        // given
+        val request = MessageRequest {
+            +"Hey Claude!?"
+        }
+
+        // when
+        val json = anthropicJson.encodeToString(request)
+
+        // then
+        json shouldEqualJson /* language=json */ """
+            {
+              "model": "claude-3-7-sonnet-latest",
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Hey Claude!?"
+                    }
+                  ]
+                }
+              ],
+              "max_tokens": 8182
+            }
+        """
+        // Note: max_tokens value will default to the max for a given model
+        // claude-3-7-sonnet-latest ist the default model
+    }
+
+    @Test
+    fun `Should create simple MessageRequest with Message and Content DSL`() {
         // given
         val request = MessageRequest {
             +Message {
                 +"Hey Claude!?"
+            }
+        }
+
+        // when
+        val json = anthropicJson.encodeToString(request)
+
+        // then
+        json shouldEqualJson /* language=json */ """
+            {
+              "model": "claude-3-7-sonnet-latest",
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Hey Claude!?"
+                    }
+                  ]
+                }
+              ],
+              "max_tokens": 8182
+            }
+        """
+        // Note: max_tokens value will default to the max for a given model
+        // claude-3-7-sonnet-latest ist the default model
+    }
+
+    @Test
+    fun `Should create simple MessageRequest without DSL`() {
+        // given
+        val request = MessageRequest {
+            messages += Message {
+                content += Text("Hey Claude!?")
             }
         }
 

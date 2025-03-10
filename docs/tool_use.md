@@ -28,7 +28,7 @@ Once the tool is defined, it can be used when building the message request:
 ```kotlin
 val anthropic = Anthropic()
 val response = anthropic.messages.create {
-    +Message { +"What is the weather like in San Francisco?" }
+    +"What is the weather like in San Francisco?"
     tools += getWeatherTool
 }
 // process the response
@@ -107,7 +107,7 @@ val weatherTools = listOf(tool)
 val anthropic = Anthropic()
 val conversation = mutableListOf<Message>()
 
-conversation += Message { +"What is the weather like in San Francisco?" }
+conversation += "What is the weather like in San Francisco?"
 
 val response1 = anthropic.messages.create {
     messages = conversation

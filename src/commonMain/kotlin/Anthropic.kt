@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -161,10 +161,11 @@ class Anthropic internal constructor(
         suspend fun create(
             block: MessageRequest.Builder.() -> Unit
         ): MessageResponse = create(
-            request = MessageRequest.Builder(
-                defaultModel,
-                defaultMaxTokens
-            ).apply(block).build()
+            request = MessageRequest.Builder().apply {
+                model = defaultModel
+                maxTokens = defaultMaxTokens
+                block(this)
+            }.build()
         )
 
         suspend fun create(
@@ -210,10 +211,9 @@ class Anthropic internal constructor(
             block: MessageRequest.Builder.() -> Unit
         ): Flow<Event> = flow {
 
-            val request = MessageRequest.Builder(
-                defaultModel,
-                defaultMaxTokens
-            ).apply {
+            val request = MessageRequest.Builder().apply {
+                model = defaultModel
+                maxTokens = defaultMaxTokens
                 block(this)
                 stream = true
             }.build()

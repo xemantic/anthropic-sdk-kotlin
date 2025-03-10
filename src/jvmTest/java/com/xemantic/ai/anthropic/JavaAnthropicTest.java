@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,33 +16,27 @@
 
 package com.xemantic.ai.anthropic;
 
-import com.xemantic.ai.anthropic.content.Text;
-import com.xemantic.ai.anthropic.message.Message;
-import com.xemantic.ai.anthropic.message.MessageResponse;
 import com.xemantic.ai.anthropic.message.Role;
 import org.junit.Test;
 
 import java.util.List;
 
+import static com.xemantic.ai.anthropic.content.Contents.text;
+import static com.xemantic.ai.anthropic.message.Messages.message;
+
 public class JavaAnthropicTest {
 
     @Test
-    public void foo() {
-        JavaAnthropic anthropic = JavaAnthropic.create();
-        MessageResponse response = anthropic.messages.createBlocking(
-                MessageRequestBuilder.builder()
-                        .messages(List.of(
-                                new Message(
-                                        Role.USER,
-                                        List.of(
-                                                new Text(
-                                                        "Hi Claude",
-                                                        null
-                                                )
-                                        )
-                                ))
-                        ).build()
-        );
+    public void shouldSendMessage() {
+        var anthropic = JavaAnthropic.create();
+        var response = anthropic.messages.createBlocking(builder -> {
+            builder.messages(
+                    message($ -> {
+                        $.setRole(Role.USER);
+                        $.setContent(List.of(text("Hi Claude")));
+                    })
+            );
+        });
         System.out.println(response);
     }
 

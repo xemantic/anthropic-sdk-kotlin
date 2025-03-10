@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,8 @@
 
 package com.xemantic.ai.anthropic
 
-import com.xemantic.ai.anthropic.message.Message
 import com.xemantic.ai.anthropic.message.MessageRequest
 import com.xemantic.ai.anthropic.message.MessageResponse
-import com.xemantic.ai.anthropic.message.System
 import kotlinx.coroutines.runBlocking
 import java.util.function.Consumer
 
@@ -35,11 +33,7 @@ class JavaAnthropic private constructor(
         @JvmStatic
         @JvmOverloads
         fun create(
-            configurer: Consumer<Anthropic.Config> = object : Consumer<Anthropic.Config> {
-                override fun accept(t: Anthropic.Config) {
-                    /* do nothing*/
-                }
-            }
+            configurer: Consumer<Anthropic.Config> = noOpConsumer()
         ): JavaAnthropic = JavaAnthropic(Anthropic { configurer.accept(this) })
 
     }
@@ -48,9 +42,11 @@ class JavaAnthropic private constructor(
     inner class Messages {
 
         fun createBlocking(
-            request: MessageRequest
+            builder: Consumer<MessageRequest.Builder>
         ): MessageResponse = runBlocking {
-            anthropic.messages.create(request)
+            val kotlinBuilder = MessageRequest.Builder()
+            builder.accept(kotlinBuilder)
+            anthropic.messages.create(kotlinBuilder.build())
         }
 
     }
@@ -60,30 +56,8 @@ class JavaAnthropic private constructor(
 
 }
 
-class MessageRequestBuilder() {
-
-    private var system: List<System>? = null
-
-    private var messages: List<Message>? = null
-
-    fun system(system: List<System>): MessageRequestBuilder {
-        this.system = system
-        return this
+inline fun <reified T> noOpConsumer(): Consumer<T> = object : Consumer<T> {
+    override fun accept(any: T) {
+        /* do nothing*/
     }
-
-    fun messages(messages: List<Message>): MessageRequestBuilder {
-        this.messages = messages
-        return this
-    }
-
-    fun build(): MessageRequest = MessageRequest {
-        this.system = system
-        this.messages = messages
-    }
-
-    companion object {
-        @JvmStatic
-        fun builder(): MessageRequestBuilder = MessageRequestBuilder()
-    }
-
 }

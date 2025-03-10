@@ -40,7 +40,7 @@ class ToolCacheControlTest {
             logHttp = true
         }
         val conversation = mutableListOf<Message>()
-        conversation += Message { +"What's 15 multiplied by 7?" }
+        conversation += "What's 15 multiplied by 7?"
 
         // when
         val initialResponse = client.messages.create {

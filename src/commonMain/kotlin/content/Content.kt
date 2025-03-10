@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package com.xemantic.ai.anthropic.content
 
 import com.xemantic.ai.anthropic.cache.CacheControl
+import com.xemantic.ai.anthropic.json.toPrettyJson
 import com.xemantic.ai.file.magic.MediaType
 import com.xemantic.ai.file.magic.detectMediaType
 import com.xemantic.ai.file.magic.readBytes
@@ -36,6 +37,8 @@ abstract class Content {
     @SerialName("cache_control")
     abstract val cacheControl: CacheControl?
 
+    override fun toString(): String = toPrettyJson()
+
 }
 
 /**
@@ -44,9 +47,9 @@ abstract class Content {
  * the [com.xemantic.ai.anthropic.message.Message] or the [ToolResult]
  * building process.
  */
-interface ContentListBuilder {
+abstract class ContentListBuilder {
 
-    val content: MutableList<Content>
+    var content: List<Content> = emptyList()
 
     operator fun Content.unaryPlus() {
         content += this
