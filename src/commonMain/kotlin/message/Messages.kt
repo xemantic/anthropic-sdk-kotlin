@@ -231,23 +231,14 @@ data class MessageResponse(
     }
 
     suspend fun useTools(): Message {
-        val documents = mutableListOf<Document>()
-        val toolResults = content.filterIsInstance<ToolUse>().map { toolUse ->
-            val result = toolUse.use()
-            result.copy {
-                content = content.map { contentElement ->
-                    if (contentElement is Document) {
-                        documents += contentElement
-                        Text("Document tool_result added as separate content to the message")
-                    } else {
-                        contentElement
-                    }
-                }
-            }
+        check(stopReason == StopReason.TOOL_USE) {
+            "You can only use tools if the stopReason is TOOL_USE"
         }
-        return Message {
-            this@Message.content += (toolResults + documents)
+        val builder = ToolResultMessageBuilder()
+        content.filterIsInstance<ToolUse>().map { toolUse ->
+            builder.add(toolUse.use())
         }
+        return builder.build()
     }
 
     val text: String?
@@ -261,5 +252,31 @@ data class MessageResponse(
         }
 
     val toolUses: List<ToolUse> get() = content.filterIsInstance<ToolUse>()
+
+}
+
+class ToolResultMessageBuilder {
+
+    private val documents = mutableListOf<Document>()
+
+    private val toolResults = mutableListOf<ToolResult>()
+
+    fun add(toolResult: ToolResult) {
+        val toolResult = toolResult.copy {
+            content = content.map { contentElement ->
+                if (contentElement is Document) {
+                    documents += contentElement
+                    Text("Document tool_result added as separate content to the message")
+                } else {
+                    contentElement
+                }
+            }
+        }
+        toolResults += toolResult
+    }
+
+    fun build(): Message = Message {
+        content += (toolResults + documents)
+    }
 
 }
