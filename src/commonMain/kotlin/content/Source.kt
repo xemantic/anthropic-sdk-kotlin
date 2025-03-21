@@ -104,6 +104,14 @@ abstract class Source : WithAdditionalProperties { // TODO cross check with offi
             block: Url.Builder.() -> Unit
         ): Url = Url.Builder().apply(block).build()
 
+        fun Url(
+            url: String,
+            block: Url.Builder.() -> Unit = {}
+        ): Url = Url.Builder().apply {
+            this.url = url
+            block(this)
+        }.build()
+
         fun Unknown(
             block: Unknown.Builder.() -> Unit
         ): Unknown = Unknown.Builder().apply(block).build()
