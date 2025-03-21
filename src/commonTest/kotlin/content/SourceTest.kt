@@ -29,7 +29,7 @@ import kotlin.test.Test
 class SourceTest {
 
     @Test
-    fun `Should created Source with additional properties`() {
+    fun `should created Base64 Source with additional properties`() {
         val source = Source.Base64 {
             data = "foo"
             mediaType(MediaType.PNG)
@@ -46,7 +46,7 @@ class SourceTest {
     }
 
     @Test
-    fun `Should deserialize Source with additional properties`() {
+    fun `should deserialize Base64 SourceSource with additional properties`() {
         // given
         val json = /* language=json */ """
             {
@@ -71,7 +71,32 @@ class SourceTest {
     }
 
     @Test
-    fun `Should created URL Source with additional properties`() {
+    fun `should created URL Source`() {
+        val source = Source.Url("https://example.com/image.png")
+        anthropicJson.encodeToString<Source>(source) shouldEqualJson /* language=json */ """
+            {
+              "type": "url",
+              "url": "https://example.com/image.png"
+            }
+        """
+    }
+
+    @Test
+    fun `should created URL Source with additional properties`() {
+        val source = Source.Url("https://example.com/image.png") {
+            additionalProperties["bar"] = "buzz"
+        }
+        anthropicJson.encodeToString<Source>(source) shouldEqualJson /* language=json */ """
+            {
+              "type": "url",
+              "url": "https://example.com/image.png",
+              "bar": "buzz"
+            }
+        """
+    }
+
+    @Test
+    fun `should created URL Source with url passed in builder and with additional properties`() {
         val source = Source.Url {
             url = "https://example.com/image.png"
             additionalProperties["bar"] = "buzz"
@@ -86,7 +111,7 @@ class SourceTest {
     }
 
     @Test
-    fun `Should deserialize Url Source with additional properties`() {
+    fun `should deserialize Url Source with additional properties`() {
         // given
         val json = /* language=json */ """
             {
@@ -109,7 +134,7 @@ class SourceTest {
     }
 
     @Test
-    fun `Should created Unknown Source like if it was URL source`() {
+    fun `should created Unknown Source like if it was URL source`() {
         val source = Source.Unknown {
             type = "url"
             additionalProperties["url"] = "https://example.com/image.png"
@@ -123,7 +148,7 @@ class SourceTest {
     }
 
     @Test
-    fun `Should deserialize Unknown Source like if it was URL2 source`() {
+    fun `should deserialize Unknown Source like if it was URL2 source`() {
         // given
         val json = /* language=json */ """
             {
