@@ -19,11 +19,13 @@ package com.xemantic.ai.anthropic.content
 import com.xemantic.ai.anthropic.Anthropic
 import com.xemantic.ai.anthropic.message.Message
 import com.xemantic.ai.anthropic.message.StopReason
+import com.xemantic.ai.file.magic.MediaType
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
+import java.io.File
 
 class JvmImageTest {
 
@@ -47,6 +49,16 @@ class JvmImageTest {
             content[0] should {
                 be<Text>()
                 have("FOO" in text.uppercase())
+            }
+        }
+    }
+
+    @Test
+    fun `Should read image file specified as java File`() {
+        Image(File("test-data/foo.png")) should {
+            source should {
+                be<Source.Base64>()
+                have(mediaType == MediaType.PNG.mime)
             }
         }
     }
