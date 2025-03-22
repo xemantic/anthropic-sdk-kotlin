@@ -64,7 +64,7 @@ class BashTool private constructor() : BuiltInTool(
 
         fun Input(
             block: Input.Builder.() -> Unit
-        ): Input = Input.Builder().also(block).build()
+        ): Input = Input.Builder().apply(block).build()
 
     }
 
@@ -73,7 +73,7 @@ class BashTool private constructor() : BuiltInTool(
 fun BashTool(
     builder: BashTool.Builder.() -> Unit = {},
     run: suspend BashTool.Input.() -> Unit
-): BashTool = BashTool.Builder().also(builder).build().apply {
+): BashTool = BashTool.Builder().apply(builder).build().apply {
     inputSerializer = serializer<BashTool.Input>()
     runner = { input -> run(input as BashTool.Input) }
 }

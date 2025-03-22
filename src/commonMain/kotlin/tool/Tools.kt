@@ -105,10 +105,10 @@ inline fun <reified T> Tool(
         "Tool input class must be an object"
     }
 
-    return DefaultTool.Builder().apply {
-        this.name = name
-        this.description = schema.description ?: description
-        inputSchema = schema.copy {
+    return DefaultTool.Builder().also {
+        it.name = name
+        it.description = schema.description ?: description
+        it.inputSchema = schema.copy {
             this.description = null
         }
     }.also(builder).build().apply {
@@ -187,11 +187,11 @@ sealed class ToolChoice {
 
         fun Auto(
             block: Auto.Builder.() -> Unit = {}
-        ): Auto = Auto.Builder().also(block).build()
+        ): Auto = Auto.Builder().apply(block).build()
 
         fun Any(
             block: Any.Builder.() -> Unit = {}
-        ): Any = Any.Builder().also(block).build()
+        ): Any = Any.Builder().apply(block).build()
 
         fun Tool(
             name: String,

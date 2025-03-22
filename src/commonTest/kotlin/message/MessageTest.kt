@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,9 @@
 
 package com.xemantic.ai.anthropic.message
 
+import com.xemantic.ai.anthropic.cache.CacheControl
+import com.xemantic.ai.anthropic.content.Text
+import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
 import kotlin.test.Test
@@ -23,9 +26,49 @@ import kotlin.test.Test
 class MessageTest {
 
     @Test
-    fun `Default Message should have Role USER`() {
-        Message {} should {
+    fun `Default empty Message should have Role USER`() {
+        Message() should {
             have(role == Role.USER)
+            have(content.isEmpty())
+        }
+    }
+
+    @Test
+    fun `should copy Message without alterations`() {
+        Message {
+            role = Role.ASSISTANT
+            content = listOf(Text("foo"))
+        }.copy() should {
+            have(role == Role.ASSISTANT)
+            have(content.size == 1)
+            content[0] should {
+                be<Text>()
+                have(text == "foo")
+                have(cacheControl == null)
+            }
+        }
+    }
+
+    @Test
+    fun `should copy Message while altering the role and content CacheControl`() {
+        Message {
+            role = Role.ASSISTANT
+            content = listOf(Text("foo"))
+        }.copy {
+            role = Role.USER
+            content = content.map {
+                it.alterCacheControl(CacheControl.Ephemeral())
+            }
+        } should {
+            have(role == Role.USER)
+            have(content.size == 1)
+            content[0] should {
+                be<Text>()
+                have(text == "foo")
+                cacheControl should {
+                    be<CacheControl.Ephemeral>()
+                }
+            }
         }
     }
 

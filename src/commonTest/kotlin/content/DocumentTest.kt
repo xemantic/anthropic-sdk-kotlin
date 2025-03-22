@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ const val testPdf = "JVBERi0xLjEKJcKlwrHDqwoKMSAwIG9iagogIDw8IC9UeXBlIC9DYXRhbG9
 class DocumentTest {
 
     @Test
-    fun `Should read text from test PDF`() = runTest {
+    fun `should read text from test PDF`() = runTest {
         // given
         val anthropic = Anthropic()
 
@@ -76,7 +76,7 @@ class DocumentTest {
     }
 
     @Test
-    fun `Should read text from test PDF file`() = runTest {
+    fun `should read text from test PDF file`() = runTest {
         if (isBrowserPlatform) return@runTest // we cannot access files in the browser
         // given
         val anthropic = Anthropic()
@@ -103,7 +103,8 @@ class DocumentTest {
     }
 
     @Test
-    fun `Should create cacheable Document`() {
+    fun `should create cacheable Document`() {
+        if (isBrowserPlatform) return // we cannot access files in the browser
         Document(Path(testDataDir, "test.pdf")) {
             cacheControl = CacheControl.Ephemeral()
         } should {
@@ -119,7 +120,7 @@ class DocumentTest {
     }
 
     @Test
-    fun `Should create Document from bytes`() {
+    fun `should create Document from bytes`() {
         Document(Path(testDataDir, "test.pdf").readBytes()).source should {
             be<Source.Base64>()
             have(mediaType == MediaType.PDF.mime)
@@ -128,7 +129,7 @@ class DocumentTest {
     }
 
     @Test
-    fun `Should fail to create Document from text file`() {
+    fun `should fail to create Document from text file`() {
         assertFailsWith<IllegalArgumentException> {
             Document(Path(testDataDir, "zero.txt"))
         } should {
@@ -141,7 +142,7 @@ class DocumentTest {
     }
 
     @Test
-    fun `Should fail to create PDF Document from image file`() {
+    fun `should fail to create PDF Document from image file`() {
         assertFailsWith<IllegalArgumentException> {
             Document(Path(testDataDir, "foo.png"))
         } should {
@@ -156,7 +157,7 @@ class DocumentTest {
     }
 
     @Test
-    fun `Should fail to create Document with null path specified in the builder`() {
+    fun `should fail to create Document with null path specified in the builder`() {
         assertFailsWith<IllegalArgumentException> {
             Document {
                 path = null
@@ -167,7 +168,7 @@ class DocumentTest {
     }
 
     @Test
-    fun `Should fail to create document with null bytes specified in the builder`() {
+    fun `should fail to create document with null bytes specified in the builder`() {
         assertFailsWith<IllegalArgumentException> {
             Document {
                 bytes = null
@@ -178,25 +179,55 @@ class DocumentTest {
     }
 
     @Test
-    fun `Should return string representation of Document`() {
+    fun `should return string representation of Document`() {
         Document {
-            source = Source.Base64 {
-                mediaType(MediaType.PDF)
-                data = testPdf
-            }
+            source = Source.Url("https://example.com/document.pdf")
             cacheControl = CacheControl.Ephemeral()
         }.toString() shouldEqualJson /* language=json */ """
             {
+              "type": "document",
               "source": {
-                "type": "base64",
-                "media_type": "application/pdf",
-                "data": "$testPdf"
+                "type": "url",
+                "url": "https://example.com/document.pdf"
               },
               "cache_control": {
                 "type": "ephemeral"
               }
             }
         """
+    }
+
+    @Test
+    fun `should copy Document`() {
+        Document {
+            source = Source.Url("https://example.com/document.pdf")
+            cacheControl = CacheControl.Ephemeral()
+        }.copy() should {
+            source should {
+                be<Source.Url>()
+                have(url == "https://example.com/document.pdf")
+            }
+            cacheControl should {
+                be<CacheControl.Ephemeral>()
+            }
+        }
+    }
+
+    @Test
+    fun `should copy Document while altering properties`() {
+        Document {
+            source = Source.Url("https://example.com/document.pdf")
+            cacheControl = CacheControl.Ephemeral()
+        }.copy {
+            source = Source.Url("https://example.com/document-new.pdf")
+            cacheControl = null
+        } should {
+            source should {
+                be<Source.Url>()
+                have(url == "https://example.com/document-new.pdf")
+            }
+            have(cacheControl == null)
+        }
     }
 
 }

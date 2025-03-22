@@ -143,13 +143,13 @@ class MessageResponseTest {
             id = "foo",
             role = Role.ASSISTANT,
             content = listOf(
-                ToolUse(
-                    id = "42",
-                    name = "",
+                ToolUse {
+                    id = "42"
+                    name = ""
                     input = buildJsonObject {
                         put("foo", JsonPrimitive("bar"))
                     }
-                )
+                }
             ),
             model = "claude-3-5-sonnet-20241022",
             stopReason = StopReason.END_TURN,
@@ -168,13 +168,13 @@ class MessageResponseTest {
             id = "foo",
             role = Role.ASSISTANT,
             content = listOf(
-                ToolUse(
-                    id = "42",
-                    name = "tool42",
+                ToolUse {
+                    id = "42"
+                    name = "tool42"
                     input = buildJsonObject {
                         put("foo", JsonPrimitive("bar"))
                     }
-                )
+                }
             ),
             model = "claude-3-5-sonnet-20241022",
             stopReason = StopReason.END_TURN,
@@ -196,20 +196,20 @@ class MessageResponseTest {
             id = "foo",
             role = Role.ASSISTANT,
             content = listOf(
-                ToolUse(
-                    id = "42",
-                    name = "tool42",
+                ToolUse {
+                    id = "42"
+                    name = "tool42"
                     input = buildJsonObject {
                         put("foo", JsonPrimitive("bar"))
                     }
-                ),
-                ToolUse(
-                    id = "43",
-                    name = "tool43",
+                },
+                ToolUse {
+                    id = "43"
+                    name = "tool43"
                     input = buildJsonObject {
                         put("foo", JsonPrimitive("bar"))
                     }
-                )
+                }
             ),
             model = "claude-3-5-sonnet-20241022",
             stopReason = StopReason.END_TURN,
@@ -251,20 +251,20 @@ class MessageResponseTest {
             role = Role.ASSISTANT,
             content = listOf(
                 Text("bar"),
-                ToolUse(
-                    id = "42",
-                    name = "tool42",
+                ToolUse {
+                    id = "42"
+                    name = "tool42"
                     input = buildJsonObject {
                         put("foo", JsonPrimitive("bar"))
                     }
-                ),
-                ToolUse(
-                    id = "43",
-                    name = "tool43",
+                },
+                ToolUse {
+                    id = "43"
+                    name = "tool43"
                     input = buildJsonObject {
                         put("foo", JsonPrimitive("bar"))
                     }
-                )
+                }
             ),
             model = "claude-3-5-sonnet-20241022",
             stopReason = StopReason.END_TURN,

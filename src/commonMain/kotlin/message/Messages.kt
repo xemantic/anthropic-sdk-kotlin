@@ -25,6 +25,9 @@ import com.xemantic.ai.anthropic.tool.Tool
 import com.xemantic.ai.anthropic.tool.ToolChoice
 import com.xemantic.ai.anthropic.usage.Usage
 import kotlinx.serialization.*
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.InvocationKind
+import kotlin.contracts.contract
 
 /**
  * The roles that can be taken by entities in a conversation.
@@ -133,15 +136,19 @@ data class MessageRequest(
 /**
  * Used only in tests
  */
+@OptIn(ExperimentalContracts::class)
 internal fun MessageRequest(
     model: Model = Model.DEFAULT,
     block: MessageRequest.Builder.() -> Unit
 ): MessageRequest {
-    val builder = MessageRequest.Builder()
-    builder.model = model.id
-    builder.maxTokens = model.maxOutput
-    block(builder)
-    return builder.build()
+    contract {
+        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+    }
+    return MessageRequest.Builder().also {
+        it.model = model.id
+        it.maxTokens = model.maxOutput
+        block(it)
+    }.build()
 }
 
 @Serializable
@@ -160,14 +167,32 @@ class Message private constructor(
         )
     }
 
+    @OptIn(ExperimentalContracts::class)
+    fun copy(
+        block: Builder.() -> Unit = {}
+    ): Message {
+        contract {
+            callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+        }
+        return Builder().also {
+            it.role = role
+            it.content = content
+            block(it)
+        }.build()
+    }
+
     override fun toString(): String = toPrettyJson()
 
 }
 
-fun Message(block: Message.Builder.() -> Unit): Message {
-    val builder = Message.Builder()
-    block(builder)
-    return builder.build()
+@OptIn(ExperimentalContracts::class)
+fun Message(
+    block: Message.Builder.() -> Unit = {}
+): Message {
+    contract {
+        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+    }
+    return Message.Builder().apply(block).build()
 }
 
 @Serializable

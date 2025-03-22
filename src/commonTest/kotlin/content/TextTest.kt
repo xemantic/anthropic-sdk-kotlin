@@ -16,8 +16,13 @@
 
 package com.xemantic.ai.anthropic.content
 
+import com.xemantic.ai.anthropic.cache.CacheControl
+import com.xemantic.kotlin.test.be
+import com.xemantic.kotlin.test.have
+import com.xemantic.kotlin.test.should
 import io.kotest.assertions.json.shouldEqualJson
 import kotlin.test.Test
+import kotlin.test.assertFailsWith
 
 class TextTest {
 
@@ -29,6 +34,42 @@ class TextTest {
               "text": "foo"
             }
         """.trimIndent()
+    }
+
+    @Test
+    fun `should fail to create Text without text attribute`() {
+        assertFailsWith<IllegalArgumentException> {
+            Text {}
+        } should {
+            have(message == "text cannot be null")
+        }
+    }
+
+    @Test
+    fun `Should copy Text`() {
+        Text {
+            text = "foo"
+            cacheControl = CacheControl.Ephemeral()
+        }.copy() should {
+            have(text == "foo")
+            cacheControl should {
+                be<CacheControl.Ephemeral>()
+            }
+        }
+    }
+
+    @Test
+    fun `Should copy Text while altering properties`() {
+        Text {
+            text = "foo"
+            cacheControl = CacheControl.Ephemeral()
+        }.copy {
+            text = "bar"
+            cacheControl = null
+        } should {
+            have(text == "bar")
+            have(cacheControl == null)
+        }
     }
 
 }

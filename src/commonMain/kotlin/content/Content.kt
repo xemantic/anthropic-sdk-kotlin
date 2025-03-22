@@ -32,12 +32,22 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 @Serializable
 @JsonClassDiscriminator("type")
 @OptIn(ExperimentalSerializationApi::class)
-abstract class Content {
+sealed class Content {
 
     @SerialName("cache_control")
     abstract val cacheControl: CacheControl?
 
     override fun toString(): String = toPrettyJson()
+
+    fun alterCacheControl(
+        cacheControl: CacheControl?
+    ): Content = when (this) {
+        is Text -> copy { this.cacheControl = cacheControl }
+        is Image -> copy { this.cacheControl = cacheControl }
+        is Document -> copy { this.cacheControl = cacheControl }
+        is ToolUse -> copy { this.cacheControl = cacheControl }
+        is ToolResult -> copy { this.cacheControl = cacheControl }
+    }
 
 }
 

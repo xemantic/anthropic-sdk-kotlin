@@ -246,14 +246,14 @@ class MessageResponseUseToolsTest {
         id = "foo_42",
         role = Role.ASSISTANT,
         content = listOf(
-            ToolUse(
-                id = "bar_1234",
-                name = "foo",
+            ToolUse {
+                id = "bar_1234"
+                name = "foo"
                 input = buildJsonObject {
                     put("bar", JsonPrimitive("buzz"))
                 }
-            ).apply {
-                this.tool = tool
+            }.also {
+                it.tool = tool
             }
         ),
         model = Model.CLAUDE_3_7_SONNET.id,

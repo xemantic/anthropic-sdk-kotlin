@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,9 @@ import com.xemantic.ai.file.magic.MediaType
 import kotlinx.io.files.Path
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.InvocationKind
+import kotlin.contracts.contract
 
 @Serializable
 @SerialName("image")
@@ -38,7 +41,7 @@ class Image private constructor(
         var cacheControl: CacheControl? = null
 
         fun build(): Image = Image(
-            source = requireNotNull(source),
+            source = requireNotNull(source) { "source cannot be null" },
             cacheControl = cacheControl
         )
 
@@ -58,31 +61,69 @@ class Image private constructor(
 
     }
 
+    @OptIn(ExperimentalContracts::class)
+    fun copy(
+        block: Builder.() -> Unit = {}
+    ): Image {
+        contract {
+            callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+        }
+        return Builder().also {
+            it.source = source
+            it.cacheControl = cacheControl
+            block(it)
+        }.build()
+    }
+
     override fun toString(): String = toPrettyJson()
 
 }
 
+@OptIn(ExperimentalContracts::class)
 fun Image(
     block: Image.Builder.() -> Unit
-): Image = Image.Builder().apply(block).build()
+): Image {
+    contract {
+        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+    }
+    return Image.Builder().apply(block).build()
+}
 
+@OptIn(ExperimentalContracts::class)
 fun Image(
     path: String,
     block: Image.Builder.() -> Unit = {}
-): Image = Image(Path(path), block)
+): Image {
+    contract {
+        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+    }
+    return Image(Path(path), block)
+}
 
+@OptIn(ExperimentalContracts::class)
 fun Image(
     path: Path,
     block: Image.Builder.() -> Unit = {}
-): Image = Image {
-    this.path = path
-    block(this)
+): Image {
+    contract {
+        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+    }
+    return Image {
+        this.path = path
+        block(this)
+    }
 }
 
+@OptIn(ExperimentalContracts::class)
 fun Image(
     bytes: ByteArray,
     block: Image.Builder.() -> Unit = {}
-): Image = Image {
-    this.bytes = bytes
-    block(this)
+): Image {
+    contract {
+        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+    }
+    return Image {
+        this.bytes = bytes
+        block(this)
+    }
 }

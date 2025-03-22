@@ -113,7 +113,7 @@ class ComputerTool private constructor(
 
         fun Input(
             block: Input.Builder.() -> Unit
-        ): Input = Input.Builder().also(block).build()
+        ): Input = Input.Builder().apply(block).build()
 
     }
 
@@ -122,7 +122,7 @@ class ComputerTool private constructor(
 fun ComputerTool(
     builder: ComputerTool.Builder.() -> Unit,
     run: suspend ComputerTool.Input.() -> Unit
-): ComputerTool = ComputerTool.Builder().also(builder).build().apply {
+): ComputerTool = ComputerTool.Builder().apply(builder).build().apply {
     inputSerializer = serializer<ComputerTool.Input>()
     runner = { input -> run(input as ComputerTool.Input) }
 }
