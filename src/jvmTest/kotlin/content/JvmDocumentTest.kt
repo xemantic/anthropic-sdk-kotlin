@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,12 +19,14 @@ package com.xemantic.ai.anthropic.content
 import com.xemantic.ai.anthropic.Anthropic
 import com.xemantic.ai.anthropic.message.Message
 import com.xemantic.ai.anthropic.message.StopReason
+import com.xemantic.ai.file.magic.MediaType
 import com.xemantic.kotlin.test.assert
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
+import java.io.File
 
 class JvmDocumentTest {
 
@@ -34,7 +36,7 @@ class JvmDocumentTest {
      * for JVM platform, therefore common tests cases are using relative path.
      */
     @Test
-    fun `Should read test PDF with path specified as String`() = runTest {
+    fun `should read test PDF with path specified as String`() = runTest {
         // given
         val client = Anthropic()
 
@@ -54,6 +56,16 @@ class JvmDocumentTest {
                 be<Text>()
                 assert("FOO" in text.uppercase())
                 assert("BAR" in text.uppercase())
+            }
+        }
+    }
+
+    @Test
+    fun `should read document file specified as java File`() {
+        Document(File("test-data/test.pdf")) should {
+            source should {
+                be<Source.Base64>()
+                have(mediaType == MediaType.PDF.mime)
             }
         }
     }

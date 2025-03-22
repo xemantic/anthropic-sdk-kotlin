@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,16 +19,18 @@ package com.xemantic.ai.anthropic.content
 import com.xemantic.ai.anthropic.Anthropic
 import com.xemantic.ai.anthropic.message.Message
 import com.xemantic.ai.anthropic.message.StopReason
+import com.xemantic.ai.file.magic.MediaType
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
+import java.io.File
 
 class JvmImageTest {
 
     @Test
-    fun `Should read test image file specified by String`() = runTest {
+    fun `should read test image file specified by String`() = runTest {
         // given
         val client = Anthropic()
 
@@ -47,6 +49,16 @@ class JvmImageTest {
             content[0] should {
                 be<Text>()
                 have("FOO" in text.uppercase())
+            }
+        }
+    }
+
+    @Test
+    fun `should read image file specified as java File`() {
+        Image(File("test-data/foo.png")) should {
+            source should {
+                be<Source.Base64>()
+                have(mediaType == MediaType.PNG.mime)
             }
         }
     }
