@@ -24,14 +24,14 @@ import kotlin.contracts.contract
 
 @OptIn(ExperimentalContracts::class)
 @JvmOverloads
-fun Image(
+fun Document(
     file: File,
-    block: Image.Builder.() -> Unit = {}
-): Image {
+    block: Document.Builder.() -> Unit = {}
+): Document {
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
-    return Image(
+    return Document(
         Path(file.absolutePath),
         block
     )

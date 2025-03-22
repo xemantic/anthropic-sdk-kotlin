@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import java.io.File
 class JvmImageTest {
 
     @Test
-    fun `Should read test image file specified by String`() = runTest {
+    fun `should read test image file specified by String`() = runTest {
         // given
         val client = Anthropic()
 
@@ -54,7 +54,7 @@ class JvmImageTest {
     }
 
     @Test
-    fun `Should read image file specified as java File`() {
+    fun `should read image file specified as java File`() {
         Image(File("test-data/foo.png")) should {
             source should {
                 be<Source.Base64>()
