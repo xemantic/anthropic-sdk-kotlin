@@ -17,7 +17,7 @@
 package com.xemantic.ai.anthropic
 
 import com.xemantic.ai.anthropic.content.ToolUse
-import com.xemantic.ai.anthropic.error.AnthropicException
+import com.xemantic.ai.anthropic.error.AnthropicApiException
 import com.xemantic.ai.anthropic.error.ErrorResponse
 import com.xemantic.ai.anthropic.event.Event
 import com.xemantic.ai.anthropic.json.anthropicJson
@@ -66,7 +66,9 @@ fun Anthropic(
 ): Anthropic {
     val config = Anthropic.Config().apply(block)
     val apiKey = if (config.apiKey != null) config.apiKey else envApiKey
-    requireNotNull(apiKey) { missingApiKeyMessage }
+    if (apiKey == null) {
+        throw AnthropicConfigException(missingApiKeyMessage)
+    }
     return Anthropic(
         apiKey = apiKey,
         anthropicVersion = config.anthropicVersion,
@@ -195,7 +197,7 @@ class Anthropic internal constructor(
                     }
                 }
 
-                is ErrorResponse -> throw AnthropicException(
+                is ErrorResponse -> throw AnthropicApiException(
                     error = response.error,
                     httpStatusCode = apiResponse.status
                 )
@@ -268,3 +270,15 @@ class Anthropic internal constructor(
     }
 
 }
+
+open class AnthropicException(
+    msg: String,
+    cause: Throwable? = null
+) : RuntimeException(msg, cause)
+
+class AnthropicConfigException(
+    msg: String,
+    cause: Throwable? = null
+) : AnthropicException(
+    msg, cause
+)

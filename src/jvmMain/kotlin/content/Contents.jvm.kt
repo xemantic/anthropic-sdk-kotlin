@@ -26,8 +26,8 @@ class Contents private constructor() {
         @JvmStatic
         fun text(
             builder: Consumer<Text.Builder>
-        ): Text = Text.Builder().apply {
-            builder.accept(this)
+        ): Text = Text.Builder().also {
+            builder.accept(it)
         }.build()
 
         @JvmStatic
@@ -35,9 +35,9 @@ class Contents private constructor() {
         fun text(
             text: String,
             builder: Consumer<Text.Builder> = noOpConsumer()
-        ): Text = Text.Builder().apply {
-            this.text = text
-            builder.accept(this)
+        ): Text = Text.Builder().also {
+            it.text = text
+            builder.accept(it)
         }.build()
     }
 

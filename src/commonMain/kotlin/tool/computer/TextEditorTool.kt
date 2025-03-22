@@ -98,7 +98,7 @@ class TextEditorTool private constructor() : BuiltInTool(
 
         fun Input(
             block: Input.Builder.() -> Unit
-        ): Input = Input.Builder().also(block).build()
+        ): Input = Input.Builder().apply(block).build()
 
     }
 
@@ -107,7 +107,7 @@ class TextEditorTool private constructor() : BuiltInTool(
 fun TextEditorTool(
     builder: TextEditorTool.Builder.() -> Unit = {},
     run: suspend TextEditorTool.Input.() -> Unit
-): TextEditorTool = TextEditorTool.Builder().also(builder).build().apply {
+): TextEditorTool = TextEditorTool.Builder().apply(builder).build().apply {
     inputSerializer = serializer<TextEditorTool.Input>()
     runner = { input -> run(input as TextEditorTool.Input) }
 }

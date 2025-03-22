@@ -14,21 +14,11 @@
  * limitations under the License.
  */
 
-package com.xemantic.ai.anthropic.message
+package com.xemantic.ai.anthropic.collections
 
-import java.util.function.Consumer
-
-class Messages private constructor() {
-
-    companion object {
-
-        @JvmStatic
-        fun message(
-            builder: Consumer<Message.Builder>
-        ): Message = Message.Builder().also {
-            builder.accept(it)
-        }.build()
-
-    }
-
+// TODO it should be moved to more general utility
+fun <T> List<T>.transformLast(
+    transform: T.() -> T
+): List<T> = mapIndexed { index, item ->
+    if (index == lastIndex) transform(item) else item
 }

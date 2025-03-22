@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ import kotlin.test.Test
 class DocumentCacheControlTest {
 
     @Test
-    fun `Should cache PDF document across conversation`() = runTest {
+    fun `should cache PDF document across conversation`() = runTest {
         if (isBrowserPlatform) return@runTest // we cannot access files in the browser
         // given
         val client = Anthropic()

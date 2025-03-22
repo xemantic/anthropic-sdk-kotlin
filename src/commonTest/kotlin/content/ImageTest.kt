@@ -133,6 +133,15 @@ class ImageTest {
     }
 
     @Test
+    fun `should fail to create Image without attributes`() {
+        assertFailsWith<IllegalArgumentException> {
+            Image {}
+        } should {
+            have(message == "source cannot be null")
+        }
+    }
+
+    @Test
     fun `Should fail to create Image from text file`() {
         if (isBrowserPlatform) return
         assertFailsWith<IllegalArgumentException> {
@@ -206,6 +215,46 @@ class ImageTest {
               }
             }
         """
+    }
+
+    @Test
+    fun `Should copy Image`() {
+        Image {
+            source = Source.Base64 {
+                mediaType(MediaType.PNG)
+                data = TEST_IMAGE
+            }
+            cacheControl = CacheControl.Ephemeral()
+        }.copy() should {
+            source should {
+                be<Source.Base64>()
+                have(mediaType == MediaType.PNG.mime)
+                have(data == TEST_IMAGE)
+            }
+            cacheControl should {
+                be<CacheControl.Ephemeral>()
+            }
+        }
+    }
+
+    @Test
+    fun `Should copy Image while altering properties`() {
+        Image {
+            source = Source.Base64 {
+                mediaType(MediaType.PNG)
+                data = TEST_IMAGE
+            }
+            cacheControl = CacheControl.Ephemeral()
+        }.copy {
+            source = Source.Url("https://example.com/image.png")
+            cacheControl = null
+        } should {
+            source should {
+                be<Source.Url>()
+                have(url == "https://example.com/image.png")
+            }
+            have(cacheControl == null)
+        }
     }
 
 }

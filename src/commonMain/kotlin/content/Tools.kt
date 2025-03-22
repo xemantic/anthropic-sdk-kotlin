@@ -29,13 +29,29 @@ import kotlin.contracts.contract
 
 @Serializable
 @SerialName("tool_use")
-data class ToolUse(
+class ToolUse private constructor(
     val id: String,
     val name: String,
     val input: JsonObject,
     @SerialName("cache_control")
     override val cacheControl: CacheControl? = null
 ) : Content() {
+
+    class Builder {
+
+        var id: String? = null
+        var name: String? = null
+        var input: JsonObject? = null
+        var cacheControl: CacheControl? = null
+
+        fun build(): ToolUse = ToolUse(
+            requireNotNull(id) { "id cannot be null" },
+            requireNotNull(name) { "name cannot be null" },
+            requireNotNull(input) { "input cannot be null" },
+            cacheControl
+        )
+
+    }
 
     @Transient
     @PublishedApi
@@ -77,8 +93,34 @@ data class ToolUse(
         }
     }
 
+    @OptIn(ExperimentalContracts::class)
+    fun copy(
+        block: Builder.() -> Unit = {}
+    ): ToolUse {
+        contract {
+            callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+        }
+        return Builder().also {
+            it.id = id
+            it.name = name
+            it.input = input
+            it.cacheControl = cacheControl
+            block(it)
+        }.build()
+    }
+
     private fun Any.toContent(): Content = this as? Content ?: Text(this.toString())
 
+}
+
+@OptIn(ExperimentalContracts::class)
+fun ToolUse(
+    block: ToolUse.Builder.() -> Unit
+): ToolUse {
+    contract {
+        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+    }
+    return ToolUse.Builder().apply(block).build()
 }
 
 @Serializable
@@ -117,21 +159,27 @@ class ToolResult private constructor(
             toolUseId = requireNotNull(toolUseId) {
                 "toolUseId cannot be null"
             },
-            content = buildList { addAll(content) },
+            content = if (content.isEmpty()) null else content,
             isError = isError,
             cacheControl = cacheControl
         )
 
     }
 
-    fun copy(block: Builder.() -> Unit = {}): ToolResult {
-        val builder = Builder()
-        builder.toolUseId = toolUseId
-        builder.content = content!!.toMutableList()
-        builder.isError = isError
-        builder.cacheControl = cacheControl
-        block(builder)
-        return builder.build()
+    @OptIn(ExperimentalContracts::class)
+    fun copy(
+        block: Builder.() -> Unit = {}
+    ): ToolResult {
+        contract {
+            callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+        }
+        return Builder().also {
+            it.toolUseId = toolUseId
+            it.content = content ?: emptyList()
+            it.isError = isError
+            it.cacheControl = cacheControl
+            block(it)
+        }.build()
     }
 
 }
@@ -143,5 +191,5 @@ inline fun ToolResult(
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
-    return ToolResult.Builder().also(block).build()
+    return ToolResult.Builder().apply(block).build()
 }

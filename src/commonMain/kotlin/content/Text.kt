@@ -19,6 +19,9 @@ package com.xemantic.ai.anthropic.content
 import com.xemantic.ai.anthropic.cache.CacheControl
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.InvocationKind
+import kotlin.contracts.contract
 
 @Serializable
 @SerialName("text")
@@ -34,22 +37,49 @@ class Text private constructor(
         var cacheControl: CacheControl? = null
 
         fun build(): Text = Text(
-            requireNotNull(text) { "text must be provided" },
+            requireNotNull(text) { "text cannot be null" },
             cacheControl
         )
 
     }
 
+    @OptIn(ExperimentalContracts::class)
+    fun copy(
+        block: Builder.() -> Unit = {}
+    ): Text {
+        contract {
+            callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+        }
+        return Builder().also {
+            it.text = text
+            it.cacheControl = cacheControl
+            block(it)
+
+        }.build()
+    }
+
 }
 
+@OptIn(ExperimentalContracts::class)
 fun Text(
     block: Text.Builder.() -> Unit
-): Text = Text.Builder().apply(block).build()
+): Text {
+    contract {
+        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+    }
+    return Text.Builder().apply(block).build()
+}
 
+@OptIn(ExperimentalContracts::class)
 fun Text(
     text: String,
     block: Text.Builder.() -> Unit = {}
-): Text = Text {
-    this.text = text
-    block(this)
+): Text {
+    contract {
+        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+    }
+    return Text {
+        this.text = text
+        block(this)
+    }
 }

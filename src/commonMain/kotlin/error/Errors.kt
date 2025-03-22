@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package com.xemantic.ai.anthropic.error
 
+import com.xemantic.ai.anthropic.AnthropicException
 import com.xemantic.ai.anthropic.Response
 import io.ktor.http.*
 import kotlinx.serialization.SerialName
@@ -35,7 +36,7 @@ data class Error(
 /**
  * An exception thrown when API requests returns error.
  */
-class AnthropicException(
-    error: Error,
-    httpStatusCode: HttpStatusCode
-) : RuntimeException(error.toString())
+class AnthropicApiException(
+    val error: Error,
+    val httpStatusCode: HttpStatusCode
+) : AnthropicException(error.toString())
