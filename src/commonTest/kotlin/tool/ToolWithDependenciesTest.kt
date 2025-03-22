@@ -43,9 +43,9 @@ class ToolWithDependenciesTest {
         var executedQuery: String? = null
     ) : Database {
         override suspend fun execute(
-            query: String
+            sql: String
         ): List<String> {
-            executedQuery = query
+            executedQuery = sql
             return listOf("foo", "bar", "buzz")
         }
     }

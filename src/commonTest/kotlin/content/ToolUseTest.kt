@@ -23,7 +23,7 @@ import com.xemantic.kotlin.test.should
 import io.kotest.assertions.json.shouldEqualJson
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
-import org.junit.Test
+import kotlin.test.Test
 import kotlin.test.assertFailsWith
 
 class ToolUseTest {
