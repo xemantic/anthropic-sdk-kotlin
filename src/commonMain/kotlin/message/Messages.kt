@@ -21,6 +21,7 @@ import com.xemantic.ai.anthropic.Response
 import com.xemantic.ai.anthropic.cache.CacheControl
 import com.xemantic.ai.anthropic.content.*
 import com.xemantic.ai.anthropic.json.toPrettyJson
+import com.xemantic.ai.anthropic.thinking.Thinking
 import com.xemantic.ai.anthropic.tool.Tool
 import com.xemantic.ai.anthropic.tool.ToolChoice
 import com.xemantic.ai.anthropic.usage.Usage
@@ -49,7 +50,7 @@ data class Metadata(
 )
 
 @Serializable
-data class MessageRequest(
+class MessageRequest private constructor(
     val model: String,
     val messages: List<Message>,
     @SerialName("max_tokens")
@@ -60,6 +61,7 @@ data class MessageRequest(
     val stream: Boolean?,
     val system: List<System>?,
     val temperature: Double?,
+    val thinking: Thinking?,
     @SerialName("tool_choice")
     val toolChoice: ToolChoice?,
     val tools: List<Tool>?,
@@ -79,6 +81,7 @@ data class MessageRequest(
             internal set
         var system: List<System>? = null
         var temperature: Double? = null
+        var thinking: Thinking? = null
         var toolChoice: ToolChoice? = null
         var tools: List<Tool> = emptyList()
         val topK: Int? = null
@@ -121,6 +124,7 @@ data class MessageRequest(
             stream = if ((stream != null) && stream!!) true else null,
             system = system,
             temperature = temperature,
+            thinking = thinking,
             toolChoice = toolChoice,
             tools = tools.toNullIfEmpty(),
             topK = topK,

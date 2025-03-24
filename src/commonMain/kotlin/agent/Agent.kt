@@ -64,6 +64,7 @@ class Agent(
         do {
             response = anthropic.messages.create {
                 tools = this@Agent.tools
+                // TODO maybe it can be a util method?
                 messages = conversation.transformLast {
                     copy {
                         content = content.transformLast {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,7 +54,7 @@ enum class Model(
     CLAUDE_3_7_SONNET(
         id = "claude-3-7-sonnet-latest",
         contextWindow = 200000,
-        maxOutput = 8182,
+        maxOutput = 8192,
         messageBatchesApi = true,
         cost = Cost(
             inputTokens = "3".dollarsPerMillion,
@@ -65,7 +65,7 @@ enum class Model(
     CLAUDE_3_7_SONNET_20250219(
         id = "claude-3-7-sonnet-20250219",
         contextWindow = 200000,
-        maxOutput = 8182,
+        maxOutput = 8192,
         messageBatchesApi = true,
         cost = Cost(
             inputTokens = "3".dollarsPerMillion,
@@ -76,7 +76,7 @@ enum class Model(
     CLAUDE_3_5_SONNET(
         id = "claude-3-5-sonnet-latest",
         contextWindow = 200000,
-        maxOutput = 8182,
+        maxOutput = 8192,
         messageBatchesApi = true,
         cost = Cost(
             inputTokens = "3".dollarsPerMillion,
@@ -87,7 +87,7 @@ enum class Model(
     CLAUDE_3_5_SONNET_20241022(
         id = "claude-3-5-sonnet-20241022",
         contextWindow = 200000,
-        maxOutput = 8182,
+        maxOutput = 8192,
         messageBatchesApi = true,
         cost = Cost(
             inputTokens = "3".dollarsPerMillion,
@@ -98,7 +98,7 @@ enum class Model(
     CLAUDE_3_5_HAIKU(
         id = "claude-3-5-haiku-latest",
         contextWindow = 200000,
-        maxOutput = 8182,
+        maxOutput = 8192,
         messageBatchesApi = true,
         cost = Cost(
             inputTokens = "0.80".dollarsPerMillion,
@@ -109,7 +109,7 @@ enum class Model(
     CLAUDE_3_5_HAIKU_20241022(
         id = "claude-3-5-haiku-20241022",
         contextWindow = 200000,
-        maxOutput = 8182,
+        maxOutput = 8192,
         messageBatchesApi = true,
         cost = Cost(
             inputTokens = "0.80".dollarsPerMillion,
@@ -120,7 +120,7 @@ enum class Model(
     CLAUDE_3_5_SONNET_20240620(
         id = "claude-3-5-sonnet-20240620",
         contextWindow = 200000,
-        maxOutput = 8182,
+        maxOutput = 8192,
         messageBatchesApi = true,
         cost = Cost(
             inputTokens = "3".dollarsPerMillion,

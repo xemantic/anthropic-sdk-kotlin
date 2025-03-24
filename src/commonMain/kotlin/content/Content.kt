@@ -17,6 +17,7 @@
 package com.xemantic.ai.anthropic.content
 
 import com.xemantic.ai.anthropic.cache.CacheControl
+import com.xemantic.ai.anthropic.json.WithAdditionalProperties
 import com.xemantic.ai.anthropic.json.toPrettyJson
 import com.xemantic.ai.file.magic.MediaType
 import com.xemantic.ai.file.magic.detectMediaType
@@ -26,6 +27,10 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonClassDiscriminator
+import kotlinx.serialization.json.JsonElement
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.InvocationKind
+import kotlin.contracts.contract
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
@@ -47,6 +52,41 @@ sealed class Content {
         is Document -> copy { this.cacheControl = cacheControl }
         is ToolUse -> copy { this.cacheControl = cacheControl }
         is ToolResult -> copy { this.cacheControl = cacheControl }
+        is Unknown -> copy { this.cacheControl = cacheControl }
+    }
+
+    @Serializable
+    class Unknown(
+        override val cacheControl: CacheControl?,
+        override val additionalProperties: Map<String, JsonElement?>?
+    ) : Content(), WithAdditionalProperties {
+
+        class Builder {
+
+            var cacheControl: CacheControl? = null
+            var additionalProperties: Map<String, JsonElement?>? = null
+
+            fun build(): Unknown = Unknown(
+                cacheControl,
+                additionalProperties
+            )
+
+        }
+
+        @OptIn(ExperimentalContracts::class)
+        fun copy(
+            block: Builder.() -> Unit = {}
+        ): Unknown {
+            contract {
+                callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+            }
+            return Builder().also {
+                it.additionalProperties = additionalProperties
+                it.cacheControl = cacheControl
+                block(it)
+            }.build()
+        }
+
     }
 
 }
