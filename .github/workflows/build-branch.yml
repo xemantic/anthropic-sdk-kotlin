@@ -17,13 +17,13 @@ jobs:
         uses: actions/checkout@v4.2.2
 
       - name: Setup Java
-        uses: actions/setup-java@v4.7.0
+        uses: actions/setup-java@v4.7.1
         with:
           distribution: 'temurin'
           java-version: 23
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4.3.0
+        uses: gradle/actions/setup-gradle@v4.3.1
 
       - name: Build
         run: ./gradlew -PjvmOnlyBuild=false build
