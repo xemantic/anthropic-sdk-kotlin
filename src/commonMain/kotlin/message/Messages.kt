@@ -70,7 +70,7 @@ data class MessageRequest(
     @SerialName("top_k")
     val topK: Int?,
     @SerialName("top_p")
-    val topP: Int?
+    val topP: Double?
 ) {
 
     class Builder() {
@@ -85,8 +85,8 @@ data class MessageRequest(
         var temperature: Double? = null
         var toolChoice: ToolChoice? = null
         var tools: List<Tool> = emptyList()
-        val topK: Int? = null
-        val topP: Int? = null
+        var topK: Int? = null
+        var topP: Double? = null
 
         fun messages(vararg messages: Message) {
             this.messages += messages.toList()
