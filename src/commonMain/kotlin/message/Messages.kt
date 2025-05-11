@@ -16,15 +16,19 @@
 
 package com.xemantic.ai.anthropic.message
 
+import com.xemantic.ai.anthropic.AnthropicModel
 import com.xemantic.ai.anthropic.Model
 import com.xemantic.ai.anthropic.Response
 import com.xemantic.ai.anthropic.cache.CacheControl
 import com.xemantic.ai.anthropic.content.*
+import com.xemantic.ai.anthropic.cost.CostWithUsage
 import com.xemantic.ai.anthropic.json.toPrettyJson
 import com.xemantic.ai.anthropic.tool.Tool
 import com.xemantic.ai.anthropic.tool.ToolChoice
 import com.xemantic.ai.anthropic.usage.Usage
-import kotlinx.serialization.*
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
@@ -250,6 +254,9 @@ data class MessageResponse(
     val usage: Usage
 ) : Response(type = "message") {
 
+    @Transient
+    internal lateinit var resolvedModel: AnthropicModel
+
     fun asMessage(): Message = Message {
         role = Role.ASSISTANT
         content += this@MessageResponse.content
@@ -277,6 +284,11 @@ data class MessageResponse(
         }
 
     val toolUses: List<ToolUse> get() = content.filterIsInstance<ToolUse>()
+
+    val costWithUsage: CostWithUsage get() = CostWithUsage(
+        cost = resolvedModel.cost * usage,
+        usage = usage
+    )
 
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package com.xemantic.ai.anthropic
 
-import com.xemantic.ai.anthropic.usage.Cost
+import com.xemantic.ai.anthropic.cost.Cost
 import com.xemantic.ai.money.Money
 import com.xemantic.ai.money.Ratio
 
@@ -31,6 +31,7 @@ interface AnthropicModel {
     val maxOutput: Int
     val messageBatchesApi: Boolean
     val cost: Cost
+
 }
 
 val ANTHROPIC_TOKEN_COST_RATIO = Money.Ratio("0.000001")
@@ -54,23 +55,23 @@ enum class Model(
     CLAUDE_3_7_SONNET(
         id = "claude-3-7-sonnet-latest",
         contextWindow = 200000,
-        maxOutput = 8182,
+        maxOutput = 64000,
         messageBatchesApi = true,
-        cost = Cost(
-            inputTokens = "3".dollarsPerMillion,
+        cost = Cost {
+            inputTokens = "3".dollarsPerMillion
             outputTokens = "15".dollarsPerMillion
-        )
+        }
     ),
 
     CLAUDE_3_7_SONNET_20250219(
         id = "claude-3-7-sonnet-20250219",
         contextWindow = 200000,
-        maxOutput = 8182,
+        maxOutput = 64000,
         messageBatchesApi = true,
-        cost = Cost(
-            inputTokens = "3".dollarsPerMillion,
+        cost = Cost {
+            inputTokens = "3".dollarsPerMillion
             outputTokens = "15".dollarsPerMillion
-        )
+        }
     ),
 
     CLAUDE_3_5_SONNET(
@@ -78,10 +79,10 @@ enum class Model(
         contextWindow = 200000,
         maxOutput = 8182,
         messageBatchesApi = true,
-        cost = Cost(
-            inputTokens = "3".dollarsPerMillion,
+        cost = Cost {
+            inputTokens = "3".dollarsPerMillion
             outputTokens = "15".dollarsPerMillion
-        )
+        }
     ),
 
     CLAUDE_3_5_SONNET_20241022(
@@ -89,10 +90,10 @@ enum class Model(
         contextWindow = 200000,
         maxOutput = 8182,
         messageBatchesApi = true,
-        cost = Cost(
-            inputTokens = "3".dollarsPerMillion,
+        cost = Cost {
+            inputTokens = "3".dollarsPerMillion
             outputTokens = "15".dollarsPerMillion
-        )
+        }
     ),
 
     CLAUDE_3_5_HAIKU(
@@ -100,10 +101,10 @@ enum class Model(
         contextWindow = 200000,
         maxOutput = 8182,
         messageBatchesApi = true,
-        cost = Cost(
-            inputTokens = "0.80".dollarsPerMillion,
+        cost = Cost {
+            inputTokens = "0.80".dollarsPerMillion
             outputTokens = "4".dollarsPerMillion
-        )
+        }
     ),
 
     CLAUDE_3_5_HAIKU_20241022(
@@ -111,10 +112,10 @@ enum class Model(
         contextWindow = 200000,
         maxOutput = 8182,
         messageBatchesApi = true,
-        cost = Cost(
-            inputTokens = "0.80".dollarsPerMillion,
+        cost = Cost {
+            inputTokens = "0.80".dollarsPerMillion
             outputTokens = "4".dollarsPerMillion
-        )
+        }
     ),
 
     CLAUDE_3_5_SONNET_20240620(
@@ -122,10 +123,10 @@ enum class Model(
         contextWindow = 200000,
         maxOutput = 8182,
         messageBatchesApi = true,
-        cost = Cost(
-            inputTokens = "3".dollarsPerMillion,
+        cost = Cost {
+            inputTokens = "3".dollarsPerMillion
             outputTokens = "15".dollarsPerMillion
-        )
+        }
     ),
 
     CLAUDE_3_OPUS(
@@ -133,10 +134,10 @@ enum class Model(
         contextWindow = 200000,
         maxOutput = 4096,
         messageBatchesApi = true,
-        cost = Cost(
-            inputTokens = "15".dollarsPerMillion,
+        cost = Cost {
+            inputTokens = "15".dollarsPerMillion
             outputTokens = "75".dollarsPerMillion
-        )
+        }
     ),
 
     CLAUDE_3_OPUS_20240229(
@@ -144,10 +145,10 @@ enum class Model(
         contextWindow = 200000,
         maxOutput = 4096,
         messageBatchesApi = true,
-        cost = Cost(
-            inputTokens = "15".dollarsPerMillion,
+        cost = Cost {
+            inputTokens = "15".dollarsPerMillion
             outputTokens = "75".dollarsPerMillion
-        )
+        }
     ),
 
     CLAUDE_3_SONNET_20240229(
@@ -155,10 +156,10 @@ enum class Model(
         contextWindow = 200000,
         maxOutput = 4096,
         messageBatchesApi = true,
-        cost = Cost(
-            inputTokens = "3".dollarsPerMillion,
+        cost = Cost {
+            inputTokens = "3".dollarsPerMillion
             outputTokens = "15".dollarsPerMillion
-        )
+        }
     ),
 
     CLAUDE_3_HAIKU_20240307(
@@ -166,10 +167,10 @@ enum class Model(
         contextWindow = 200000,
         maxOutput = 4096,
         messageBatchesApi = true,
-        cost = Cost(
-            inputTokens = "0.25".dollarsPerMillion,
+        cost = Cost {
+            inputTokens = "0.25".dollarsPerMillion
             outputTokens = "1.25".dollarsPerMillion
-        )
+        }
     );
 
     companion object {

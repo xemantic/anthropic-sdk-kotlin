@@ -155,6 +155,25 @@ For the reference check equivalent examples in the official Anthropic SDKs:
 * [Python](https://github.com/anthropics/anthropic-sdk-python/blob/main/examples/tools.py)
 * [Go](https://github.com/anthropics/anthropic-sdk-go/blob/main/examples/tools/main.go)
 
+### Calculating usage costs
+
+An instance of `Anthropic` client has a property `costWithUsage` of the [CostWithUsage](src/commonMain/kotlin/cost/CostCollection.kt) class which holds the cumulative usage statistics together with the overall cost calculation.
+
+Each returned `MessageResponse` also provides the `costWithUsage`. The [CostCollector](src/commonMain/kotlin/cost/CostCollection.kt) class can be used to cumulate this data by just adding `CostWithUsage` instance to the `CostCollector` instance:
+
+```kotlin
+val anthropic = Anthropic()
+val costCollector = CostCollector()
+// ...
+val response = anthropic.messages.create {
+    +"Hi Claude"
+}
+costCollector += response.costWithUsage
+```
+
+> [!NOTE]
+> The `CostCollector` is using atomic operations to ensure thread-safety in concurrent environment.
+
 ## Projects using anthropic-sdk-kotlin
 
 * [anthropic-sdk-kotlin-demo](https://github.com/xemantic/anthropic-sdk-kotlin-demo): more complex examples
@@ -171,7 +190,7 @@ export ANTHROPIC_API_KEY=your-key-goes-here
 
 Many [unit tests](src/commonTest/kotlin) are actually integration tests calling Anthropic APIs
 and asserting against results. This is the reason why they might be flaky from time to time. For
-example if the test image is misinterpreted, or Claude is randomly fantasizing too much.
+example, if the test image is misinterpreted, or Claude is randomly fantasizing too much.
 
 ## Project dependencies
 

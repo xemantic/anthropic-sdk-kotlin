@@ -18,7 +18,6 @@ package com.xemantic.ai.anthropic.agent
 
 import com.xemantic.ai.anthropic.Anthropic
 import com.xemantic.ai.anthropic.cache.CacheControl
-import com.xemantic.ai.anthropic.collections.transformLast
 import com.xemantic.ai.anthropic.content.Content
 import com.xemantic.ai.anthropic.content.Text
 import com.xemantic.ai.anthropic.content.ToolUse
@@ -27,6 +26,7 @@ import com.xemantic.ai.anthropic.message.MessageResponse
 import com.xemantic.ai.anthropic.message.StopReason
 import com.xemantic.ai.anthropic.message.plusAssign
 import com.xemantic.ai.anthropic.tool.Tool
+import com.xemantic.ai.anthropic.util.transformLast
 
 /**
  * This is highly experimental work in progress code. Most likely
@@ -64,10 +64,10 @@ class Agent(
         do {
             response = anthropic.messages.create {
                 tools = this@Agent.tools
-                messages = conversation.transformLast {
-                    copy {
-                        content = content.transformLast {
-                            alterCacheControl(
+                messages = conversation.transformLast { message ->
+                    message.copy {
+                        content = content.transformLast { contentElement ->
+                            contentElement.alterCacheControl(
                                 CacheControl.Ephemeral()
                             )
                         }

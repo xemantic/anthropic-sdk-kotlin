@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Kazimierz Pogoda / Xemantic
+ * Copyright 2025 Kazimierz Pogoda / Xemantic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.xemantic.ai.anthropic.usage
+package com.xemantic.ai.anthropic.cost
 
 import com.xemantic.ai.money.Money
 import com.xemantic.ai.money.ZERO
@@ -26,12 +26,12 @@ class CostTest {
 
     @Test
     fun `Should create a Cost instance with correct values`() {
-        Cost(
-            inputTokens = Money("0.001"),
-            outputTokens = Money("0.002"),
-            cacheCreationInputTokens = Money("0.00025"),
+        Cost {
+            inputTokens = Money("0.001")
+            outputTokens = Money("0.002")
+            cacheCreationInputTokens = Money("0.00025")
             cacheReadInputTokens = Money("0.0005")
-        ) should {
+        } should {
             have(inputTokens == Money("0.001"))
             have(outputTokens == Money("0.002"))
             have(cacheCreationInputTokens == Money("0.00025"))
@@ -44,10 +44,10 @@ class CostTest {
      */
     @Test
     fun `Should create a Cost instance with correct values when cache costs are not specified`() {
-        Cost(
-            inputTokens = Money("0.001"),
+        Cost {
+            inputTokens = Money("0.001")
             outputTokens = Money("0.002")
-        ) should {
+        } should {
             have(inputTokens == Money("0.001"))
             have(outputTokens == Money("0.002"))
             have(cacheCreationInputTokens == Money("0.00125"))
@@ -58,18 +58,18 @@ class CostTest {
     @Test
     fun `Should add two Cost instances without cache`() {
         // given
-        val cost1 = Cost(
-            inputTokens = Money("0.001"),
-            outputTokens = Money("0.002"),
-            cacheCreationInputTokens = Money.ZERO,
-            cacheReadInputTokens = Money.ZERO
-        )
-        val cost2 = Cost(
-            inputTokens = Money("0.003"),
-            outputTokens = Money("0.004"),
-            cacheCreationInputTokens = Money.ZERO,
-            cacheReadInputTokens = Money.ZERO
-        )
+        val cost1 = Cost {
+            inputTokens = Money("0.001")
+            outputTokens = Money("0.002")
+            cacheCreationInputTokens = Money.Companion.ZERO
+            cacheReadInputTokens = Money.Companion.ZERO
+        }
+        val cost2 = Cost {
+            inputTokens = Money("0.003")
+            outputTokens = Money("0.004")
+            cacheCreationInputTokens = Money.Companion.ZERO
+            cacheReadInputTokens = Money.Companion.ZERO
+        }
 
         // when
         val result = cost1 + cost2
@@ -78,26 +78,26 @@ class CostTest {
         result should {
             have(inputTokens == Money("0.004"))
             have(outputTokens == Money("0.006"))
-            have(cacheCreationInputTokens == Money.ZERO)
-            have(cacheReadInputTokens == Money.ZERO)
+            have(cacheCreationInputTokens == Money.Companion.ZERO)
+            have(cacheReadInputTokens == Money.Companion.ZERO)
         }
     }
 
     @Test
     fun `Should add two Cost instances with cache`() {
         // given
-        val cost1 = Cost(
-            inputTokens = Money("0.001"),
-            outputTokens = Money("0.002"),
-            cacheCreationInputTokens = Money("0.0001"),
-            cacheReadInputTokens = Money("0.0002"),
-        )
-        val cost2 = Cost(
-            inputTokens = Money("0.003"),
-            outputTokens = Money("0.004"),
-            cacheCreationInputTokens = Money("0.0003"),
+        val cost1 = Cost {
+            inputTokens = Money("0.001")
+            outputTokens = Money("0.002")
+            cacheCreationInputTokens = Money("0.0001")
+            cacheReadInputTokens = Money("0.0002")
+        }
+        val cost2 = Cost {
+            inputTokens = Money("0.003")
+            outputTokens = Money("0.004")
+            cacheCreationInputTokens = Money("0.0003")
             cacheReadInputTokens = Money("0.0004")
-        )
+        }
 
         // when
         val result = cost1 + cost2
@@ -113,12 +113,12 @@ class CostTest {
 
     @Test
     fun `Should calculate total cost`() {
-        Cost(
-            inputTokens = Money("0.001"),
-            outputTokens = Money("0.002"),
-            cacheCreationInputTokens = Money("0.0005"),
+        Cost {
+            inputTokens = Money("0.001")
+            outputTokens = Money("0.002")
+            cacheCreationInputTokens = Money("0.0005")
             cacheReadInputTokens = Money("0.0007")
-        ) should {
+        } should {
             have(total == Money("0.0042"))
         }
     }
@@ -126,10 +126,10 @@ class CostTest {
     @Test
     fun `Should create ZERO Cost instance`() {
         Cost.ZERO should {
-            have(inputTokens == Money.ZERO)
-            have(outputTokens == Money.ZERO)
-            have(cacheCreationInputTokens == Money.ZERO)
-            have(cacheReadInputTokens == Money.ZERO)
+            have(inputTokens == Money.Companion.ZERO)
+            have(outputTokens == Money.Companion.ZERO)
+            have(cacheCreationInputTokens == Money.Companion.ZERO)
+            have(cacheReadInputTokens == Money.Companion.ZERO)
         }
     }
 
