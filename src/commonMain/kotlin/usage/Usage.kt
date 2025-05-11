@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,17 @@
 
 package com.xemantic.ai.anthropic.usage
 
-import com.xemantic.ai.money.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.InvocationKind
+import kotlin.contracts.contract
 
+/**
+ * Represents API usage object,
+ */
 @Serializable
-data class Usage(
+class Usage private constructor(
     @SerialName("input_tokens")
     val inputTokens: Int,
     @SerialName("output_tokens")
@@ -29,8 +34,24 @@ data class Usage(
     @SerialName("cache_creation_input_tokens")
     val cacheCreationInputTokens: Int? = null,
     @SerialName("cache_read_input_tokens")
-    val cacheReadInputTokens: Int? = null,
+    val cacheReadInputTokens: Int? = null
 ) {
+
+    class Builder {
+
+        var inputTokens: Int? = null
+        var outputTokens: Int? = null
+        var cacheCreationInputTokens: Int? = null
+        var cacheReadInputTokens: Int? = null
+
+        fun build(): Usage = Usage(
+            requireNotNull(inputTokens) { "inputTokens cannot be null" },
+            requireNotNull(outputTokens) { "outputTokens cannot be null"},
+            cacheCreationInputTokens,
+            cacheReadInputTokens
+        )
+
+    }
 
     companion object {
 
@@ -50,53 +71,35 @@ data class Usage(
         cacheReadInputTokens = (cacheReadInputTokens ?: 0) + (usage.cacheReadInputTokens ?: 0)
     )
 
-    fun cost(
-        modelCost: Cost,
-        costRatio: Money.Ratio = Money.Ratio.ONE
-    ): Cost = Cost(
-        inputTokens = inputTokens * modelCost.inputTokens * costRatio,
-        outputTokens = outputTokens * modelCost.outputTokens * costRatio,
-        // how cacheCreation and batch are playing together?
-        cacheCreationInputTokens = (cacheCreationInputTokens ?: 0) * modelCost.cacheCreationInputTokens * costRatio,
-        cacheReadInputTokens = (cacheReadInputTokens ?: 0) * modelCost.cacheReadInputTokens * costRatio
-    )
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as Usage
+
+        if (inputTokens != other.inputTokens) return false
+        if (outputTokens != other.outputTokens) return false
+        if (cacheCreationInputTokens != other.cacheCreationInputTokens) return false
+        if (cacheReadInputTokens != other.cacheReadInputTokens) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = inputTokens
+        result = 31 * result + outputTokens
+        result = 31 * result + (cacheCreationInputTokens ?: 0)
+        result = 31 * result + (cacheReadInputTokens ?: 0)
+        return result
+    }
+
 
 }
 
-@Serializable
-data class Cost(
-    val inputTokens: Money,
-    val outputTokens: Money,
-    val cacheCreationInputTokens: Money = inputTokens * Money.Ratio("1.25"),
-    val cacheReadInputTokens: Money = inputTokens * Money.Ratio("0.1"),
-) {
-
-    operator fun plus(cost: Cost): Cost = Cost(
-        inputTokens = inputTokens + cost.inputTokens,
-        outputTokens = outputTokens + cost.outputTokens,
-        cacheCreationInputTokens = cacheCreationInputTokens + cost.cacheCreationInputTokens,
-        cacheReadInputTokens = cacheReadInputTokens + cost.cacheReadInputTokens
-    )
-
-    operator fun times(amount: Money): Cost = Cost(
-        inputTokens = inputTokens * amount,
-        outputTokens = outputTokens * amount,
-        cacheCreationInputTokens = cacheCreationInputTokens * amount,
-        cacheReadInputTokens = cacheReadInputTokens * amount
-    )
-
-    val total: Money
-        get() =
-            inputTokens +
-                    outputTokens +
-                    cacheCreationInputTokens +
-                    cacheReadInputTokens
-
-    companion object {
-        val ZERO = Cost(
-            inputTokens = Money.ZERO,
-            outputTokens = Money.ZERO
-        )
+@OptIn(ExperimentalContracts::class)
+fun Usage(block: Usage.Builder.() -> Unit): Usage {
+    contract {
+        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
-
+    return Usage.Builder().also(block).build()
 }
