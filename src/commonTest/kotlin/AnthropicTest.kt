@@ -31,14 +31,14 @@ import kotlin.test.Test
 class AnthropicTest {
 
     @Test
-    fun `Should create Anthropic instance with 0 Usage and Cost`() {
+    fun `should create Anthropic instance with 0 Usage and Cost`() {
         Anthropic() should {
             have(costWithUsage == CostWithUsage.ZERO)
         }
     }
 
     @Test
-    fun `Should receive an introduction from Claude`() = runTest {
+    fun `should receive an introduction from Claude`() = runTest {
         // given
         val anthropic = Anthropic()
 
@@ -66,7 +66,38 @@ class AnthropicTest {
     }
 
     @Test
-    fun `Should receive Usage and update Cost calculation`() = runTest {
+    fun `should use topK topP and temperature`() = runTest {
+        // given
+        val anthropic = Anthropic()
+
+        // when
+        val response = anthropic.messages.create {
+            +"Hello World! What's your name?"
+            topK = 40
+            topP = 0.7
+            temperature = 0.3
+        }
+
+        // then
+        response should {
+            have(role == Role.ASSISTANT)
+            have("claude" in model)
+            have(stopReason == StopReason.END_TURN)
+            have(content.size == 1)
+            content[0] should {
+                be<Text>()
+                have("Claude" in text)
+            }
+            have(stopSequence == null)
+            usage should {
+                have(inputTokens == 15)
+                have(outputTokens > 0)
+            }
+        }
+    }
+
+    @Test
+    fun `should receive Usage and update Cost calculation`() = runTest {
         // given
         val anthropic = Anthropic()
 
@@ -108,7 +139,7 @@ class AnthropicTest {
     }
 
     @Test
-    fun `Should use system prompt`() = runTest {
+    fun `should use system prompt`() = runTest {
         // given
         val anthropic = Anthropic()
 
