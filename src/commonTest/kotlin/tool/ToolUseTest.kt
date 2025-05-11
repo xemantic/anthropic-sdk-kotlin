@@ -46,7 +46,7 @@ class ToolUseTest {
         val initialResponse = client.messages.create {
             messages = conversation
             tools = mathTools
-            toolChoice = ToolChoice.Companion.Tool<Calculator>()
+            toolChoice = ToolChoice.Tool<Calculator>()
         }
         conversation += initialResponse
 
@@ -176,7 +176,7 @@ class ToolUseTest {
             system(systemPrompt)
             messages = conversation
             tools = mathTools
-            toolChoice = ToolChoice.Companion.Tool<FibonacciCalculator>()
+            toolChoice = ToolChoice.Tool<FibonacciCalculator>()
         }
         conversation += fibonacciResponse
 
@@ -194,7 +194,7 @@ class ToolUseTest {
         val calculatorResponse = client.messages.create {
             messages = conversation
             tools = mathTools
-            toolChoice = ToolChoice.Companion.Tool<Calculator>()
+            toolChoice = ToolChoice.Tool<Calculator>()
         }
         conversation += calculatorResponse
 

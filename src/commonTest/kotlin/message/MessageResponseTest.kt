@@ -78,10 +78,10 @@ class MessageResponseTest {
             have(stopReason == StopReason.TOOL_USE)
             have(stopSequence == null)
             have(
-                usage == Usage(
-                    inputTokens = 419,
+                usage == Usage {
+                    inputTokens = 419
                     outputTokens = 86
-                )
+                }
             )
             content[0] should {
                 be<ToolUse>()
@@ -107,10 +107,10 @@ class MessageResponseTest {
             model = "claude-3-5-sonnet-20241022",
             stopReason = StopReason.END_TURN,
             stopSequence = null,
-            usage = Usage(
-                inputTokens = 419,
+            usage = Usage {
+                inputTokens = 419
                 outputTokens = 86
-            )
+            }
         )
         assert(response.text == "bar")
     }
@@ -128,10 +128,10 @@ class MessageResponseTest {
             model = "claude-3-5-sonnet-20241022",
             stopReason = StopReason.END_TURN,
             stopSequence = null,
-            usage = Usage(
-                inputTokens = 419,
+            usage = Usage {
+                inputTokens = 419
                 outputTokens = 86
-            )
+            }
         )
         assert(response.text == "bar\nbuzz")
     }
@@ -154,10 +154,10 @@ class MessageResponseTest {
             model = "claude-3-5-sonnet-20241022",
             stopReason = StopReason.END_TURN,
             stopSequence = null,
-            usage = Usage(
-                inputTokens = 419,
+            usage = Usage {
+                inputTokens = 419
                 outputTokens = 86
-            )
+            }
         )
         assert(response.text == null)
     }
@@ -179,10 +179,10 @@ class MessageResponseTest {
             model = "claude-3-5-sonnet-20241022",
             stopReason = StopReason.END_TURN,
             stopSequence = null,
-            usage = Usage(
-                inputTokens = 419,
+            usage = Usage {
+                inputTokens = 419
                 outputTokens = 86
-            )
+            }
         )
         response.toolUse should {
             have(id == "42")
@@ -214,10 +214,10 @@ class MessageResponseTest {
             model = "claude-3-5-sonnet-20241022",
             stopReason = StopReason.END_TURN,
             stopSequence = null,
-            usage = Usage(
-                inputTokens = 419,
+            usage = Usage {
+                inputTokens = 419
                 outputTokens = 86
-            )
+            }
         )
         response.toolUse should {
             have(id == "42")
@@ -236,10 +236,10 @@ class MessageResponseTest {
             model = "claude-3-5-sonnet-20241022",
             stopReason = StopReason.END_TURN,
             stopSequence = null,
-            usage = Usage(
-                inputTokens = 419,
+            usage = Usage {
+                inputTokens = 419
                 outputTokens = 86
-            )
+            }
         )
         assert(response.toolUse == null)
     }
@@ -269,10 +269,10 @@ class MessageResponseTest {
             model = "claude-3-5-sonnet-20241022",
             stopReason = StopReason.END_TURN,
             stopSequence = null,
-            usage = Usage(
-                inputTokens = 419,
+            usage = Usage {
+                inputTokens = 419
                 outputTokens = 86
-            )
+            }
         )
         response.toolUses should {
             have(size == 2)
@@ -292,10 +292,10 @@ class MessageResponseTest {
             model = "claude-3-5-sonnet-20241022",
             stopReason = StopReason.END_TURN,
             stopSequence = null,
-            usage = Usage(
-                inputTokens = 419,
+            usage = Usage {
+                inputTokens = 419
                 outputTokens = 86
-            )
+            }
         )
         response should {
             have(toolUses.isEmpty())

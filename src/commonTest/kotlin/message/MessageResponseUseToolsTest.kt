@@ -259,10 +259,10 @@ class MessageResponseUseToolsTest {
         model = Model.CLAUDE_3_7_SONNET.id,
         stopReason = StopReason.TOOL_USE,
         stopSequence = null,
-        usage = Usage(
-            inputTokens = 419,
+        usage = Usage {
+            inputTokens = 419
             outputTokens = 86
-        )
+        }
     )
 
 }

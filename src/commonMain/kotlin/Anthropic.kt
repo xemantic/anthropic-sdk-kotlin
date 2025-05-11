@@ -17,16 +17,14 @@
 package com.xemantic.ai.anthropic
 
 import com.xemantic.ai.anthropic.content.ToolUse
+import com.xemantic.ai.anthropic.cost.CostCollector
+import com.xemantic.ai.anthropic.cost.CostWithUsage
 import com.xemantic.ai.anthropic.error.AnthropicApiException
 import com.xemantic.ai.anthropic.error.ErrorResponse
 import com.xemantic.ai.anthropic.event.Event
 import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.ai.anthropic.message.MessageRequest
 import com.xemantic.ai.anthropic.message.MessageResponse
-import com.xemantic.ai.anthropic.message.StopReason
-import com.xemantic.ai.anthropic.usage.Cost
-import com.xemantic.ai.anthropic.usage.Usage
-import com.xemantic.ai.anthropic.usage.UsageCollector
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.*
@@ -93,6 +91,10 @@ class Anthropic internal constructor(
     val logLevel: LogLevel,
     private val modelMap: Map<String, AnthropicModel>
 ) {
+
+    private val costCollector = CostCollector()
+
+    val costWithUsage: CostWithUsage get() = costCollector.costWithUsage
 
     class Config {
         var apiKey: String? = null
@@ -170,7 +172,7 @@ class Anthropic internal constructor(
             }.build()
         )
 
-        suspend fun create(
+        private suspend fun create(
             request: MessageRequest
         ): MessageResponse {
             val apiResponse = client.post("/v1/messages") {
@@ -180,20 +182,19 @@ class Anthropic internal constructor(
             val response = apiResponse.body<Response>()
             when (response) {
                 is MessageResponse -> response.apply {
-                    updateUsage(response)
-                    if (response.stopReason == StopReason.TOOL_USE) {
-                        val toolMap = request.tools!!.associateBy { it.name }
-                        content.filterIsInstance<ToolUse>()
-                            .forEach { toolUse ->
-                                val tool = toolMap[toolUse.name]
-                                if (tool != null) {
-                                    toolUse.tool = tool
-                                } else {
-                                    // Sometimes it happens that Claude is sending non-defined tool name in tool use
-                                    // TODO in the future it should go to the stderr
-                                    println("Error!!! Unexpected tool use: ${toolUse.name}")
-                                }
-                            }
+                    resolvedModel = anthropicModel
+                    costCollector += costWithUsage
+
+                    val toolMap = request.tools?.associateBy { it.name } ?: emptyMap()
+                    content.filterIsInstance<ToolUse>().forEach { toolUse ->
+                        val tool = toolMap[toolUse.name]
+                        if (tool != null) {
+                            toolUse.tool = tool
+                        } else {
+                            // Sometimes it happens that Claude is sending non-defined tool name in tool use
+                            // TODO in the future it should go to the stderr
+                            println("Error!!! Unexpected tool use: ${toolUse.name}")
+                        }
                     }
                 }
 
@@ -236,7 +237,8 @@ class Anthropic internal constructor(
                         // TODO we need better way of handling subsequent deltas with usage
                         if (event is Event.MessageStart) {
                             // TODO more rules are needed here
-                            updateUsage(event.message)
+                            //costCollector += usageWithCost
+                            //updateUsage(event.message)
                         }
                         emit(event)
                     }
@@ -247,14 +249,6 @@ class Anthropic internal constructor(
 
     val messages = Messages()
 
-    private val usageCollector = UsageCollector()
-
-    val usage: Usage get() = usageCollector.usage
-
-    val cost: Cost get() = usageCollector.cost
-
-    override fun toString(): String = "Anthropic($usage, $cost)"
-
     private val MessageResponse.anthropicModel: AnthropicModel
         get() = requireNotNull(
             modelMap[model]
@@ -262,13 +256,7 @@ class Anthropic internal constructor(
             "The model returned in the response is not known to Anthropic API client: $id"
         }
 
-    private fun updateUsage(response: MessageResponse) {
-        usageCollector.update(
-            modelCost = response.anthropicModel.cost,
-            usage = response.usage
-        )
-    }
-
+    override fun toString(): String = "Anthropic($costWithUsage)"
 }
 
 open class AnthropicException(

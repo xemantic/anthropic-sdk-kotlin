@@ -59,7 +59,7 @@ class MessageRequestTest {
                   ]
                 }
               ],
-              "max_tokens": 8182
+              "max_tokens": 64000
             }
         """
         // Note: max_tokens value will default to the max for a given model
@@ -93,7 +93,7 @@ class MessageRequestTest {
                   ]
                 }
               ],
-              "max_tokens": 8182
+              "max_tokens": 64000
             }
         """
         // Note: max_tokens value will default to the max for a given model
@@ -127,7 +127,7 @@ class MessageRequestTest {
                   ]
                 }
               ],
-              "max_tokens": 8182
+              "max_tokens": 64000
             }
         """
         // Note: max_tokens value will default to the max for a given model
@@ -193,7 +193,7 @@ class MessageRequestTest {
                   ]
                 }
               ],
-              "max_tokens": 8182,
+              "max_tokens": 64000,
               "tools": [
                 {
                   "type": "computer_20250124",
@@ -267,7 +267,7 @@ class MessageRequestTest {
                   ]
                 }
               ],
-              "max_tokens": 8182,
+              "max_tokens": 64000,
               "tool_choice": {
                 "type": "tool",
                 "name": "get_weather",

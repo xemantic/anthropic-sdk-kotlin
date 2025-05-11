@@ -35,7 +35,6 @@ import org.jreleaser.model.Active
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.plugin.serialization)
-    alias(libs.plugins.kotlinx.atomicfu)
     alias(libs.plugins.kotlin.plugin.power.assert)
     alias(libs.plugins.dokka)
     alias(libs.plugins.versions)
@@ -73,7 +72,7 @@ val kotlinTarget = KotlinVersion.fromVersion(libs.versions.kotlinTarget.get())
 
 val isReleaseBuild = !project.version.toString().endsWith("-SNAPSHOT")
 val jvmOnlyBuild: String? by project
-val isJvmOnlyBuild: Boolean = (jvmOnlyBuild == null) || (jvmOnlyBuild!!.uppercase() == "true")
+val isJvmOnlyBuild: Boolean = (jvmOnlyBuild == null) || (jvmOnlyBuild!!.lowercase() == "true")
 
 // we don't want to risk that a flaky test will crash the release build
 // and everything should be tested anyway after merging to the main branch

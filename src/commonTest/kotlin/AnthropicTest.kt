@@ -17,10 +17,9 @@
 package com.xemantic.ai.anthropic
 
 import com.xemantic.ai.anthropic.content.Text
+import com.xemantic.ai.anthropic.cost.CostWithUsage
 import com.xemantic.ai.anthropic.message.Role
 import com.xemantic.ai.anthropic.message.StopReason
-import com.xemantic.ai.anthropic.usage.Cost
-import com.xemantic.ai.anthropic.usage.Usage
 import com.xemantic.ai.money.Money
 import com.xemantic.ai.money.ZERO
 import com.xemantic.kotlin.test.be
@@ -34,8 +33,7 @@ class AnthropicTest {
     @Test
     fun `Should create Anthropic instance with 0 Usage and Cost`() {
         Anthropic() should {
-            have(usage == Usage.ZERO)
-            have(cost == Cost.ZERO)
+            have(costWithUsage == CostWithUsage.ZERO)
         }
     }
 
@@ -92,7 +90,7 @@ class AnthropicTest {
             }
         }
 
-        anthropic should {
+        anthropic.costWithUsage should {
             usage should {
                 have(inputTokens == 21)
                 have(inputTokens > 0)
