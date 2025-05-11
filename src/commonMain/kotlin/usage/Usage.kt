@@ -16,6 +16,7 @@
 
 package com.xemantic.ai.anthropic.usage
 
+import com.xemantic.ai.anthropic.json.toPrettyJson
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.contracts.ExperimentalContracts
@@ -93,6 +94,7 @@ class Usage private constructor(
         return result
     }
 
+    override fun toString(): String = toPrettyJson()
 
 }
 

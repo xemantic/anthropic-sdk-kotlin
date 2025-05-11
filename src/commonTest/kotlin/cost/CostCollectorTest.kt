@@ -37,10 +37,22 @@ class CostCollectorTest {
     @Test
     fun `toString should return String representation of UsageCollector`() {
         assert(
-            CostCollector().toString() ==
-                    "UsageCollector(usage=" +
-                    "Usage(inputTokens=0, outputTokens=0, cacheCreationInputTokens=0, cacheReadInputTokens=0), cost=" +
-                    "Cost(inputTokens=0, outputTokens=0, cacheCreationInputTokens=0, cacheReadInputTokens=0))"
+            CostCollector().toString() == """
+                CostCollector {
+                  "cost": {
+                    "inputTokens": "0",
+                    "outputTokens": "0",
+                    "cacheCreationInputTokens": "0",
+                    "cacheReadInputTokens": "0"
+                  },
+                  "usage": {
+                    "input_tokens": 0,
+                    "output_tokens": 0,
+                    "cache_creation_input_tokens": 0,
+                    "cache_read_input_tokens": 0
+                  }
+                }
+            """.trimIndent()
         )
     }
 
@@ -48,12 +60,13 @@ class CostCollectorTest {
     fun `Should update cost and usage`() {
         // given
         val collector = CostCollector()
+        val usage = Usage {
+            inputTokens = 1000
+            outputTokens = 1000
+        }
         val costWithUsage = CostWithUsage(
-            usage = Usage {
-                inputTokens = 1000
-                outputTokens = 1000
-            },
-            cost = Model.Companion.DEFAULT.cost
+            cost = Model.DEFAULT.cost * usage,
+            usage = usage,
         )
 
         // when
@@ -65,16 +78,14 @@ class CostCollectorTest {
                 usage == Usage {
                     inputTokens = 1000
                     outputTokens = 1000
-                    cacheCreationInputTokens = 0
-                    cacheReadInputTokens = 0
                 }
             )
             have(
                 cost == Cost {
                     inputTokens = Money(".003")
                     outputTokens = Money(".015")
-                    cacheCreationInputTokens = Money.Companion.ZERO
-                    cacheReadInputTokens = Money.Companion.ZERO
+                    cacheCreationInputTokens = Money.ZERO
+                    cacheReadInputTokens = Money.ZERO
                 }
             )
         }
@@ -93,16 +104,16 @@ class CostCollectorTest {
 
         // when
         collector += CostWithUsage(
+            cost = Model.CLAUDE_3_5_SONNET.cost * testUsage,
             usage = testUsage,
-            cost = Model.CLAUDE_3_5_SONNET.cost
         )
         collector += CostWithUsage(
-            usage = testUsage,
-            cost = Model.CLAUDE_3_5_HAIKU.cost
+            cost = Model.CLAUDE_3_5_HAIKU.cost * testUsage,
+            usage = testUsage
         )
         collector += CostWithUsage(
-            usage = testUsage,
-            cost = Model.CLAUDE_3_OPUS.cost
+            cost = Model.CLAUDE_3_OPUS.cost * testUsage,
+            usage = testUsage
         )
 
         // then

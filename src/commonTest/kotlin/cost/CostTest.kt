@@ -61,14 +61,14 @@ class CostTest {
         val cost1 = Cost {
             inputTokens = Money("0.001")
             outputTokens = Money("0.002")
-            cacheCreationInputTokens = Money.Companion.ZERO
-            cacheReadInputTokens = Money.Companion.ZERO
+            cacheCreationInputTokens = Money.ZERO
+            cacheReadInputTokens = Money.ZERO
         }
         val cost2 = Cost {
             inputTokens = Money("0.003")
             outputTokens = Money("0.004")
-            cacheCreationInputTokens = Money.Companion.ZERO
-            cacheReadInputTokens = Money.Companion.ZERO
+            cacheCreationInputTokens = Money.ZERO
+            cacheReadInputTokens = Money.ZERO
         }
 
         // when
@@ -78,8 +78,8 @@ class CostTest {
         result should {
             have(inputTokens == Money("0.004"))
             have(outputTokens == Money("0.006"))
-            have(cacheCreationInputTokens == Money.Companion.ZERO)
-            have(cacheReadInputTokens == Money.Companion.ZERO)
+            have(cacheCreationInputTokens == Money.ZERO)
+            have(cacheReadInputTokens == Money.ZERO)
         }
     }
 
@@ -126,10 +126,10 @@ class CostTest {
     @Test
     fun `Should create ZERO Cost instance`() {
         Cost.ZERO should {
-            have(inputTokens == Money.Companion.ZERO)
-            have(outputTokens == Money.Companion.ZERO)
-            have(cacheCreationInputTokens == Money.Companion.ZERO)
-            have(cacheReadInputTokens == Money.Companion.ZERO)
+            have(inputTokens == Money.ZERO)
+            have(outputTokens == Money.ZERO)
+            have(cacheCreationInputTokens == Money.ZERO)
+            have(cacheReadInputTokens == Money.ZERO)
         }
     }
 

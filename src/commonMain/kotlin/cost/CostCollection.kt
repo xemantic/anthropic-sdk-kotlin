@@ -16,6 +16,7 @@
 
 package com.xemantic.ai.anthropic.cost
 
+import com.xemantic.ai.anthropic.json.toPrettyJson
 import com.xemantic.ai.anthropic.usage.Usage
 import com.xemantic.ai.anthropic.util.update
 import kotlinx.serialization.Serializable
@@ -40,6 +41,8 @@ data class CostWithUsage(
         val ZERO = CostWithUsage(Cost.ZERO,  Usage.ZERO)
 
     }
+
+    override fun toString(): String = toPrettyJson()
 
 }
 
@@ -70,6 +73,6 @@ class CostCollector {
      *
      * @return A string containing the current usage and cost.
      */
-    override fun toString(): String = "UsageAndCostCollector(${_costWithUsage.load()})"
+    override fun toString(): String = "CostCollector ${_costWithUsage.load()}"
 
 }

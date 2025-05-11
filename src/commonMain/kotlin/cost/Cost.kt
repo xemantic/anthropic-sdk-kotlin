@@ -16,6 +16,7 @@
 
 package com.xemantic.ai.anthropic.cost
 
+import com.xemantic.ai.anthropic.json.toPrettyJson
 import com.xemantic.ai.anthropic.usage.Usage
 import com.xemantic.ai.money.Money
 import com.xemantic.ai.money.Ratio
@@ -29,8 +30,8 @@ import kotlin.contracts.contract
 class Cost private constructor(
     val inputTokens: Money,
     val outputTokens: Money,
-    val cacheCreationInputTokens: Money = inputTokens * Money.Ratio("1.25"),
-    val cacheReadInputTokens: Money = inputTokens * Money.Ratio("0.1"),
+    val cacheCreationInputTokens: Money,
+    val cacheReadInputTokens: Money,
 ) {
 
     class Builder {
@@ -41,10 +42,18 @@ class Cost private constructor(
         var cacheReadInputTokens: Money? = null
 
         fun build(): Cost = Cost(
-            requireNotNull(inputTokens) { "inputTokens cannot be null" },
-            requireNotNull(outputTokens) { "outputTokens cannot be null" },
-            requireNotNull(cacheCreationInputTokens) { "cacheCreationInputTokens cannot be null" },
-            requireNotNull(cacheReadInputTokens) { "cacheReadInputTokens cannot be null" }
+            inputTokens = requireNotNull(inputTokens) { "inputTokens cannot be null" },
+            outputTokens = requireNotNull(outputTokens) { "outputTokens cannot be null" },
+            cacheCreationInputTokens = if (cacheCreationInputTokens != null) {
+                cacheCreationInputTokens!!
+            } else {
+                inputTokens!! * Money.Ratio("1.25")
+            },
+            cacheReadInputTokens = if (cacheReadInputTokens != null) {
+                cacheReadInputTokens!!
+            } else {
+                inputTokens!! * Money.Ratio("0.1")
+            }
         )
 
     }
@@ -80,7 +89,9 @@ class Cost private constructor(
     companion object {
         val ZERO = Cost(
             inputTokens = Money.ZERO,
-            outputTokens = Money.ZERO
+            outputTokens = Money.ZERO,
+            cacheCreationInputTokens = Money.ZERO,
+            cacheReadInputTokens = Money.ZERO
         )
     }
 
@@ -105,6 +116,8 @@ class Cost private constructor(
         result = 31 * result + cacheReadInputTokens.hashCode()
         return result
     }
+
+    override fun toString(): String = toPrettyJson()
 
 }
 

@@ -172,7 +172,7 @@ class Anthropic internal constructor(
             }.build()
         )
 
-        suspend fun create(
+        private suspend fun create(
             request: MessageRequest
         ): MessageResponse {
             val apiResponse = client.post("/v1/messages") {
@@ -185,8 +185,8 @@ class Anthropic internal constructor(
                     resolvedModel = anthropicModel
                     costCollector += costWithUsage
 
-                    val toolMap = request.tools!!.associateBy { it.name }
-                    content.filterIsInstance<ToolUse>() .forEach { toolUse ->
+                    val toolMap = request.tools?.associateBy { it.name } ?: emptyMap()
+                    content.filterIsInstance<ToolUse>().forEach { toolUse ->
                         val tool = toolMap[toolUse.name]
                         if (tool != null) {
                             toolUse.tool = tool

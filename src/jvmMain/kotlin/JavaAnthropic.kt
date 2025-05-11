@@ -44,9 +44,7 @@ class JavaAnthropic private constructor(
         fun createBlocking(
             builder: Consumer<MessageRequest.Builder>
         ): MessageResponse = runBlocking {
-            val kotlinBuilder = MessageRequest.Builder()
-            builder.accept(kotlinBuilder)
-            anthropic.messages.create(kotlinBuilder.build())
+            anthropic.messages.create { builder.accept(this) }
         }
 
     }
@@ -56,8 +54,4 @@ class JavaAnthropic private constructor(
 
 }
 
-inline fun <reified T> noOpConsumer(): Consumer<T> = object : Consumer<T> {
-    override fun accept(any: T) {
-        /* do nothing*/
-    }
-}
+inline fun <reified T> noOpConsumer(): Consumer<T> = Consumer<T> { /* do nothing*/ }

@@ -45,7 +45,7 @@ class CostReportTest {
                 outputTokens = 86
             }
         ).apply {
-            resolvedModel = Model.Companion.DEFAULT
+            resolvedModel = Model.DEFAULT
         }
         val usageWithCost = response.costWithUsage
         collector += usageWithCost
