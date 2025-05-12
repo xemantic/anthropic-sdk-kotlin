@@ -138,7 +138,7 @@ class Anthropic internal constructor(
                 if (response.status != HttpStatusCode.OK
                     && !(response.status in retriableResponses || response.status.value >= 500)) {
                     val bytes = response.readRawBytes()
-                    val errorString = String(bytes)
+                    val errorString = bytes.decodeToString()
                     val errorResponse = anthropicJson.decodeFromString<ErrorResponse>(errorString)
                     throw AnthropicApiException(
                         error = errorResponse.error,
