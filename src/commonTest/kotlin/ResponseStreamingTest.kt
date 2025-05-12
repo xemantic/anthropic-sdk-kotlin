@@ -26,9 +26,11 @@ import com.xemantic.ai.anthropic.message.toMessageResponse
 import com.xemantic.kotlin.test.assert
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
+import io.ktor.client.HttpClient
+import io.ktor.client.request.get
+import io.ktor.client.statement.bodyAsText
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.test.runTest
-import java.net.URI
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 import kotlin.test.fail
@@ -125,6 +127,8 @@ class ResponseStreamingTest {
 
 }
 
-fun fetchText(
+suspend fun fetchText(
     url: String
-): String = URI(url).toURL().readText()
+): String = HttpClient().run {
+    get(url).bodyAsText()
+}
