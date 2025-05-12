@@ -104,9 +104,23 @@ fun main() = runBlocking {
     client.messages.stream {
         +"Write me a poem."
     }
-        .filterIsInstance<ContentBlockDeltaEvent>()
-        .map { (it.delta as Delta.TextDelta).text }
+        .filter { it.delta is Event.ContentBlockDelta.Delta.TextDelta }
+        .map { (it.delta as Event.ContentBlockDelta.Delta.TextDelta).text }
         .collect { delta -> print(delta) }
+}
+```
+
+The `toMessageResponse` function will return the complete `MessageResponse` from the stream:
+
+```kotlin
+fun main() = runBlocking {
+    val client = Anthropic()
+    val response = client.messages.stream {
+        +"Write me a poem."
+    }
+        .onEach { println("Event: $it") }
+        .toMessageResponse()
+    println(response)
 }
 ```
 

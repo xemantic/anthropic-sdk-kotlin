@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,39 +16,42 @@
 
 package com.xemantic.ai.anthropic.event
 
+import com.xemantic.ai.anthropic.AnthropicModel
 import com.xemantic.ai.anthropic.message.MessageResponse
 import com.xemantic.ai.anthropic.message.StopReason
-import kotlinx.serialization.ExperimentalSerializationApi
+import com.xemantic.ai.anthropic.tool.Tool
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonClassDiscriminator
+import kotlinx.serialization.Transient
+import kotlinx.serialization.json.JsonObject
 
 // reference https://docs.spring.io/spring-ai/reference/_images/anthropic-claude3-events-model.jpg
 
 @Serializable
-@JsonClassDiscriminator("type")
-@OptIn(ExperimentalSerializationApi::class)
-sealed class Event {
+sealed interface Event {
 
     @Serializable
     @SerialName("message_start")
     data class MessageStart(
         val message: MessageResponse
-    ) : Event()
+    ) : Event {
+        @Transient
+        lateinit var resolvedModel: AnthropicModel
+    }
 
     @Serializable
     @SerialName("message_delta")
     data class MessageDelta(
         val delta: Delta,
         val usage: Usage
-    ) : Event() {
+    ) : Event {
 
         @Serializable
         data class Delta(
             @SerialName("stop_reason")
             val stopReason: StopReason,
             @SerialName("stop_sequence")
-            val stopSequence: String? // TODO is that correct?
+            val stopSequence: String?
         )
 
         @Serializable
@@ -61,7 +64,11 @@ sealed class Event {
 
     @Serializable
     @SerialName("message_stop")
-    class MessageStop : Event() {
+    class MessageStop : Event {
+        @Transient
+        lateinit var resolvedModel: AnthropicModel
+        @Transient
+        lateinit var toolMap: Map<String, Tool>
         override fun toString(): String = "MessageStop"
     }
 
@@ -71,18 +78,27 @@ sealed class Event {
         val index: Int,
         @SerialName("content_block")
         val contentBlock: ContentBlock
-    ) : Event()
+    ) : Event {
 
-    @Serializable
-    @SerialName("content_block_stop")
-    data class ContentBlockStop(
-        val index: Int
-    ) : Event()
+        @Serializable
+        sealed class ContentBlock {
 
-    @Serializable
-    @SerialName("ping")
-    class Ping : Event() {
-        override fun toString(): String = "Ping"
+            @Serializable
+            @SerialName("text")
+            data class Text(
+                val text: String
+            ) : ContentBlock()
+
+            @Serializable
+            @SerialName("tool_use")
+            data class ToolUse(
+                val id: String,
+                val name: String,
+                val input: JsonObject // this is not being used, because the whole JSON comes in delta
+            ) : ContentBlock()
+
+        }
+
     }
 
     @Serializable
@@ -90,44 +106,44 @@ sealed class Event {
     data class ContentBlockDelta(
         val index: Int,
         val delta: Delta
-    ) : Event()
+    ) : Event {
 
-}
+        @Serializable
+        sealed class Delta {
 
+            @Serializable
+            @SerialName("text_delta")
+            data class TextDelta(
+                val text: String
+            ) : Delta()
 
-// TODO error event is missing, should we rename all of these to events?
+            @Serializable
+            @SerialName("input_json_delta")
+            data class InputJsonDelta(
+                @SerialName("partial_json")
+                val partialJson: String
+            ) : Delta()
 
+        }
 
-@Serializable
-@JsonClassDiscriminator("type")
-@OptIn(ExperimentalSerializationApi::class)
-sealed class ContentBlock {
-
-    @Serializable
-    @SerialName("text")
-    class Text(
-        val text: String
-    ) : ContentBlock()
-
-    @Serializable
-    @SerialName("tool_use")
-    class ToolUse(
-        val text: String // TODO tool_id
-    ) : ContentBlock()
-
-}
-
-
-@Serializable
-@JsonClassDiscriminator("type")
-@OptIn(ExperimentalSerializationApi::class)
-sealed class Delta {
+    }
 
     @Serializable
-    @SerialName("text_delta")
-    data class TextDelta(
-        val text: String
-    ) : Delta()
+    @SerialName("content_block_stop")
+    data class ContentBlockStop(
+        val index: Int
+    ) : Event
+
+    @Serializable
+    @SerialName("ping")
+    class Ping : Event {
+        override fun toString(): String = "Ping"
+    }
+
+    @Serializable
+    @SerialName("error")
+    data class Error(
+        val error: com.xemantic.ai.anthropic.error.Error
+    ) : Event
 
 }
-

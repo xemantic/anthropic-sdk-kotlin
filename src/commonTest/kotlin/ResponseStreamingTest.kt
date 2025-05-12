@@ -16,14 +16,22 @@
 
 package com.xemantic.ai.anthropic
 
-import com.xemantic.ai.anthropic.event.Delta.TextDelta
+import com.xemantic.ai.anthropic.content.Text
+import com.xemantic.ai.anthropic.error.AnthropicApiException
 import com.xemantic.ai.anthropic.event.Event
+import com.xemantic.ai.anthropic.message.Message
+import com.xemantic.ai.anthropic.message.addCacheBreakpoint
+import com.xemantic.ai.anthropic.message.plusAssign
+import com.xemantic.ai.anthropic.message.toMessageResponse
 import com.xemantic.kotlin.test.assert
-import kotlinx.coroutines.flow.filterIsInstance
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.toList
+import com.xemantic.kotlin.test.have
+import com.xemantic.kotlin.test.should
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.test.runTest
+import java.net.URI
 import kotlin.test.Test
+import kotlin.test.assertFailsWith
+import kotlin.test.fail
 
 class ResponseStreamingTest {
 
@@ -37,7 +45,8 @@ class ResponseStreamingTest {
             +"Say: 'The sun slowly dipped below the horizon, painting the sky in a breathtaking array of oranges, pinks, and purples.'"
         }
             .filterIsInstance<Event.ContentBlockDelta>()
-            .map { (it.delta as TextDelta).text }
+            .filter { it.delta is Event.ContentBlockDelta.Delta.TextDelta }
+            .map { (it.delta as Event.ContentBlockDelta.Delta.TextDelta).text }
             .toList()
             .joinToString(separator = "|")
 
@@ -47,4 +56,75 @@ class ResponseStreamingTest {
         assert(response == "The sun slowly dipped below the horizon, painting the sky in a breathtaking array of oranges, pinks, and purples.")
     }
 
+    @Test
+    fun `should analyze a text big enough to activate caching`() = runTest {
+        val text = fetchText("https://www.gutenberg.org/files/1342/1342-0.txt").take(5000) // Pride and Prejudice
+        val anthropic = Anthropic()
+        val conversation = mutableListOf<Message>()
+
+        conversation += Message {
+            +Text(text)
+            +"Analyze this text"
+        }
+        val response1 = anthropic.messages.stream {
+            messages = conversation.addCacheBreakpoint()
+        }.onEach {
+            if (it is Event.ContentBlockDelta && it.delta is Event.ContentBlockDelta.Delta.TextDelta) {
+                print(it.delta.text)
+            }
+        }.toMessageResponse()
+        conversation += response1
+
+        response1 should {
+            have("Austen" in text)
+            if (usage.cacheReadInputTokens != null && usage.cacheCreationInputTokens != null) {
+                have(usage.cacheReadInputTokens >= 0)
+                have( usage.cacheCreationInputTokens >= 0)
+            } else {
+                fail("Usage: cacheReadInputTokens and cacheCreationInputTokens must be provided")
+            }
+        }
+
+        conversation += "What do you think about this book?"
+        val response2 = anthropic.messages.stream {
+            messages = conversation.addCacheBreakpoint()
+        }.onEach {
+            if (it is Event.ContentBlockDelta && it.delta is Event.ContentBlockDelta.Delta.TextDelta) {
+                print(it.delta.text)
+            }
+        }.toMessageResponse()
+        response2 should {
+            if (usage.cacheReadInputTokens != null && usage.cacheCreationInputTokens != null) {
+                have(usage.cacheReadInputTokens > 0)
+                have( usage.cacheCreationInputTokens > 0)
+            } else {
+                fail("Usage: cacheReadInputTokens and cacheCreationInputTokens must be provided")
+            }
+        }
+    }
+
+    @Test
+    fun `should return error when error is expected`() = runTest {
+        // given
+        val anthropic = Anthropic()
+
+        // when
+        val exception = assertFailsWith<AnthropicApiException> {
+            anthropic.messages.stream {
+                maxTokens = 1000000000
+                +"Foo"
+            }.toMessageResponse()
+        }
+
+        // then
+        exception.error should {
+            have(type == "invalid_request_error")
+            have(message == "max_tokens: 1000000000 > 64000, which is the maximum allowed number of output tokens for claude-3-7-sonnet-20250219")
+        }
+    }
+
 }
+
+fun fetchText(
+    url: String
+): String = URI(url).toURL().readText()

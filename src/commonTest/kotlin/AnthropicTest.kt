@@ -18,6 +18,7 @@ package com.xemantic.ai.anthropic
 
 import com.xemantic.ai.anthropic.content.Text
 import com.xemantic.ai.anthropic.cost.CostWithUsage
+import com.xemantic.ai.anthropic.error.AnthropicApiException
 import com.xemantic.ai.anthropic.message.Role
 import com.xemantic.ai.anthropic.message.StopReason
 import com.xemantic.ai.money.Money
@@ -25,8 +26,10 @@ import com.xemantic.ai.money.ZERO
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
+import io.ktor.http.*
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
+import kotlin.test.assertFailsWith
 
 class AnthropicTest {
 
@@ -156,6 +159,29 @@ class AnthropicTest {
             content[0] should {
                 be<Text>()
                 have(text == "HAHAHA")
+            }
+        }
+    }
+
+    @Test
+    fun `should return error when error is expected`() = runTest {
+        // given
+        val anthropic = Anthropic()
+
+        // when
+        val exception = assertFailsWith<AnthropicApiException> {
+            anthropic.messages.create {
+                maxTokens = 1000000000
+                +"Foo"
+            }
+        }
+
+        // then
+        exception should {
+            have(httpStatusCode == HttpStatusCode.BadRequest)
+            error should {
+                have(type == "invalid_request_error")
+                have(message == "max_tokens: 1000000000 > 64000, which is the maximum allowed number of output tokens for claude-3-7-sonnet-20250219")
             }
         }
     }

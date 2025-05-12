@@ -16,6 +16,7 @@
 
 package com.xemantic.ai.anthropic
 
+import com.xemantic.ai.anthropic.content.Content
 import com.xemantic.ai.anthropic.content.ToolUse
 import com.xemantic.ai.anthropic.cost.CostCollector
 import com.xemantic.ai.anthropic.cost.CostWithUsage
@@ -25,6 +26,8 @@ import com.xemantic.ai.anthropic.event.Event
 import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.ai.anthropic.message.MessageRequest
 import com.xemantic.ai.anthropic.message.MessageResponse
+import com.xemantic.ai.anthropic.tool.Tool
+import com.xemantic.ai.anthropic.usage.Usage
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.*
@@ -32,6 +35,7 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.client.plugins.sse.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.flow.Flow
@@ -119,18 +123,34 @@ class Anthropic internal constructor(
 
     private val client = HttpClient {
 
-        val retriableResponses = setOf<HttpStatusCode>(
+        val retriableResponses = setOf(
             HttpStatusCode.RequestTimeout,
             HttpStatusCode.Conflict,
             HttpStatusCode.TooManyRequests,
             HttpStatusCode.InternalServerError
         )
 
+        // declaration order matters :(
+        install(SSE)
+
+        HttpResponseValidator {
+            validateResponse { response ->
+                if (response.status != HttpStatusCode.OK
+                    && !(response.status in retriableResponses || response.status.value >= 500)) {
+                    val bytes = response.readRawBytes()
+                    val errorString = String(bytes)
+                    val errorResponse = anthropicJson.decodeFromString<ErrorResponse>(errorString)
+                    throw AnthropicApiException(
+                        error = errorResponse.error,
+                        httpStatusCode = response.status
+                    )
+                }
+            }
+        }
+
         install(ContentNegotiation) {
             json(anthropicJson)
         }
-
-        install(SSE)
 
         if (logLevel != LogLevel.NONE) {
             install(Logging) {
@@ -181,28 +201,16 @@ class Anthropic internal constructor(
             }
             val response = apiResponse.body<Response>()
             when (response) {
-                is MessageResponse -> response.apply {
-                    resolvedModel = anthropicModel
-                    costCollector += costWithUsage
-
-                    val toolMap = request.tools?.associateBy { it.name } ?: emptyMap()
-                    content.filterIsInstance<ToolUse>().forEach { toolUse ->
-                        val tool = toolMap[toolUse.name]
-                        if (tool != null) {
-                            toolUse.tool = tool
-                        } else {
-                            // Sometimes it happens that Claude is sending non-defined tool name in tool use
-                            // TODO in the future it should go to the stderr
-                            println("Error!!! Unexpected tool use: ${toolUse.name}")
-                        }
-                    }
+                is MessageResponse -> {
+                    val toolMap = request.toolMap
+                    response.resolvedModel = response.anthropicModel
+                    response.content.resolveTools(toolMap)
+                    costCollector += response.costWithUsage
                 }
-
-                is ErrorResponse -> throw AnthropicApiException(
+                is ErrorResponse -> throw AnthropicApiException( // technically, this should be handled by the validator
                     error = response.error,
                     httpStatusCode = apiResponse.status
                 )
-
                 else -> throw RuntimeException(
                     "Unsupported response: $response"
                 ) // should never happen
@@ -221,27 +229,50 @@ class Anthropic internal constructor(
                 stream = true
             }.build()
 
-            client.sse(
-                urlString = "/v1/messages",
-                request = {
-                    method = HttpMethod.Post
-                    contentType(ContentType.Application.Json)
-                    setBody(request)
-                }
-            ) {
-                incoming
-                    .map { it.data }
-                    .filterNotNull()
-                    .map { anthropicJson.decodeFromString<Event>(it) }
-                    .collect { event ->
-                        // TODO we need better way of handling subsequent deltas with usage
-                        if (event is Event.MessageStart) {
-                            // TODO more rules are needed here
-                            //costCollector += usageWithCost
-                            //updateUsage(event.message)
-                        }
-                        emit(event)
+            try {
+                client.sse(
+                    urlString = "/v1/messages",
+                    request = {
+                        method = HttpMethod.Post
+                        contentType(ContentType.Application.Json)
+                        setBody(request)
                     }
+                ) {
+                    var usage = Usage.ZERO
+                    var resolvedModel: AnthropicModel? = null
+                    incoming
+                        .map { it.data }
+                        .filterNotNull()
+                        .map { anthropicJson.decodeFromString<Event>(it) }
+                        .collect { event ->
+                            when (event) {
+                                is Event.MessageDelta -> {
+                                    usage += Usage {
+                                        inputTokens = 0
+                                        outputTokens = event.usage.outputTokens
+                                    }
+                                }
+                                is Event.MessageStart -> {
+                                    resolvedModel = event.message.anthropicModel
+                                    usage += event.message.usage
+                                }
+                                is Event.MessageStop -> {
+                                    event.toolMap = request.toolMap
+                                    event.resolvedModel = resolvedModel!!
+                                    val costWithUsage = CostWithUsage(
+                                        cost = resolvedModel.cost * usage,
+                                        usage = usage
+                                    )
+                                    costCollector += costWithUsage
+                                }
+                                else -> { /* do nothing */ }
+                            }
+                            emit(event)
+                        }
+                }
+            } catch (e: SSEClientException) {
+                if (e.cause is AnthropicApiException) throw e.cause!!
+                throw e
             }
         }
 
@@ -270,3 +301,18 @@ class AnthropicConfigException(
 ) : AnthropicException(
     msg, cause
 )
+
+internal fun List<Content>.resolveTools(toolMap: Map<String, Tool>) {
+    filterIsInstance<ToolUse>().forEach { toolUse ->
+        val tool = toolMap[toolUse.name]
+        if (tool != null) {
+            toolUse.tool = tool
+        } else {
+            // Sometimes it happens that Claude is sending non-defined tool name in tool use
+            // TODO in the future it should go to the stderr
+            println("Error!!! Unexpected tool use: ${toolUse.name}")
+        }
+    }
+}
+
+private val MessageRequest.toolMap: Map<String, Tool> get() = tools?.associateBy { it.name } ?: emptyMap()

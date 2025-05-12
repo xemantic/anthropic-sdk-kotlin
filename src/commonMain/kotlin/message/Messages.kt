@@ -26,6 +26,7 @@ import com.xemantic.ai.anthropic.json.toPrettyJson
 import com.xemantic.ai.anthropic.tool.Tool
 import com.xemantic.ai.anthropic.tool.ToolChoice
 import com.xemantic.ai.anthropic.usage.Usage
+import com.xemantic.ai.anthropic.util.transformLast
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -121,12 +122,12 @@ data class MessageRequest(
             maxTokens = requireNotNull(maxTokens) { "maxTokens must be specified" },
             messages = messages,
             metadata = metadata,
-            stopSequences = stopSequences.toNullIfEmpty(),
+            stopSequences = stopSequences.ifEmpty { null },
             stream = if ((stream != null) && stream!!) true else null,
             system = system,
             temperature = temperature,
             toolChoice = toolChoice,
-            tools = tools.toNullIfEmpty(),
+            tools = tools.ifEmpty { null },
             topK = topK,
             topP = topP
         )
@@ -316,4 +317,14 @@ class ToolResultMessageBuilder {
         content += (toolResults + documents)
     }
 
+}
+
+fun List<Message>.addCacheBreakpoint(): List<Message> = transformLast { message ->
+    message.copy {
+        content = content.transformLast { contentElement ->
+            contentElement.alterCacheControl(
+                CacheControl.Ephemeral()
+            )
+        }
+    }
 }
