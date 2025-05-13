@@ -257,7 +257,8 @@ kotlin {
 }
 
 if (!isJvmOnlyBuild) {
-
+    // linux test native test temporarily disabled as it is causing GitHub action to stall
+    tasks.named("linuxX64Test") { enabled = false }
     // skip tests for which system environment variable retrival is not implemented at the moment
     //tasks.named("wasmWasiNodeTest") { enabled = false }
 //// skip test for certain targets which are not fully supported by kotest
@@ -291,11 +292,7 @@ tasks.withType<Test> {
     testLogging {
         events(
             TestLogEvent.SKIPPED,
-            TestLogEvent.FAILED,
-            TestLogEvent.STANDARD_OUT,
-            TestLogEvent.STANDARD_ERROR,
-            TestLogEvent.PASSED,
-            TestLogEvent.STARTED
+            TestLogEvent.FAILED
         )
         showStackTraces = true
         exceptionFormat = TestExceptionFormat.FULL
