@@ -27,7 +27,7 @@ import kotlin.test.assertFailsWith
 class ToolResultTest {
 
     @Test
-    fun `Should create ToolResult for a single String representing Text content`() {
+    fun `should create ToolResult for a single String representing Text content`() {
         ToolResult {
             toolUseId = "42"
             +"foo"
@@ -45,7 +45,7 @@ class ToolResultTest {
     }
 
     @Test
-    fun `Should create ToolResult for Text element representing content`() {
+    fun `should create ToolResult for Text element representing content`() {
         ToolResult {
             toolUseId = "42"
             +Text(text = "foo")
@@ -63,7 +63,7 @@ class ToolResultTest {
     }
 
     @Test
-    fun `Should create error ToolResult`() {
+    fun `should create error ToolResult`() {
         ToolResult {
             toolUseId = "42"
             error("Error message")
@@ -115,7 +115,7 @@ class ToolResultTest {
     }
 
     @Test
-    fun `Should copy ToolResult`() {
+    fun `should copy ToolResult`() {
         ToolResult {
             toolUseId = "42"
             content = listOf(Text("foo"))
@@ -135,7 +135,7 @@ class ToolResultTest {
     }
 
     @Test
-    fun `Should copy ToolResult while altering properties`() {
+    fun `should copy ToolResult while altering properties`() {
         ToolResult {
             toolUseId = "42"
             content = listOf(Text("foo"))

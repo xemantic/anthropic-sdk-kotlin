@@ -28,7 +28,7 @@ import kotlin.test.Test
 class CostCollectorTest {
 
     @Test
-    fun `Should initialize CostCollector with zero usage`() {
+    fun `should initialize CostCollector with zero usage`() {
         CostCollector() should {
             have(costWithUsage == CostWithUsage.ZERO)
         }
@@ -57,7 +57,7 @@ class CostCollectorTest {
     }
 
     @Test
-    fun `Should update cost and usage`() {
+    fun `should update cost and usage`() {
         // given
         val collector = CostCollector()
         val usage = Usage {
@@ -92,7 +92,7 @@ class CostCollectorTest {
     }
 
     @Test
-    fun `Should accumulate multiple usage updates`() {
+    fun `should accumulate multiple usage updates`() {
         // given
         val collector = CostCollector()
         val testUsage = Usage {

@@ -25,7 +25,7 @@ import kotlin.test.Test
 class CostTest {
 
     @Test
-    fun `Should create a Cost instance with correct values`() {
+    fun `should create a Cost instance with correct values`() {
         Cost {
             inputTokens = Money("0.001")
             outputTokens = Money("0.002")
@@ -43,7 +43,7 @@ class CostTest {
      * This case is used when costs per model are being defined.
      */
     @Test
-    fun `Should create a Cost instance with correct values when cache costs are not specified`() {
+    fun `should create a Cost instance with correct values when cache costs are not specified`() {
         Cost {
             inputTokens = Money("0.001")
             outputTokens = Money("0.002")
@@ -56,7 +56,7 @@ class CostTest {
     }
 
     @Test
-    fun `Should add two Cost instances without cache`() {
+    fun `should add two Cost instances without cache`() {
         // given
         val cost1 = Cost {
             inputTokens = Money("0.001")
@@ -84,7 +84,7 @@ class CostTest {
     }
 
     @Test
-    fun `Should add two Cost instances with cache`() {
+    fun `should add two Cost instances with cache`() {
         // given
         val cost1 = Cost {
             inputTokens = Money("0.001")
@@ -112,7 +112,7 @@ class CostTest {
     }
 
     @Test
-    fun `Should calculate total cost`() {
+    fun `should calculate total cost`() {
         Cost {
             inputTokens = Money("0.001")
             outputTokens = Money("0.002")
@@ -124,7 +124,7 @@ class CostTest {
     }
 
     @Test
-    fun `Should create ZERO Cost instance`() {
+    fun `should create ZERO Cost instance`() {
         Cost.ZERO should {
             have(inputTokens == Money.ZERO)
             have(outputTokens == Money.ZERO)

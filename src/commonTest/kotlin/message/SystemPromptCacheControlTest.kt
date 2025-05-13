@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ class SystemPromptCacheControlTest {
 
     @Test
     @Ignore
-    fun `Should cache system prompt across conversation`() = runTest {
+    fun `should cache system prompt across conversation`() = runTest {
         // given
         val client = Anthropic {
             logHttp = true

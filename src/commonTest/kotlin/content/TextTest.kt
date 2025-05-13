@@ -46,7 +46,7 @@ class TextTest {
     }
 
     @Test
-    fun `Should copy Text`() {
+    fun `should copy Text`() {
         Text {
             text = "foo"
             cacheControl = CacheControl.Ephemeral()
@@ -59,7 +59,7 @@ class TextTest {
     }
 
     @Test
-    fun `Should copy Text while altering properties`() {
+    fun `should copy Text while altering properties`() {
         Text {
             text = "foo"
             cacheControl = CacheControl.Ephemeral()

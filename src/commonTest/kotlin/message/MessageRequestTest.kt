@@ -35,7 +35,7 @@ import kotlin.test.Test
 class MessageRequestTest {
 
     @Test
-    fun `Should create simple MessageRequest with implicit message`() {
+    fun `should create simple MessageRequest with implicit message`() {
         // given
         val request = MessageRequest {
             +"Hey Claude!?"
@@ -67,7 +67,7 @@ class MessageRequestTest {
     }
 
     @Test
-    fun `Should create simple MessageRequest with Message and Content DSL`() {
+    fun `should create simple MessageRequest with Message and Content DSL`() {
         // given
         val request = MessageRequest {
             +Message {
@@ -101,7 +101,7 @@ class MessageRequestTest {
     }
 
     @Test
-    fun `Should create simple MessageRequest without DSL`() {
+    fun `should create simple MessageRequest without DSL`() {
         // given
         val request = MessageRequest {
             messages += Message {
@@ -153,7 +153,7 @@ class MessageRequestTest {
     }
 
     @Test
-    fun `Should create MessageRequest with multiple tools`() {
+    fun `should create MessageRequest with multiple tools`() {
         // given
         val request = MessageRequest {
             +Message {
@@ -235,7 +235,7 @@ class MessageRequestTest {
     }
 
     @Test
-    fun `Should create MessageRequest with explicit ToolChoice`() {
+    fun `should create MessageRequest with explicit ToolChoice`() {
         // given
         val request = MessageRequest {
             +Message {
@@ -299,7 +299,7 @@ class MessageRequestTest {
     }
 
     @Test
-    fun `Should deserialize MessageRequest - for example a JSON stored on disk`() {
+    fun `should deserialize MessageRequest - for example a JSON stored on disk`() {
         // given
         val request = /* language=json */ """
             {
@@ -364,7 +364,7 @@ class MessageRequestTest {
 
     @Test
     @Ignore // TODO this test can be fixed only when the model is refactored to be configurable
-    fun `Should fail to create a MessageRequest instance for unknown model`() {
+    fun `should fail to create a MessageRequest instance for unknown model`() {
         //val messageRequest = MessageRequest {  }
     }
 

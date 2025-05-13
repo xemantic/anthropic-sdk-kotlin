@@ -33,7 +33,7 @@ import kotlin.test.Test
 class ToolUseTest {
 
     @Test
-    fun `Should only use Calculator tool - non-named`() = runTest {
+    fun `should only use Calculator tool - non-named`() = runTest {
         // given
         val mathTools = listOf(
             Tool<Calculator> { calculate() }
@@ -80,7 +80,7 @@ class ToolUseTest {
     }
 
     @Test
-    fun `Should only use Calculator tool - named`() = runTest {
+    fun `should only use Calculator tool - named`() = runTest {
         // given
         val mathTools = listOf(
             Tool<Calculator>("my_calculator") { calculate() }
@@ -127,7 +127,7 @@ class ToolUseTest {
     }
 
     @Test
-    fun `Should use FibonacciCalculator tool`() = runTest {
+    fun `should use FibonacciCalculator tool`() = runTest {
         // given
         val mathTools = listOf(
             Tool<FibonacciCalculator> { calculate() }
@@ -158,7 +158,7 @@ class ToolUseTest {
     }
 
     @Test
-    fun `Should use 2 tools in sequence`() = runTest {
+    fun `should use 2 tools in sequence`() = runTest {
         // given
         val mathTools = listOf(
             Tool<FibonacciCalculator> { calculate() },

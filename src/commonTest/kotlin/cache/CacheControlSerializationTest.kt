@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import kotlin.test.Test
 class CacheControlSerializationTest {
 
     @Test
-    fun `Should serialize Ephemeral CacheControl`() {
+    fun `should serialize Ephemeral CacheControl`() {
         anthropicJson.encodeToString(
             serializer = CacheControl.serializer(),
             value = CacheControl.Ephemeral()
@@ -42,7 +42,7 @@ class CacheControlSerializationTest {
     }
 
     @Test
-    fun `Should serialize Ephemeral CacheControl with additional properties`() {
+    fun `should serialize Ephemeral CacheControl with additional properties`() {
         anthropicJson.encodeToString(
             serializer = CacheControl.serializer(),
             value = CacheControl.Ephemeral {
@@ -71,7 +71,7 @@ class CacheControlSerializationTest {
     }
 
     @Test
-    fun `Should deserialize Ephemeral CacheControl`() {
+    fun `should deserialize Ephemeral CacheControl`() {
         anthropicJson.decodeFromString<CacheControl>(
             """
             {
@@ -84,7 +84,7 @@ class CacheControlSerializationTest {
     }
 
     @Test
-    fun `Should deserialize CacheControl with additional properties`() {
+    fun `should deserialize CacheControl with additional properties`() {
         anthropicJson.decodeFromString<CacheControl>(
             """
             {
@@ -102,7 +102,7 @@ class CacheControlSerializationTest {
     }
 
     @Test
-    fun `Should serialize hypothetical new CacheControl with additional properties`() {
+    fun `should serialize hypothetical new CacheControl with additional properties`() {
         anthropicJson.encodeToString(
             serializer = CacheControl.serializer(),
             value = CacheControl.Unknown {
@@ -118,7 +118,7 @@ class CacheControlSerializationTest {
     }
 
     @Test
-    fun `Should serialize hypothetical CacheControl with additional properties`() {
+    fun `should serialize hypothetical CacheControl with additional properties`() {
         anthropicJson.encodeToString(
             serializer = CacheControl.serializer(),
             value = CacheControl.Unknown {
@@ -134,7 +134,7 @@ class CacheControlSerializationTest {
     }
 
     @Test
-    fun `Should deserialize hypothetical future CacheControl instance`() {
+    fun `should deserialize hypothetical future CacheControl instance`() {
         anthropicJson.decodeFromString<CacheControl>(
             /* language=json */
             """
@@ -149,7 +149,7 @@ class CacheControlSerializationTest {
     }
 
     @Test
-    fun `Should deserialize hypothetical future CacheControl instance with additional properties`() {
+    fun `should deserialize hypothetical future CacheControl instance with additional properties`() {
         anthropicJson.decodeFromString<CacheControl>(
             /* language=json */
             """

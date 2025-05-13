@@ -50,7 +50,7 @@ const val TEST_IMAGE = "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMA
 class ImageTest {
 
     @Test
-    fun `Should read text from test image`() = runTest {
+    fun `should read text from test image`() = runTest {
         // given
         val anthropic = Anthropic()
 
@@ -79,7 +79,7 @@ class ImageTest {
     }
 
     @Test
-    fun `Should read text from test image file`() = runTest {
+    fun `should read text from test image file`() = runTest {
         if (isBrowserPlatform) return@runTest // we cannot access files in the browser
         // given
         val anthropic = Anthropic()
@@ -106,7 +106,7 @@ class ImageTest {
     }
 
     @Test
-    fun `Should create cacheable Image`() {
+    fun `should create cacheable Image`() {
         if (isBrowserPlatform) return
         Image(Path(testDataDir, "foo.png")) {
             cacheControl = CacheControl.Ephemeral()
@@ -123,7 +123,7 @@ class ImageTest {
     }
 
     @Test
-    fun `Should create Image from bytes`() {
+    fun `should create Image from bytes`() {
         if (isBrowserPlatform) return
         Image(Path(testDataDir, "foo.png").readBytes()).source should {
             be<Source.Base64>()
@@ -142,7 +142,7 @@ class ImageTest {
     }
 
     @Test
-    fun `Should fail to create Image from text file`() {
+    fun `should fail to create Image from text file`() {
         if (isBrowserPlatform) return
         assertFailsWith<IllegalArgumentException> {
             Image(Path(testDataDir, "zero.txt"))
@@ -156,7 +156,7 @@ class ImageTest {
     }
 
     @Test
-    fun `Should fail to create Image from PDF document file`() {
+    fun `should fail to create Image from PDF document file`() {
         if (isBrowserPlatform) return
         assertFailsWith<IllegalArgumentException> {
             Image(Path(testDataDir, "test.pdf"))
@@ -173,7 +173,7 @@ class ImageTest {
     }
 
     @Test
-    fun `Should fail to create Image with null path specified in the builder`() {
+    fun `should fail to create Image with null path specified in the builder`() {
         if (isBrowserPlatform) return
         assertFailsWith<IllegalArgumentException> {
             Image {
@@ -185,7 +185,7 @@ class ImageTest {
     }
 
     @Test
-    fun `Should fail to create image with null bytes specified in the builder`() {
+    fun `should fail to create image with null bytes specified in the builder`() {
         assertFailsWith<IllegalArgumentException> {
             Image {
                 bytes = null
@@ -196,7 +196,7 @@ class ImageTest {
     }
 
     @Test
-    fun `Should return string representation of Image`() {
+    fun `should return string representation of Image`() {
         Image {
             source = Source.Base64 {
                 mediaType(MediaType.PNG)
@@ -218,7 +218,7 @@ class ImageTest {
     }
 
     @Test
-    fun `Should copy Image`() {
+    fun `should copy Image`() {
         Image {
             source = Source.Base64 {
                 mediaType(MediaType.PNG)
@@ -238,7 +238,7 @@ class ImageTest {
     }
 
     @Test
-    fun `Should copy Image while altering properties`() {
+    fun `should copy Image while altering properties`() {
         Image {
             source = Source.Base64 {
                 mediaType(MediaType.PNG)

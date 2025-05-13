@@ -27,7 +27,7 @@ import kotlin.test.Test
 class ToolCacheControlTest {
 
     @Test
-    fun `Should cache Calculator tool definition`() = runTest {
+    fun `should cache Calculator tool definition`() = runTest {
         // given
         val mathTools = listOf(
             Tool<Calculator>(
@@ -36,9 +36,7 @@ class ToolCacheControlTest {
                 }
             ) { calculate() }
         )
-        val client = Anthropic {
-            logHttp = true
-        }
+        val client = Anthropic()
         val conversation = mutableListOf<Message>()
         conversation += "What's 15 multiplied by 7?"
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import kotlin.test.Test
 class ErrorResponseTest {
 
     @Test
-    fun `Should deserialize ErrorResponse`() {
+    fun `should deserialize ErrorResponse`() {
         anthropicJson.decodeFromString<Response>(/* language=json */ """
             {
               "type": "error",

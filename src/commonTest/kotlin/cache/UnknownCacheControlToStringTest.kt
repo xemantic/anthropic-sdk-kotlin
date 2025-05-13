@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import kotlin.test.Test
 class UnknownCacheControlToStringTest {
 
     @Test
-    fun `Should return pretty toString JSON of Unknown CacheControl`() {
+    fun `should return pretty toString JSON of Unknown CacheControl`() {
         CacheControl.Unknown {
             type = "persistent"
             additionalProperties["max_storage"] = 100000

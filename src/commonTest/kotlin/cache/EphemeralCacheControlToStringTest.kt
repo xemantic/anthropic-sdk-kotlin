@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import kotlin.test.Test
 class EphemeralCacheControlToStringTest {
 
     @Test
-    fun `Should return pretty toString JSON of Ephemeral CacheControl`() {
+    fun `should return pretty toString JSON of Ephemeral CacheControl`() {
         CacheControl.Ephemeral().toString() shouldEqualJson /* language=json */ """
             {
               "type": "ephemeral"
@@ -34,7 +34,7 @@ class EphemeralCacheControlToStringTest {
     }
 
     @Test
-    fun `Should return pretty toString JSON of Ephemeral CacheControl with additional properties`() {
+    fun `should return pretty toString JSON of Ephemeral CacheControl with additional properties`() {
         CacheControl.Ephemeral {
             additionalProperties["booleanProperty"] = true
             additionalProperties["intProperty"] = 42
