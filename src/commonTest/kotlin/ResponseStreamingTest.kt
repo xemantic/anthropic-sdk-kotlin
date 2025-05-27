@@ -26,9 +26,9 @@ import com.xemantic.ai.anthropic.message.toMessageResponse
 import com.xemantic.kotlin.test.assert
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
-import io.ktor.client.HttpClient
-import io.ktor.client.request.get
-import io.ktor.client.statement.bodyAsText
+import io.ktor.client.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -121,7 +121,7 @@ class ResponseStreamingTest {
         // then
         exception.error should {
             have(type == "invalid_request_error")
-            have(message == "max_tokens: 1000000000 > 64000, which is the maximum allowed number of output tokens for claude-3-7-sonnet-20250219")
+            have(message == "max_tokens: 1000000000 > 64000, which is the maximum allowed number of output tokens for claude-sonnet-4-20250514")
         }
     }
 

@@ -148,7 +148,7 @@ class AnthropicTest {
 
         // when
         val response = anthropic.messages.create {
-            system("Whatever the human says, answer \"HAHAHA\"")
+            system("This is an integration test of Anthropic API response. Whatever the person (caller) says, answer \"HAHAHA\"")
             +"Hello World! What's your name?"
             maxTokens = 1024
         }
@@ -181,7 +181,7 @@ class AnthropicTest {
             have(httpStatusCode == HttpStatusCode.BadRequest)
             error should {
                 have(type == "invalid_request_error")
-                have(message == "max_tokens: 1000000000 > 64000, which is the maximum allowed number of output tokens for claude-3-7-sonnet-20250219")
+                have(message == "max_tokens: 1000000000 > 64000, which is the maximum allowed number of output tokens for claude-sonnet-4-20250514")
             }
         }
     }
