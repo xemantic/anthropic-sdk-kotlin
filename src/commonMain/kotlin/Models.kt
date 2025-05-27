@@ -52,6 +52,50 @@ enum class Model(
     override val cost: Cost
 ) : AnthropicModel {
 
+    CLAUDE_4_OPUS(
+        id = "claude-opus-4-0",
+        contextWindow = 200000,
+        maxOutput = 32000,
+        messageBatchesApi = true,
+        cost = Cost {
+            inputTokens = "15".dollarsPerMillion
+            outputTokens = "75".dollarsPerMillion
+        }
+    ),
+
+    CLAUDE_4_OPUS_20250514(
+        id = "claude-opus-4-20250514",
+        contextWindow = 200000,
+        maxOutput = 32000,
+        messageBatchesApi = true,
+        cost = Cost {
+            inputTokens = "15".dollarsPerMillion
+            outputTokens = "75".dollarsPerMillion
+        }
+    ),
+
+    CLAUDE_4_SONNET(
+        id = "claude-sonnet-4-0",
+        contextWindow = 200000,
+        maxOutput = 64000,
+        messageBatchesApi = true,
+        cost = Cost {
+            inputTokens = "3".dollarsPerMillion
+            outputTokens = "15".dollarsPerMillion
+        }
+    ),
+
+    CLAUDE_4_SONNET_20250514(
+        id = "claude-sonnet-4-20250514",
+        contextWindow = 200000,
+        maxOutput = 64000,
+        messageBatchesApi = true,
+        cost = Cost {
+            inputTokens = "3".dollarsPerMillion
+            outputTokens = "15".dollarsPerMillion
+        }
+    ),
+
     CLAUDE_3_7_SONNET(
         id = "claude-3-7-sonnet-latest",
         contextWindow = 200000,
@@ -175,7 +219,7 @@ enum class Model(
 
     companion object {
 
-        val DEFAULT: Model = CLAUDE_3_7_SONNET
+        val DEFAULT: Model = CLAUDE_4_SONNET
 
     }
 
