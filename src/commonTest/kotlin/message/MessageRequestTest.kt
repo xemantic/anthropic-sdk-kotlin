@@ -47,7 +47,7 @@ class MessageRequestTest {
         // then
         json shouldEqualJson /* language=json */ """
             {
-              "model": "claude-3-7-sonnet-latest",
+              "model": "claude-sonnet-4-0",
               "messages": [
                 {
                   "role": "user",
@@ -81,7 +81,7 @@ class MessageRequestTest {
         // then
         json shouldEqualJson /* language=json */ """
             {
-              "model": "claude-3-7-sonnet-latest",
+              "model": "claude-sonnet-4-0",
               "messages": [
                 {
                   "role": "user",
@@ -115,7 +115,7 @@ class MessageRequestTest {
         // then
         json shouldEqualJson /* language=json */ """
             {
-              "model": "claude-3-7-sonnet-latest",
+              "model": "claude-sonnet-4-0",
               "messages": [
                 {
                   "role": "user",
@@ -181,7 +181,7 @@ class MessageRequestTest {
         // then
         json shouldEqualJson /* language=json */ """
             {
-              "model": "claude-3-7-sonnet-latest",
+              "model": "claude-sonnet-4-0",
               "messages": [
                 {
                   "role": "user",
@@ -255,7 +255,7 @@ class MessageRequestTest {
         // then
         json shouldEqualJson /* language=json */ """
             {
-              "model": "claude-3-7-sonnet-latest",
+              "model": "claude-sonnet-4-0",
               "messages": [
                 {
                   "role": "user",
@@ -303,7 +303,7 @@ class MessageRequestTest {
         // given
         val request = /* language=json */ """
             {
-              "model": "claude-3-7-sonnet-latest",
+              "model": "claude-sonnet-4-0",
               "messages": [
                 {
                   "role": "user",
