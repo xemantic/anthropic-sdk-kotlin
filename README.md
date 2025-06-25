@@ -212,7 +212,7 @@ API dependencies (will be provided as transitive dependencies of `anthropic-sdk-
 
 * [xemantic-ai-tool-schema](https://github.com/xemantic/xemantic-ai-tool-schema)
 * [xemantic-ai-money](https://github.com/xemantic/xemantic-ai-money)
-* [kotlinx-datetime](https://github.com/Kotlin/kotlinx-datetime)
+* [xemantic-kotlin-core](https://github.com/xemantic/xemantic-kotlin-core)
 
 Implementation dependencies:
 

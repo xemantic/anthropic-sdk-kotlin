@@ -111,9 +111,12 @@ kotlin {
     compilerOptions {
         apiVersion = kotlinTarget
         languageVersion = kotlinTarget
-        freeCompilerArgs.add("-Xmulti-dollar-interpolation")
+        freeCompilerArgs.add(
+            "-Xcontext-sensitive-resolution"
+        )
         extraWarnings.set(true)
         progressiveMode = true
+        optIn.addAll("kotlin.time.ExperimentalTime")
     }
 
     jvm {
@@ -205,7 +208,7 @@ kotlin {
                 api(libs.xemantic.ai.tool.schema)
                 api(libs.xemantic.ai.money)
                 api(libs.xemantic.ai.file.magic)
-                api(libs.kotlinx.datetime)
+                api(libs.xemantic.kotlin.core)
                 implementation(libs.ktor.client.core)
                 implementation(libs.ktor.client.content.negotiation)
                 implementation(libs.ktor.client.logging)
