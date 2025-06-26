@@ -145,7 +145,7 @@ kotlin {
             nodejs {
                 testTask {
                     useMocha {
-                        timeout = "20s"
+                        timeout = "60s"
                     }
                 }
             }
@@ -251,6 +251,12 @@ kotlin {
             macosTest {
                 dependencies {
                     implementation(libs.ktor.client.darwin)
+                }
+            }
+
+            jsTest {
+                dependencies {
+                    implementation(libs.ktor.client.js)
                 }
             }
         }

@@ -19,12 +19,6 @@ package com.xemantic.ai.anthropic.util
 import kotlin.concurrent.atomics.AtomicReference
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
-fun <T> List<T>.transformLast(
-    transform: (T) -> T
-): List<T> = mapIndexed { index, item ->
-    if (index == lastIndex) transform(item) else item
-}
-
 /**
  * Extension function that implements atomic update operation
  * by repeatedly trying to update the value until successful.
