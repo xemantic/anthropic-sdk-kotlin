@@ -23,6 +23,7 @@ import com.xemantic.ai.anthropic.message.Message
 import com.xemantic.ai.anthropic.message.addCacheBreakpoint
 import com.xemantic.ai.anthropic.message.plusAssign
 import com.xemantic.ai.anthropic.message.toMessageResponse
+import com.xemantic.ai.anthropic.test.testAnthropic
 import com.xemantic.kotlin.test.assert
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
@@ -40,7 +41,7 @@ class ResponseStreamingTest {
     @Test
     fun `should stream the response`() = runTest {
         // given
-        val client = Anthropic()
+        val client = testAnthropic()
 
         // when
         val chunkedResponse = client.messages.stream {
@@ -60,8 +61,8 @@ class ResponseStreamingTest {
 
     @Test
     fun `should analyze a text big enough to activate caching`() = runTest {
-        val text = fetchText("https://www.gutenberg.org/files/1342/1342-0.txt").take(5000) // Pride and Prejudice
-        val anthropic = Anthropic()
+        val text = fetchText("https://raw.githubusercontent.com/xemantic/anthropic-sdk-kotlin/refs/heads/main/README.md")
+        val anthropic = testAnthropic()
         val conversation = mutableListOf<Message>()
 
         conversation += Message {
@@ -78,7 +79,7 @@ class ResponseStreamingTest {
         conversation += response1
 
         response1 should {
-            have("Austen" in text)
+            have(text.contains("anthropic", ignoreCase = true))
             if (usage.cacheReadInputTokens != null && usage.cacheCreationInputTokens != null) {
                 have(usage.cacheReadInputTokens >= 0)
                 have( usage.cacheCreationInputTokens >= 0)
@@ -87,7 +88,7 @@ class ResponseStreamingTest {
             }
         }
 
-        conversation += "What do you think about this book?"
+        conversation += "How many times anthropic is mentioned in the README?"
         val response2 = anthropic.messages.stream {
             messages = conversation.addCacheBreakpoint()
         }.onEach {
@@ -108,7 +109,7 @@ class ResponseStreamingTest {
     @Test
     fun `should return error when error is expected`() = runTest {
         // given
-        val anthropic = Anthropic()
+        val anthropic = testAnthropic()
 
         // when
         val exception = assertFailsWith<AnthropicApiException> {

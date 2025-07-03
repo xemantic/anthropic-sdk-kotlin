@@ -16,12 +16,12 @@
 
 package com.xemantic.ai.anthropic.tool
 
-import com.xemantic.ai.anthropic.Anthropic
 import com.xemantic.ai.anthropic.content.Text
 import com.xemantic.ai.anthropic.content.ToolUse
 import com.xemantic.ai.anthropic.message.Message
 import com.xemantic.ai.anthropic.message.StopReason
 import com.xemantic.ai.anthropic.message.plusAssign
+import com.xemantic.ai.anthropic.test.testAnthropic
 import com.xemantic.ai.anthropic.tool.test.Calculator
 import com.xemantic.ai.anthropic.tool.test.FibonacciCalculator
 import com.xemantic.kotlin.test.be
@@ -38,7 +38,7 @@ class ToolUseTest {
         val mathTools = listOf(
             Tool<Calculator> { calculate() }
         )
-        val client = Anthropic()
+        val client = testAnthropic()
         val conversation = mutableListOf<Message>()
         conversation += "What's 15 multiplied by 7?"
 
@@ -85,7 +85,7 @@ class ToolUseTest {
         val mathTools = listOf(
             Tool<Calculator>("my_calculator") { calculate() }
         )
-        val client = Anthropic()
+        val client = testAnthropic()
         val conversation = mutableListOf<Message>()
         conversation += "What's 15 multiplied by 7?"
 
@@ -132,7 +132,7 @@ class ToolUseTest {
         val mathTools = listOf(
             Tool<FibonacciCalculator> { calculate() }
         )
-        val client = Anthropic()
+        val client = testAnthropic()
 
         // when
         val response = client.messages.create {
@@ -164,7 +164,7 @@ class ToolUseTest {
             Tool<FibonacciCalculator> { calculate() },
             Tool<Calculator> { calculate() }
         )
-        val client = Anthropic()
+        val client = testAnthropic()
         val systemPrompt =
             "Always use tools to perform calculations. Never calculate on your own, even if you know the answer."
         val prompt = "Calculate Fibonacci number 42 and then divide it by 42"

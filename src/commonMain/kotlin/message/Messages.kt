@@ -26,7 +26,7 @@ import com.xemantic.ai.anthropic.json.toPrettyJson
 import com.xemantic.ai.anthropic.tool.Tool
 import com.xemantic.ai.anthropic.tool.ToolChoice
 import com.xemantic.ai.anthropic.usage.Usage
-import com.xemantic.ai.anthropic.util.transformLast
+import com.xemantic.kotlin.core.collections.mapLast
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -319,9 +319,9 @@ class ToolResultMessageBuilder {
 
 }
 
-fun List<Message>.addCacheBreakpoint(): List<Message> = transformLast { message ->
+fun List<Message>.addCacheBreakpoint(): List<Message> = mapLast { message ->
     message.copy {
-        content = content.transformLast { contentElement ->
+        content = content.mapLast { contentElement ->
             contentElement.alterCacheControl(
                 CacheControl.Ephemeral()
             )

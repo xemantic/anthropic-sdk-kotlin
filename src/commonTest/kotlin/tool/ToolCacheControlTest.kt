@@ -16,10 +16,10 @@
 
 package com.xemantic.ai.anthropic.tool
 
-import com.xemantic.ai.anthropic.Anthropic
 import com.xemantic.ai.anthropic.cache.CacheControl
 import com.xemantic.ai.anthropic.message.Message
 import com.xemantic.ai.anthropic.message.plusAssign
+import com.xemantic.ai.anthropic.test.testAnthropic
 import com.xemantic.ai.anthropic.tool.test.Calculator
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -36,7 +36,7 @@ class ToolCacheControlTest {
                 }
             ) { calculate() }
         )
-        val client = Anthropic()
+        val client = testAnthropic()
         val conversation = mutableListOf<Message>()
         conversation += "What's 15 multiplied by 7?"
 

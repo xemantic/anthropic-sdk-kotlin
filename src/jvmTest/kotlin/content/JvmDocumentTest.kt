@@ -38,10 +38,10 @@ class JvmDocumentTest {
     @Test
     fun `should read test PDF with path specified as String`() = runTest {
         // given
-        val client = Anthropic()
+        val anthropic = Anthropic()
 
         // when
-        val response = client.messages.create {
+        val response = anthropic.messages.create {
             +Message {
                 +Document("test-data/test.pdf")
                 +"What's in the document?"

@@ -16,9 +16,9 @@
 
 package com.xemantic.ai.anthropic.tool
 
-import com.xemantic.ai.anthropic.Anthropic
 import com.xemantic.ai.anthropic.message.Message
 import com.xemantic.ai.anthropic.message.StopReason
+import com.xemantic.ai.anthropic.test.testAnthropic
 import com.xemantic.ai.tool.schema.meta.Description
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
@@ -66,7 +66,7 @@ class ToolWithDependenciesTest {
                 testDatabase.execute(sql)
             }
         )
-        val anthropic = Anthropic()
+        val anthropic = testAnthropic()
 
         // when
         val response = anthropic.messages.create {

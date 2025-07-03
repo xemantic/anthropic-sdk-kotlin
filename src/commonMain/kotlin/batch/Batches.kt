@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,17 @@
  * limitations under the License.
  */
 
+@file:UseSerializers(InstantSerializer::class)
+
 package com.xemantic.ai.anthropic.batch
 
 import com.xemantic.ai.anthropic.Response
 import com.xemantic.ai.anthropic.message.Message
-import kotlinx.datetime.Instant
+import com.xemantic.kotlin.core.time.InstantSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.UseSerializers
+import kotlin.time.Instant
 
 @Serializable
 data class MessageBatchRequest(

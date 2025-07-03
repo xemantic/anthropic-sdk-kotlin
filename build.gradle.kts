@@ -111,9 +111,12 @@ kotlin {
     compilerOptions {
         apiVersion = kotlinTarget
         languageVersion = kotlinTarget
-        freeCompilerArgs.add("-Xmulti-dollar-interpolation")
+        freeCompilerArgs.add(
+            "-Xcontext-sensitive-resolution"
+        )
         extraWarnings.set(true)
         progressiveMode = true
+        optIn.addAll("kotlin.time.ExperimentalTime")
     }
 
     jvm {
@@ -132,8 +135,6 @@ kotlin {
             // browser tests switched off for a moment
             browser {
                 testTask {
-                    // for unknown reason browser tests are failing
-                    enabled = false
                     useKarma {
                         useChromeHeadless()
                     }
@@ -142,7 +143,7 @@ kotlin {
             nodejs {
                 testTask {
                     useMocha {
-                        timeout = "20s"
+                        timeout = "60s"
                     }
                 }
             }
@@ -205,7 +206,7 @@ kotlin {
                 api(libs.xemantic.ai.tool.schema)
                 api(libs.xemantic.ai.money)
                 api(libs.xemantic.ai.file.magic)
-                api(libs.kotlinx.datetime)
+                api(libs.xemantic.kotlin.core)
                 implementation(libs.ktor.client.core)
                 implementation(libs.ktor.client.content.negotiation)
                 implementation(libs.ktor.client.logging)
@@ -248,6 +249,12 @@ kotlin {
             macosTest {
                 dependencies {
                     implementation(libs.ktor.client.darwin)
+                }
+            }
+
+            jsTest {
+                dependencies {
+                    implementation(libs.ktor.client.js)
                 }
             }
         }

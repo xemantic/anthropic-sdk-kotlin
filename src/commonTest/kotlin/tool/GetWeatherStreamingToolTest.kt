@@ -16,12 +16,12 @@
 
 package com.xemantic.ai.anthropic.tool
 
-import com.xemantic.ai.anthropic.Anthropic
 import com.xemantic.ai.anthropic.content.Text
 import com.xemantic.ai.anthropic.content.ToolResult
 import com.xemantic.ai.anthropic.content.ToolUse
 import com.xemantic.ai.anthropic.event.Event
 import com.xemantic.ai.anthropic.message.*
+import com.xemantic.ai.anthropic.test.testAnthropic
 import com.xemantic.ai.tool.schema.meta.Description
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
@@ -53,7 +53,7 @@ class GetWeatherStreamingToolTest {
                 "15 degrees in $location" // We are returning static value. In real-life it should be another API call
             }
         )
-        val anthropic = Anthropic()
+        val anthropic = testAnthropic()
         val conversation = mutableListOf<Message>()
 
         conversation += "What is the weather like in San Francisco?"

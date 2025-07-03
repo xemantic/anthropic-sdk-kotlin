@@ -32,10 +32,10 @@ class JvmImageTest {
     @Test
     fun `should read test image file specified by String`() = runTest {
         // given
-        val client = Anthropic()
+        val anthropic = Anthropic()
 
         // when
-        val response = client.messages.create {
+        val response = anthropic.messages.create {
             +Message {
                 +Image("test-data/foo.png")
                 +"What's on this picture?"
