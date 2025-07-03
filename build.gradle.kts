@@ -252,11 +252,6 @@ kotlin {
                 }
             }
 
-            jsTest {
-                dependencies {
-                    implementation(libs.ktor.client.js)
-                }
-            }
         }
 
     }

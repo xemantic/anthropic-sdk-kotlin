@@ -4,7 +4,7 @@ javaTarget = "17"
 
 kotlin = "2.2.0"
 kotlinxCoroutines = "1.10.2"
-ktor = "3.2.1"
+ktor = "3.2.0"
 kotest = "6.0.0.M4"
 
 xemanticKotlinCore = "0.1.2"
@@ -46,7 +46,6 @@ ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx
 ktor-client-java = { module = "io.ktor:ktor-client-java", version.ref = "ktor" }
 ktor-client-curl = { module = "io.ktor:ktor-client-curl", version.ref = "ktor" }
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
-ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor" }
 
 kotest-assertions-json = { module = "io.kotest:kotest-assertions-json", version.ref = "kotest" }
 
