@@ -16,10 +16,10 @@
 
 package com.xemantic.ai.anthropic.tool.computer
 
-import com.xemantic.ai.anthropic.Anthropic
 import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.ai.anthropic.message.Message
 import com.xemantic.ai.anthropic.message.StopReason
+import com.xemantic.ai.anthropic.test.testAnthropic
 import com.xemantic.ai.anthropic.tool.Tool
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
@@ -35,7 +35,7 @@ class BashToolTest {
         // given
         var actualInput: BashTool.Input? = null
         val tool = BashTool { actualInput = this }
-        val anthropic = Anthropic()
+        val anthropic = testAnthropic()
 
         // when
         val response = anthropic.messages.create {

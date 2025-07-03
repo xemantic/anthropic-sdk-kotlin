@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,16 @@
 
 package com.xemantic.ai.anthropic.test
 
+import com.xemantic.ai.anthropic.Anthropic
 import com.xemantic.kotlin.test.gradleRootDir
+import com.xemantic.kotlin.test.isBrowserPlatform
 import kotlinx.io.files.Path
 
-val testDataDir: Path = Path(gradleRootDir, "test-data")
+val testDataDir: Path get() = Path(gradleRootDir, "test-data")
+
+fun testAnthropic(
+    block: Anthropic.Config.() -> Unit = {}
+): Anthropic = Anthropic {
+    block()
+    directBrowserAccess = isBrowserPlatform
+}

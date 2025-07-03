@@ -36,7 +36,7 @@ class DocumentCacheControlTest {
     fun `should cache PDF document across conversation`() = runTest {
         if (isBrowserPlatform) return@runTest // we cannot access files in the browser
         // given
-        val client = Anthropic()
+        val anthropic = Anthropic()
         val conversation = mutableListOf<Message>()
         conversation += Message {
             +Document(Path(testDataDir, "test.pdf")) {
@@ -46,7 +46,7 @@ class DocumentCacheControlTest {
         }
 
         // when
-        val response1 = client.messages.create {
+        val response1 = anthropic.messages.create {
             messages = conversation
         }
         conversation += response1
@@ -71,7 +71,7 @@ class DocumentCacheControlTest {
         }
 
         // when
-        val response2 = client.messages.create {
+        val response2 = anthropic.messages.create {
             messages = conversation
         }
 

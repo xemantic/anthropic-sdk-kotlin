@@ -135,8 +135,6 @@ kotlin {
             // browser tests switched off for a moment
             browser {
                 testTask {
-                    // for unknown reason browser tests are failing
-                    enabled = false
                     useKarma {
                         useChromeHeadless()
                     }

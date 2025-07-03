@@ -21,6 +21,7 @@ import com.xemantic.ai.anthropic.cost.CostWithUsage
 import com.xemantic.ai.anthropic.error.AnthropicApiException
 import com.xemantic.ai.anthropic.message.Role
 import com.xemantic.ai.anthropic.message.StopReason
+import com.xemantic.ai.anthropic.test.testAnthropic
 import com.xemantic.ai.money.Money
 import com.xemantic.ai.money.ZERO
 import com.xemantic.kotlin.test.be
@@ -43,7 +44,7 @@ class AnthropicTest {
     @Test
     fun `should receive an introduction from Claude`() = runTest {
         // given
-        val anthropic = Anthropic()
+        val anthropic = testAnthropic()
 
         // when
         val response = anthropic.messages.create {
@@ -71,7 +72,7 @@ class AnthropicTest {
     @Test
     fun `should use topK topP and temperature`() = runTest {
         // given
-        val anthropic = Anthropic()
+        val anthropic = testAnthropic()
 
         // when
         val response = anthropic.messages.create {
@@ -102,7 +103,7 @@ class AnthropicTest {
     @Test
     fun `should receive Usage and update Cost calculation`() = runTest {
         // given
-        val anthropic = Anthropic()
+        val anthropic = testAnthropic()
 
         // when
         val response = anthropic.messages.create {
@@ -144,7 +145,7 @@ class AnthropicTest {
     @Test
     fun `should use system prompt`() = runTest {
         // given
-        val anthropic = Anthropic()
+        val anthropic = testAnthropic()
 
         // when
         val response = anthropic.messages.create {
@@ -166,7 +167,7 @@ class AnthropicTest {
     @Test
     fun `should return error when error is expected`() = runTest {
         // given
-        val anthropic = Anthropic()
+        val anthropic = testAnthropic()
 
         // when
         val exception = assertFailsWith<AnthropicApiException> {

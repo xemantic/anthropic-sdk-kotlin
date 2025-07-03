@@ -20,6 +20,7 @@ import com.xemantic.ai.anthropic.Anthropic
 import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.ai.anthropic.message.Message
 import com.xemantic.ai.anthropic.message.StopReason
+import com.xemantic.ai.anthropic.test.testAnthropic
 import com.xemantic.ai.anthropic.tool.Tool
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
@@ -40,7 +41,7 @@ class ComputerToolTest {
                 displayHeightPx = 768
             }
         ) { actualInput = this }
-        val anthropic = Anthropic {
+        val anthropic = testAnthropic {
             anthropicBeta += Anthropic.Beta.COMPUTER_USE_2025_01_24.id
         }
 

@@ -16,13 +16,12 @@
 
 package com.xemantic.ai.anthropic.content
 
-import com.xemantic.ai.anthropic.Anthropic
 import com.xemantic.ai.anthropic.cache.CacheControl
 import com.xemantic.ai.anthropic.message.Message
 import com.xemantic.ai.anthropic.message.StopReason
+import com.xemantic.ai.anthropic.test.testAnthropic
 import com.xemantic.ai.anthropic.test.testDataDir
 import com.xemantic.ai.file.magic.MediaType
-import com.xemantic.ai.file.magic.readBytes
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.isBrowserPlatform
@@ -30,6 +29,7 @@ import com.xemantic.kotlin.test.should
 import io.kotest.assertions.json.shouldEqualJson
 import kotlinx.coroutines.test.runTest
 import kotlinx.io.files.Path
+import kotlin.io.encoding.Base64
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 
@@ -49,7 +49,7 @@ class DocumentTest {
     @Test
     fun `should read text from test PDF`() = runTest {
         // given
-        val anthropic = Anthropic()
+        val anthropic = testAnthropic()
 
         // when
         val response = anthropic.messages.create {
@@ -79,7 +79,7 @@ class DocumentTest {
     fun `should read text from test PDF file`() = runTest {
         if (isBrowserPlatform) return@runTest // we cannot access files in the browser
         // given
-        val anthropic = Anthropic()
+        val anthropic = testAnthropic()
 
         // when
         val response = anthropic.messages.create {
@@ -121,7 +121,7 @@ class DocumentTest {
 
     @Test
     fun `should create Document from bytes`() {
-        Document(Path(testDataDir, "test.pdf").readBytes()).source should {
+        Document(Base64.decode(testPdf)).source should {
             be<Source.Base64>()
             have(mediaType == MediaType.PDF.mime)
             have(data.isNotEmpty())
@@ -130,6 +130,7 @@ class DocumentTest {
 
     @Test
     fun `should fail to create Document from text file`() {
+        if (isBrowserPlatform) return // we cannot access files in the browser
         assertFailsWith<IllegalArgumentException> {
             Document(Path(testDataDir, "zero.txt"))
         } should {
@@ -143,6 +144,7 @@ class DocumentTest {
 
     @Test
     fun `should fail to create PDF Document from image file`() {
+        if (isBrowserPlatform) return // we cannot access files in the browser
         assertFailsWith<IllegalArgumentException> {
             Document(Path(testDataDir, "foo.png"))
         } should {

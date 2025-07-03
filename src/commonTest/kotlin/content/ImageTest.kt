@@ -16,10 +16,10 @@
 
 package com.xemantic.ai.anthropic.content
 
-import com.xemantic.ai.anthropic.Anthropic
 import com.xemantic.ai.anthropic.cache.CacheControl
 import com.xemantic.ai.anthropic.message.Message
 import com.xemantic.ai.anthropic.message.StopReason
+import com.xemantic.ai.anthropic.test.testAnthropic
 import com.xemantic.ai.anthropic.test.testDataDir
 import com.xemantic.ai.file.magic.MediaType
 import com.xemantic.ai.file.magic.readBytes
@@ -52,7 +52,7 @@ class ImageTest {
     @Test
     fun `should read text from test image`() = runTest {
         // given
-        val anthropic = Anthropic()
+        val anthropic = testAnthropic()
 
         // when
         val response = anthropic.messages.create {
@@ -82,7 +82,7 @@ class ImageTest {
     fun `should read text from test image file`() = runTest {
         if (isBrowserPlatform) return@runTest // we cannot access files in the browser
         // given
-        val anthropic = Anthropic()
+        val anthropic = testAnthropic()
 
         // when
         val response = anthropic.messages.create {
