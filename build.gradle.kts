@@ -197,6 +197,22 @@ kotlin {
 
         @OptIn(ExperimentalSwiftExportDsl::class)
         swiftExport {}
+
+//        targets.withType<KotlinNativeTarget> {
+//            binaries.all {
+//                freeCompilerArgs += "-Xdisable-phases=RemoveRedundantCallsToStaticInitializersPhase"
+//            }
+//        }
+
+//        // setup tests running in RELEASE mode
+//        targets.withType<KotlinNativeTarget>().configureEach {
+//            binaries.test(listOf(RELEASE))
+//        }
+//        targets.withType<KotlinNativeTargetWithTests<*>>().configureEach {
+//            testRuns.create("releaseTest") {
+//                setExecutionSourceFrom(binaries.getTest(RELEASE))
+//            }
+//        }
     }
 
     sourceSets {
