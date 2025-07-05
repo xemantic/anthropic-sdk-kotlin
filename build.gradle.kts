@@ -223,6 +223,8 @@ kotlin {
                 api(libs.xemantic.ai.money)
                 api(libs.xemantic.ai.file.magic)
                 api(libs.xemantic.kotlin.core)
+                implementation(libs.kotlinx.serialization.core)
+                implementation(libs.kotlinx.serialization.json)
                 implementation(libs.ktor.client.core)
                 implementation(libs.ktor.client.content.negotiation)
                 implementation(libs.ktor.client.logging)
