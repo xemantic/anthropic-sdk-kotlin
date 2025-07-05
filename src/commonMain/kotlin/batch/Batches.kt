@@ -14,16 +14,12 @@
  * limitations under the License.
  */
 
-@file:UseSerializers(InstantSerializer::class)
-
 package com.xemantic.ai.anthropic.batch
 
 import com.xemantic.ai.anthropic.Response
 import com.xemantic.ai.anthropic.message.Message
-import com.xemantic.kotlin.core.time.InstantSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.UseSerializers
 import kotlin.time.Instant
 
 @Serializable
