@@ -111,7 +111,7 @@ kotlin {
     compilerOptions {
         apiVersion = kotlinTarget
         languageVersion = kotlinTarget
-        freeCompilerArgs.add(
+        freeCompilerArgs.addAll(
             "-Xcontext-sensitive-resolution"
         )
         extraWarnings.set(true)
@@ -125,7 +125,10 @@ kotlin {
             apiVersion = kotlinTarget
             languageVersion = kotlinTarget
             jvmTarget = JvmTarget.fromTarget(javaTarget)
-            freeCompilerArgs.add("-Xjdk-release=$javaTarget")
+            freeCompilerArgs.addAll(
+                "-Xjdk-release=$javaTarget",
+                "-Xjvm-default=all-compatibility"
+            )
             progressiveMode = true
         }
     }

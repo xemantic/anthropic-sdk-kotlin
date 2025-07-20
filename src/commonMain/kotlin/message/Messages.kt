@@ -286,6 +286,8 @@ data class MessageResponse(
 
     val toolUses: List<ToolUse> get() = content.filterIsInstance<ToolUse>()
 
+    val requestsToolUse: Boolean get() = stopReason == StopReason.TOOL_USE
+
     val costWithUsage: CostWithUsage get() = CostWithUsage(
         cost = resolvedModel.cost * usage,
         usage = usage
