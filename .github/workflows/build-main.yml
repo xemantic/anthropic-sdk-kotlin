@@ -8,7 +8,7 @@ on:
 
 jobs:
   build_main:
-    runs-on: blacksmith-32vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
         uses: actions/checkout@v5.0.0
