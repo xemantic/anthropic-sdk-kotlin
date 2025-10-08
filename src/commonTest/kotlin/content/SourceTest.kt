@@ -35,7 +35,7 @@ class SourceTest {
             mediaType(MediaType.PNG)
             additionalProperties["bar"] = "buzz"
         }
-        anthropicJson.encodeToString<Source>(source) shouldEqualJson /* language=json */ """
+        anthropicJson.encodeToString<Source>(source) shouldEqualJson """
             {
               "type": "base64",
               "media_type": "image/png",
@@ -48,7 +48,7 @@ class SourceTest {
     @Test
     fun `should deserialize Base64 SourceSource with additional properties`() {
         // given
-        val json = /* language=json */ """
+        val json = """
             {
               "type": "base64",
               "media_type": "image/png",
@@ -73,7 +73,7 @@ class SourceTest {
     @Test
     fun `should created URL Source`() {
         val source = Source.Url("https://example.com/image.png")
-        anthropicJson.encodeToString<Source>(source) shouldEqualJson /* language=json */ """
+        anthropicJson.encodeToString<Source>(source) shouldEqualJson """
             {
               "type": "url",
               "url": "https://example.com/image.png"
@@ -86,7 +86,7 @@ class SourceTest {
         val source = Source.Url("https://example.com/image.png") {
             additionalProperties["bar"] = "buzz"
         }
-        anthropicJson.encodeToString<Source>(source) shouldEqualJson /* language=json */ """
+        anthropicJson.encodeToString<Source>(source) shouldEqualJson """
             {
               "type": "url",
               "url": "https://example.com/image.png",
@@ -101,7 +101,7 @@ class SourceTest {
             url = "https://example.com/image.png"
             additionalProperties["bar"] = "buzz"
         }
-        anthropicJson.encodeToString<Source>(source) shouldEqualJson /* language=json */ """
+        anthropicJson.encodeToString<Source>(source) shouldEqualJson """
             {
               "type": "url",
               "url": "https://example.com/image.png",
@@ -113,7 +113,7 @@ class SourceTest {
     @Test
     fun `should deserialize Url Source with additional properties`() {
         // given
-        val json = /* language=json */ """
+        val json = """
             {
               "type": "url",
               "url": "https://example.com/image.png",
@@ -139,7 +139,7 @@ class SourceTest {
             type = "url"
             additionalProperties["url"] = "https://example.com/image.png"
         }
-        anthropicJson.encodeToString<Source>(source) shouldEqualJson /* language=json */ """
+        anthropicJson.encodeToString<Source>(source) shouldEqualJson """
             {
               "type": "url",
               "url": "https://example.com/image.png"
@@ -150,7 +150,7 @@ class SourceTest {
     @Test
     fun `should deserialize Unknown Source like if it was URL2 source`() {
         // given
-        val json = /* language=json */ """
+        val json = """
             {
               "type": "url2",
               "url": "https://example.com/image.png"

@@ -18,11 +18,11 @@ package com.xemantic.ai.anthropic.content
 
 import com.xemantic.ai.anthropic.cache.CacheControl
 import com.xemantic.ai.anthropic.json.anthropicJson
-import com.xemantic.ai.anthropic.tool.Tool
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.serializer
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
@@ -53,45 +53,12 @@ class ToolUse private constructor(
 
     }
 
-    @Transient
-    @PublishedApi
-    internal lateinit var tool: Tool
-
-    fun decodeInput(): Any = anthropicJson.decodeFromJsonElement(
-        deserializer = tool.inputSerializer,
+    inline fun <reified T> decodeInput(
+        json: Json = anthropicJson
+    ): T = json.decodeFromJsonElement(
+        deserializer = json.serializersModule.serializer<T>(),
         element = input
-    )!!
-
-    /**
-     * Executes the tool and returns the result.
-     *
-     * @return A [ToolResult] containing the outcome of executing the tool.
-     */
-    suspend fun use(): ToolResult = ToolResult {
-        toolUseId = id
-        try {
-            if (::tool.isInitialized) {
-                val input = decodeInput()
-                val result = tool.runner(input)
-                if ((result != null) && (result !is Unit)) {
-                    // TODO maybe we should also support ByteArray?
-                    if (result is Content) {
-                        content += result
-                    } else if (result is List<*>) {
-                        content += result.map { it!!.toContent() }
-                    } else {
-                        content += result.toContent()
-                    }
-                }
-            } else {
-                error("Cannot use unknown tool: $name")
-            }
-        } catch (e: Exception) {
-            // TODO a better way to log this exception
-            e.printStackTrace()
-            error(e.message ?: "Unknown error occurred")
-        }
-    }
+    )
 
     @OptIn(ExperimentalContracts::class)
     fun copy(
@@ -108,8 +75,6 @@ class ToolUse private constructor(
             block(it)
         }.build()
     }
-
-    private fun Any.toContent(): Content = this as? Content ?: Text(this.toString())
 
 }
 

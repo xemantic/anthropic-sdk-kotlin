@@ -127,35 +127,37 @@ fun main() = runBlocking {
 ### Using tools
 
 > [!NOTE]
-> Check [Tool Use conventions](docs/tool_use.md) document for full documentation.
+> Check [Tool Use Guide](docs/tool_use_guide.md) document for full documentation.
 
 If you want to write AI agents, you need tools, and this is where this library shines, while removing any boilerplate code:
 
 ```kotlin
-@SerialName("get_weather")
 @Description("Get the weather for a specific location")
 data class GetWeather(val location: String)
 
 fun main() = runBlocking {
-    val tool = Tool<GetWeather> { "The weather is 73f" }
-    val myTools = listOf(tool)
-    val anthropic = Anthropic()
+    val toolbox = Toolbox {
+        tool<GetWeather> {
+            "The weather in $location is 73f" // it would be returned by API
+        }
+    }
+    val anthropic = Anthropic {
+        defaultTools = toolbox.tools
+    }
 
     val conversation = mutableListOf<Message>()
     conversation += "What is the weather in SF?"
 
     val initialResponse = client.messages.create {
         messages = conversation
-        tools = myTools
     }
     println("Initial response: ${initialResponse.text}")
 
     conversation += initialResponse
-    conversation += initialResponse.useTools()
+    conversation += initialResponse.useTools(toolbox)
 
     val finalResponse = client.messages.create {
         messages = conversation
-        tools = myTools
     }
     println("Final response: ${finalResponse.text}")
 }

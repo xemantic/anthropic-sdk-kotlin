@@ -17,12 +17,18 @@
 package com.xemantic.ai.anthropic.tool
 
 import com.xemantic.ai.anthropic.cache.CacheControl
+import com.xemantic.ai.anthropic.content.Content
+import com.xemantic.ai.anthropic.content.Text
+import com.xemantic.ai.anthropic.content.ToolResult
+import com.xemantic.ai.anthropic.content.ToolUse
 import com.xemantic.ai.anthropic.json.ToolSerializer
+import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.ai.anthropic.json.toPrettyJson
 import com.xemantic.ai.tool.schema.JsonSchema
 import com.xemantic.ai.tool.schema.ObjectSchema
 import com.xemantic.ai.tool.schema.generator.jsonSchemaOf
 import kotlinx.serialization.*
+import kotlinx.serialization.json.Json
 
 @Serializable(with = ToolSerializer::class)
 abstract class Tool {
@@ -31,14 +37,6 @@ abstract class Tool {
     abstract val description: String?
     abstract val inputSchema: JsonSchema?
     abstract val cacheControl: CacheControl?
-
-    @Transient
-    @PublishedApi
-    internal lateinit var inputSerializer: KSerializer<*>
-
-    @Transient
-    @PublishedApi
-    internal lateinit var runner: suspend (input: Any) -> Any?
 
     override fun toString(): String = toPrettyJson()
 
@@ -73,7 +71,7 @@ class DefaultTool private constructor(
 }
 
 @Serializable
-abstract class BuiltInTool(
+abstract class BuiltInTool<Input>(
     override val name: String,
     val type: String
 ) : Tool() {
@@ -97,7 +95,6 @@ inline fun <reified T> Tool(
     name: String? = toolName<T>(),
     description: String? = null,
     builder: DefaultTool.Builder.() -> Unit = {},
-    noinline run: suspend T.() -> Any? = { "ok" }
 ): Tool {
 
     val schema = jsonSchemaOf<T>()
@@ -111,10 +108,8 @@ inline fun <reified T> Tool(
         it.inputSchema = schema.copy {
             this.description = null
         }
-    }.also(builder).build().apply {
-        inputSerializer = serializer<T>()
-        runner = { input -> run(input as T) }
-    }
+        it.builder()
+    }.build()
 
 }
 
@@ -215,3 +210,160 @@ internal val String.normalizedToolName: String
         .replace('.', '_')
         .replace('$', '_')
         .take(64)
+
+fun Toolbox(block: Toolbox.Builder.() -> Unit): Toolbox {
+    val builder = Toolbox.Builder()
+    block(builder)
+    return builder.build()
+}
+
+class Toolbox private constructor(
+    val tools: List<Tool>,
+    private val handlerMap: Map<String, Handler>,
+    private val exceptionHandler: (Exception) -> Unit,
+    private val json: Json
+) {
+
+    @PublishedApi
+    internal class Handler(
+        val serializer: DeserializationStrategy<Any>,
+        val runner: suspend Any.() -> Any
+    )
+
+    class Builder {
+
+        var exceptionHandler: (Exception) -> Unit = {}
+
+        var json: Json = anthropicJson
+
+        inline fun <reified T> tool(
+            builder: DefaultTool.Builder.() -> Unit = {}, // TODO test builder
+            name: String = toolName<T>(),
+            noinline block: suspend T.() -> Any = { "ok" }
+        ) {
+
+            val strategy = serializer<T>()
+
+            val tool = Tool<T>(name = name, builder = builder)
+
+            @Suppress("UNCHECKED_CAST")
+            toolMap[name] = ToolEntry(
+                tool = tool,
+                serializer = strategy as DeserializationStrategy<Any>,
+                runner = block as suspend Any.() -> Any
+            )
+        }
+
+        inline fun <reified T : BuiltInTool<I>, reified I> tool(
+            tool: T,
+            noinline block: suspend I.() -> Any = { "ok" }
+        ) {
+
+            @Suppress("UNCHECKED_CAST")
+            toolMap[tool.name] = ToolEntry(
+                tool = tool,
+                serializer = json.serializersModule.serializer<I>() as DeserializationStrategy<Any>,
+                runner = block as suspend Any.() -> Any
+            )
+        }
+
+        fun build(): Toolbox = Toolbox(
+            tools = toolMap.values.map { it.tool },
+            handlerMap = toolMap.mapValues { (_, entry) -> entry.handler() },
+            exceptionHandler = exceptionHandler,
+            json = json
+        )
+
+        @PublishedApi
+        internal class ToolEntry(
+            val tool: Tool,
+            val serializer: DeserializationStrategy<Any>,
+            val runner: suspend Any.() -> Any
+        ) {
+
+            fun handler() = Handler(
+                serializer = serializer,
+                runner = runner
+            )
+
+        }
+
+        @PublishedApi
+        internal val toolMap = mutableMapOf<String, ToolEntry>()
+
+    }
+
+    /**
+     * Executes the tool and returns the result.
+     *
+     * @return A [ToolResult] containing the outcome of executing the tool.
+     */
+    suspend fun use(
+        toolUse: ToolUse
+    ): ToolResult = ToolResult {
+
+        toolUseId = toolUse.id
+
+        try {
+
+            val handler = requireNotNull(
+                handlerMap[toolUse.name]
+            ) {
+                "No such tool in this box: ${toolUse.name}"
+            }
+
+            val input = json.decodeFromJsonElement(
+                deserializer = handler.serializer,
+                element = toolUse.input
+            )
+            val result = handler.runner.invoke(input)
+
+            if (result !is Unit) {
+                handle(result)
+            } else {
+                // sometimes an empty tool result is causing errors
+                content += Text("ok")
+            }
+
+        } catch (e: Exception) {
+            exceptionHandler(e)
+            error(e.message ?: "Unknown error occurred")
+        }
+    }
+
+    private fun ToolResult.Builder.handle(
+        result: Any
+    ) = when (result) {
+
+        is Content -> {
+            content += result
+        }
+
+        is List<*> -> {
+            content += result.map {
+                if (it == null) Text("null")
+                else it as? Content ?: toText(it)
+            }
+        }
+
+        else -> {
+            content += toText(result)
+        }
+
+    }
+
+    private fun toText(result: Any) = Text(
+        result as? String ?: try {
+            @OptIn(ExperimentalSerializationApi::class)
+            val serializer = json.serializersModule.serializer(
+                kClass = result::class,
+                typeArgumentsSerializers = emptyList(),
+                isNullable = false
+            )
+            json.encodeToString(serializer, result)
+        } catch (e: SerializationException) {
+            result.toString()
+        }
+    )
+
+}

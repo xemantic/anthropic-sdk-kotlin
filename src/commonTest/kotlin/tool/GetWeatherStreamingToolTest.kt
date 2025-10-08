@@ -48,18 +48,21 @@ class GetWeatherStreamingToolTest {
 
     @Test
     fun `should get weather for the location`() = runTest {
-        val weatherTools = listOf(
-            Tool<GetWeather> {
+        // given
+        val toolbox = Toolbox {
+            tool<GetWeather> {
                 "15 degrees in $location" // We are returning static value. In real-life it should be another API call
             }
-        )
-        val anthropic = testAnthropic()
+        }
+        val anthropic = testAnthropic {
+            defaultTools = toolbox.tools
+        }
         val conversation = mutableListOf<Message>()
-
         conversation += "What is the weather like in San Francisco?"
+
+        // when
         val response1 = anthropic.messages.stream {
             messages = conversation.addCacheBreakpoint()
-            tools = weatherTools
         }.onEach {
             if (it is Event.ContentBlockDelta && it.delta is Event.ContentBlockDelta.Delta.TextDelta) {
                 print(it.delta.text)
@@ -67,13 +70,18 @@ class GetWeatherStreamingToolTest {
         }.toMessageResponse()
         conversation += response1
 
+        // then
         response1 should {
             have(stopReason == StopReason.TOOL_USE)
             have(content.isNotEmpty())
             have(content.any { it is ToolUse })
         }
 
-        val tooResults = response1.useTools()
+        // when
+        val tooResults = response1.useTools(toolbox)
+        conversation += tooResults
+
+        // then
         tooResults should {
             have(role == Role.USER)
             have(content.size == 1)
@@ -90,10 +98,8 @@ class GetWeatherStreamingToolTest {
             }
         }
 
-        conversation += tooResults
         val response2 = anthropic.messages.stream {
             messages = conversation.addCacheBreakpoint()
-            tools = weatherTools
         }.onEach {
             if (it is Event.ContentBlockDelta && it.delta is Event.ContentBlockDelta.Delta.TextDelta) {
                 print(it.delta.text)

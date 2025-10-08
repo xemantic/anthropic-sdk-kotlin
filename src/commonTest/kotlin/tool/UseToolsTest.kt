@@ -30,22 +30,23 @@ import com.xemantic.kotlin.test.should
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 
-class ToolUseTest {
+class UseToolsTest {
 
     @Test
     fun `should only use Calculator tool - non-named`() = runTest {
         // given
-        val mathTools = listOf(
-            Tool<Calculator> { calculate() }
-        )
-        val client = testAnthropic()
+        val toolbox = Toolbox {
+            tool<Calculator> { calculate() }
+        }
+        val client = testAnthropic {
+            defaultTools = toolbox.tools
+        }
         val conversation = mutableListOf<Message>()
         conversation += "What's 15 multiplied by 7?"
 
         // when
         val initialResponse = client.messages.create {
             messages = conversation
-            tools = mathTools
             toolChoice = ToolChoice.Tool<Calculator>()
         }
         conversation += initialResponse
@@ -60,12 +61,11 @@ class ToolUseTest {
             }
         }
 
-        conversation += initialResponse.useTools()
+        conversation += initialResponse.useTools(toolbox)
 
         // when
         val resultResponse = client.messages.create {
             messages = conversation
-            tools = mathTools // tool definitions need to be present
         }
 
         // then
@@ -82,17 +82,20 @@ class ToolUseTest {
     @Test
     fun `should only use Calculator tool - named`() = runTest {
         // given
-        val mathTools = listOf(
-            Tool<Calculator>("my_calculator") { calculate() }
-        )
-        val client = testAnthropic()
+        val toolbox = Toolbox {
+            tool<Calculator>(name = "my_calculator") {
+                calculate()
+            }
+        }
+        val client = testAnthropic {
+            defaultTools = toolbox.tools
+        }
         val conversation = mutableListOf<Message>()
         conversation += "What's 15 multiplied by 7?"
 
         // when
         val initialResponse = client.messages.create {
             messages = conversation
-            tools = mathTools
             toolChoice = ToolChoice.Tool("my_calculator")
         }
         conversation += initialResponse
@@ -107,12 +110,11 @@ class ToolUseTest {
             }
         }
 
-        conversation += initialResponse.useTools()
+        conversation += initialResponse.useTools(toolbox)
 
         // when
         val resultResponse = client.messages.create {
             messages = conversation
-            tools = mathTools // tool definitions need to be present
         }
 
         // then
@@ -129,15 +131,15 @@ class ToolUseTest {
     @Test
     fun `should use FibonacciCalculator tool`() = runTest {
         // given
-        val mathTools = listOf(
-            Tool<FibonacciCalculator> { calculate() }
-        )
+        val toolbox = Toolbox {
+            tool<FibonacciCalculator> { calculate() }
+        }
         val client = testAnthropic()
 
         // when
         val response = client.messages.create {
             +"What's fibonacci number 42"
-            tools = mathTools
+            tools = toolbox.tools
         }
 
         // then
@@ -146,7 +148,7 @@ class ToolUseTest {
             have(name == "fibonacci_calculator")
         }
 
-        val result = toolUse.use()
+        val result = toolbox.use(toolUse)
         result should {
             have(toolUseId == toolUse.id)
             have(content != null && content.size == 1)
@@ -160,11 +162,13 @@ class ToolUseTest {
     @Test
     fun `should use 2 tools in sequence`() = runTest {
         // given
-        val mathTools = listOf(
-            Tool<FibonacciCalculator> { calculate() },
-            Tool<Calculator> { calculate() }
-        )
-        val client = testAnthropic()
+        val toolbox = Toolbox {
+            tool<FibonacciCalculator> { calculate() }
+            tool<Calculator> { calculate() }
+        }
+        val client = testAnthropic {
+            defaultTools = toolbox.tools
+        }
         val systemPrompt =
             "Always use tools to perform calculations. Never calculate on your own, even if you know the answer."
         val prompt = "Calculate Fibonacci number 42 and then divide it by 42"
@@ -175,7 +179,6 @@ class ToolUseTest {
         val fibonacciResponse = client.messages.create {
             system(systemPrompt)
             messages = conversation
-            tools = mathTools
             toolChoice = ToolChoice.Tool<FibonacciCalculator>()
         }
         conversation += fibonacciResponse
@@ -188,12 +191,11 @@ class ToolUseTest {
                 have(name == "fibonacci_calculator")
             }
         }
-        conversation += fibonacciResponse.useTools()
+        conversation += fibonacciResponse.useTools(toolbox)
 
         // when
         val calculatorResponse = client.messages.create {
             messages = conversation
-            tools = mathTools
             toolChoice = ToolChoice.Tool<Calculator>()
         }
         conversation += calculatorResponse
@@ -206,12 +208,11 @@ class ToolUseTest {
                 have(name == "calculator")
             }
         }
-        conversation += calculatorResponse.useTools()
+        conversation += calculatorResponse.useTools(toolbox)
 
         // when
         val finalResponse = client.messages.create {
             messages = conversation
-            tools = mathTools
         }
         finalResponse should {
             have(content.isNotEmpty())

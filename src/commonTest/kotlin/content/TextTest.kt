@@ -28,12 +28,12 @@ class TextTest {
 
     @Test
     fun `should return string representation of Text`() {
-        Text("foo").toString() shouldEqualJson /* language=json */ """
+        Text("foo").toString() shouldEqualJson """
             {
               "type": "text",
               "text": "foo"
             }
-        """.trimIndent()
+        """
     }
 
     @Test

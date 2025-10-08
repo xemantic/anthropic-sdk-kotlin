@@ -47,29 +47,37 @@ class GetWeatherToolTest {
 
     @Test
     fun `should get weather for the location`() = runTest {
-        val weatherTools = listOf(
-            Tool<GetWeather> {
+        // given
+        val toolbox = Toolbox {
+            tool<GetWeather> {
                 "15 degrees in $location" // We are returning static value. In real-life it should be another API call
             }
-        )
-        val anthropic = testAnthropic()
+        }
+        val anthropic = testAnthropic {
+            defaultTools = toolbox.tools
+        }
         val conversation = mutableListOf<Message>()
-
         conversation += "What is the weather like in San Francisco?"
+
+        // when
         val response1 = anthropic.messages.create {
             messages = conversation
-            tools = weatherTools
         }
         conversation += response1
 
+        // then
         response1 should {
             have(stopReason == StopReason.TOOL_USE)
             have(content.isNotEmpty())
             have(content.any { it is ToolUse })
         }
 
-        val tooResults = response1.useTools()
-        tooResults should {
+        // when
+        val toolResults = response1.useTools(toolbox)
+        conversation += toolResults
+
+        // then
+        toolResults should {
             have(role == Role.USER)
             have(content.size == 1)
             content[0] should {
@@ -85,11 +93,12 @@ class GetWeatherToolTest {
             }
         }
 
-        conversation += tooResults
+        // when
         val response2 = anthropic.messages.create {
             messages = conversation
-            tools = weatherTools
         }
+
+        // then
         response2 should {
             have("15" in text!!)
             have("San Francisco" in text!!)

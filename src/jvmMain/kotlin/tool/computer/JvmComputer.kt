@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package com.xemantic.ai.anthropic.tool.computer
 
 import com.xemantic.ai.anthropic.content.ToolResult
+import com.xemantic.ai.anthropic.tool.Computer
 import java.awt.Rectangle
 import java.awt.Robot
 import java.awt.Toolkit
@@ -24,8 +25,8 @@ import java.io.ByteArrayOutputStream
 import javax.imageio.ImageIO
 
 
-fun ComputerTool.Input.process(): ToolResult {
-    if (action == ComputerTool.Action.SCREENSHOT) {
+fun Computer.Input.process(): ToolResult {
+    if (action == Computer.Action.SCREENSHOT) {
         takeScreenshot()
     }
     // TODO non-finished

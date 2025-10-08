@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-package com.xemantic.ai.anthropic.tool.computer
+package com.xemantic.ai.anthropic.tool
 
-import com.xemantic.ai.anthropic.tool.BuiltInTool
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.serializer
 
 @Serializable
 @SerialName("bash")
-class BashTool private constructor() : BuiltInTool(
+class Bash private constructor() : BuiltInTool<Bash.Input>(
     name = "bash",
     type = "bash_20250124"
 ) {
@@ -56,7 +54,7 @@ class BashTool private constructor() : BuiltInTool(
 
     class Builder {
 
-        fun build(): BashTool = BashTool()
+        fun build(): Bash = Bash()
 
     }
 
@@ -70,10 +68,6 @@ class BashTool private constructor() : BuiltInTool(
 
 }
 
-fun BashTool(
-    builder: BashTool.Builder.() -> Unit = {},
-    run: suspend BashTool.Input.() -> Unit
-): BashTool = BashTool.Builder().apply(builder).build().apply {
-    inputSerializer = serializer<BashTool.Input>()
-    runner = { input -> run(input as BashTool.Input) }
-}
+fun Bash(
+    builder: Bash.Builder.() -> Unit = {}
+): Bash = Bash.Builder().apply(builder).build()

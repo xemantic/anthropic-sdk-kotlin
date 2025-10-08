@@ -37,7 +37,6 @@ class MessageResponseTest {
     @Test
     fun `should deserialize ToolUse message response`() {
         // given
-        /* language=json */
         val jsonResponse = """
             {
               "id": "msg_01PspkNzNG3nrf5upeTsmWLF",

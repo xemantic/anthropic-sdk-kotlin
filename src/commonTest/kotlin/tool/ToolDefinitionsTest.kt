@@ -18,7 +18,6 @@ package com.xemantic.ai.anthropic.tool
 
 import com.xemantic.ai.anthropic.cache.CacheControl
 import com.xemantic.ai.tool.schema.meta.Description
-import com.xemantic.kotlin.test.assert
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
@@ -40,48 +39,41 @@ class ToolDefinitionsTest {
     class Foo(val bar: String)
 
     @Test
-    fun `should define tool without runner`() = runTest {
+    fun `should define tool`() = runTest {
         val tool = Tool<Foo>()
         tool should {
             have(name.endsWith("Foo"))
             have(description == null)
             have(cacheControl == null)
         }
-        assert(tool.runner(Foo("buzz")) == "ok") // ok is the standard result
     }
 
     @Test
-    fun `should define tool with runner`() = runTest {
-        val tool = Tool<Foo> {
-            "result: $bar"
-        }
+    fun `should define tool with custom name`() = runTest {
+        val tool = Tool<Foo>("bar")
         tool should {
-            have(name.endsWith("Foo"))
+            have(name.endsWith("bar"))
             have(description == null)
             have(cacheControl == null)
         }
-        val result = tool.runner(Foo("buzz"))
-        assert(result == "result: buzz")
     }
 
     @Test
-    fun `should define 2 tools of the same type with different names and runners`() = runTest {
-        val tool1 = Tool<Foo>("tool1") {
-            "tool1: $bar"
+    fun `should define 2 tools of the same type with different names`() = runTest {
+        val tool1 = Tool<Foo>(name = "tool1")
+        val tool2 = Tool<Foo>("tool2")
+        tool1 should {
+            have(name == "tool1")
         }
-        val tool2 = Tool<Foo>("tool2") {
-            "tool2: $bar"
+        tool2 should {
+            have(name == "tool2")
         }
-        val foo = Foo("buzz")
-        val result1 = tool1.runner(foo)
-        val result2 = tool2.runner(foo)
-        assert(result1 == "tool1: buzz")
-        assert(result2 == "tool2: buzz")
     }
 
     /**
      * Let's start with defining a test tool used later in the tests.
      */
+    // given
     @SerialName("message_repeater")
     @Description("A test tool receiving a message and outputting it back")
     class MessageRepeater(
@@ -92,15 +84,13 @@ class ToolDefinitionsTest {
     @Test
     fun `should create a tool instance from the test tool annotated with description`() {
         // when
-        val tool = Tool<MessageRepeater> {
-            message
-        }
+        val tool = Tool<MessageRepeater>()
 
         tool should {
             have(name == "message_repeater")
             have(description == "A test tool receiving a message and outputting it back")
             have(cacheControl == null)
-            inputSchema.toString() shouldEqualJson /* language=json */ """
+            inputSchema.toString() shouldEqualJson """
                 {
                   "type": "object",
                   "properties": {
@@ -120,12 +110,8 @@ class ToolDefinitionsTest {
     @Test
     fun `should create a tool instance from the test tool with given CacheControl`() {
         // when
-        val tool = Tool<MessageRepeater>(
-            builder = {
-                cacheControl = CacheControl.Ephemeral()
-            }
-        ) {
-            /* no tool use */
+        val tool = Tool<MessageRepeater> {
+            cacheControl = CacheControl.Ephemeral()
         }
 
         tool should {
@@ -134,7 +120,7 @@ class ToolDefinitionsTest {
             cacheControl should {
                 be<CacheControl.Ephemeral>()
             }
-            inputSchema.toString() shouldEqualJson /* language=json */ """
+            inputSchema.toString() shouldEqualJson """
             {
               "type": "object",
               "properties": {

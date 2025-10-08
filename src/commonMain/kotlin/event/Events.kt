@@ -19,7 +19,6 @@ package com.xemantic.ai.anthropic.event
 import com.xemantic.ai.anthropic.AnthropicModel
 import com.xemantic.ai.anthropic.message.MessageResponse
 import com.xemantic.ai.anthropic.message.StopReason
-import com.xemantic.ai.anthropic.tool.Tool
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -65,10 +64,6 @@ sealed interface Event {
     @Serializable
     @SerialName("message_stop")
     class MessageStop : Event {
-        @Transient
-        lateinit var resolvedModel: AnthropicModel
-        @Transient
-        lateinit var toolMap: Map<String, Tool>
         override fun toString(): String = "MessageStop"
     }
 

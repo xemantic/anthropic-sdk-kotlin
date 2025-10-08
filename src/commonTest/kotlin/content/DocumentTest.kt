@@ -185,7 +185,7 @@ class DocumentTest {
         Document {
             source = Source.Url("https://example.com/document.pdf")
             cacheControl = CacheControl.Ephemeral()
-        }.toString() shouldEqualJson /* language=json */ """
+        }.toString() shouldEqualJson """
             {
               "type": "document",
               "source": {
