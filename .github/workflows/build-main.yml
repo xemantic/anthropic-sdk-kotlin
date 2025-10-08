@@ -20,7 +20,7 @@ jobs:
           java-version: 23
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4.4.3
+        uses: gradle/actions/setup-gradle@v5.0.0
 
       - name: Build
         run: ./gradlew -PjvmOnlyBuild=false build sourcesJar javadocJar publish
