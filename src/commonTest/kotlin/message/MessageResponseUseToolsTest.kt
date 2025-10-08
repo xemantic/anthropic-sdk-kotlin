@@ -309,7 +309,7 @@ class MessageResponseUseToolsTest {
     }
 
     @Test
-    fun `should return Document and Image, Text and null text when Tool returns list of Content elements`() = runTest {
+    fun `should return Document and Image and Text and null Text when Tool returns list of Content elements`() = runTest {
         // given
         val toolbox = Toolbox {
             tool<Foo> {
