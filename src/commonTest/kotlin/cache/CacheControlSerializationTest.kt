@@ -34,7 +34,7 @@ class CacheControlSerializationTest {
         anthropicJson.encodeToString(
             serializer = CacheControl.serializer(),
             value = CacheControl.Ephemeral()
-        ) shouldEqualJson /* language=json */ """
+        ) shouldEqualJson """
             {
               "type": "ephemeral"
             }
@@ -55,7 +55,7 @@ class CacheControlSerializationTest {
                 }
                 additionalProperties["nullProperty"] = null
             }
-        ) shouldEqualJson /* language=json */ """
+        ) shouldEqualJson """
             {
               "type": "ephemeral",
               "booleanProperty": true,
@@ -109,7 +109,7 @@ class CacheControlSerializationTest {
                 type = "persistent"
                 additionalProperties["foo"] = "bar"
             }
-        ) shouldEqualJson /* language=json */ """
+        ) shouldEqualJson """
             {
               "type": "persistent",
               "foo": "bar"
@@ -125,7 +125,7 @@ class CacheControlSerializationTest {
                 type = "persistent"
                 additionalProperties["foo"] = "bar"
             }
-        ) shouldEqualJson /* language=json */ """
+        ) shouldEqualJson """
             {
               "type": "persistent",
               "foo": "bar"
@@ -136,7 +136,6 @@ class CacheControlSerializationTest {
     @Test
     fun `should deserialize hypothetical future CacheControl instance`() {
         anthropicJson.decodeFromString<CacheControl>(
-            /* language=json */
             """
             {
               "type": "persistent"
@@ -151,7 +150,6 @@ class CacheControlSerializationTest {
     @Test
     fun `should deserialize hypothetical future CacheControl instance with additional properties`() {
         anthropicJson.decodeFromString<CacheControl>(
-            /* language=json */
             """
             {
               "type": "persistent",

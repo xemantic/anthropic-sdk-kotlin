@@ -22,7 +22,6 @@ import com.xemantic.ai.anthropic.content.ToolUse
 import com.xemantic.ai.anthropic.error.AnthropicApiException
 import com.xemantic.ai.anthropic.event.Event
 import com.xemantic.ai.anthropic.event.Event.*
-import com.xemantic.ai.anthropic.resolveTools
 import com.xemantic.ai.anthropic.usage.Usage
 import io.ktor.http.*
 import kotlinx.coroutines.flow.Flow
@@ -88,8 +87,6 @@ suspend fun Flow<Event>.toMessageResponse(): MessageResponse {
                 response = response!!.copy(
                     content = content
                 )
-                response.resolvedModel = event.resolvedModel
-                response.content.resolveTools(event.toolMap)
                 messageStopped = true
             }
             is Ping -> { /* nothing to do */ }

@@ -16,8 +16,6 @@
 
 package com.xemantic.ai.anthropic
 
-import com.xemantic.ai.anthropic.content.Content
-import com.xemantic.ai.anthropic.content.ToolUse
 import com.xemantic.ai.anthropic.cost.CostCollector
 import com.xemantic.ai.anthropic.cost.CostWithUsage
 import com.xemantic.ai.anthropic.error.AnthropicApiException
@@ -78,6 +76,7 @@ fun Anthropic(
         apiBase = config.apiBase,
         defaultModel = config.defaultModel.id,
         defaultMaxTokens = config.defaultMaxTokens,
+        defaultTools = config.defaultTools,
         directBrowserAccess = config.directBrowserAccess,
         logLevel = if (config.logHttp) LogLevel.ALL else LogLevel.NONE,
         modelMap = config.modelMap
@@ -91,6 +90,7 @@ class Anthropic internal constructor(
     val apiBase: String,
     val defaultModel: String,
     val defaultMaxTokens: Int,
+    val defaultTools: List<Tool>?,
     val directBrowserAccess: Boolean,
     val logLevel: LogLevel,
     private val modelMap: Map<String, AnthropicModel>
@@ -108,10 +108,20 @@ class Anthropic internal constructor(
         var defaultModel: AnthropicModel = Model.DEFAULT
         var defaultMaxTokens: Int = defaultModel.maxOutput
 
+        /**
+         * The list of tools used by default for every message request.
+         * Can be overridden on per-request basis.
+         */
+        var defaultTools: List<Tool>? = null
+
         var directBrowserAccess: Boolean = false
         var logHttp: Boolean = false
 
         var modelMap: Map<String, AnthropicModel> = Model.entries.associateBy { it.id }
+
+        operator fun Beta.unaryPlus() {
+            anthropicBeta += this.id
+        }
 
     }
 
@@ -186,8 +196,7 @@ class Anthropic internal constructor(
             block: MessageRequest.Builder.() -> Unit
         ): MessageResponse = create(
             request = MessageRequest.Builder().apply {
-                model = defaultModel
-                maxTokens = defaultMaxTokens
+                applyDefaults()
                 block(this)
             }.build()
         )
@@ -202,9 +211,7 @@ class Anthropic internal constructor(
             val response = apiResponse.body<Response>()
             when (response) {
                 is MessageResponse -> {
-                    val toolMap = request.toolMap
                     response.resolvedModel = response.anthropicModel
-                    response.content.resolveTools(toolMap)
                     costCollector += response.costWithUsage
                 }
                 is ErrorResponse -> throw AnthropicApiException( // technically, this should be handled by the validator
@@ -223,9 +230,8 @@ class Anthropic internal constructor(
         ): Flow<Event> = flow {
 
             val request = MessageRequest.Builder().apply {
-                model = defaultModel
-                maxTokens = defaultMaxTokens
-                block(this)
+                applyDefaults()
+                block()
                 stream = true
             }.build()
 
@@ -239,7 +245,7 @@ class Anthropic internal constructor(
                     }
                 ) {
                     var usage = Usage.ZERO
-                    var resolvedModel: AnthropicModel? = null
+                    lateinit var resolvedModel: AnthropicModel
                     incoming
                         .map { it.data }
                         .filterNotNull()
@@ -257,8 +263,6 @@ class Anthropic internal constructor(
                                     usage += event.message.usage
                                 }
                                 is Event.MessageStop -> {
-                                    event.toolMap = request.toolMap
-                                    event.resolvedModel = resolvedModel!!
                                     val costWithUsage = CostWithUsage(
                                         cost = resolvedModel.cost * usage,
                                         usage = usage
@@ -273,6 +277,14 @@ class Anthropic internal constructor(
             } catch (e: SSEClientException) {
                 if (e.cause is AnthropicApiException) throw e.cause!!
                 throw e
+            }
+        }
+
+        private fun MessageRequest.Builder.applyDefaults() {
+            model = defaultModel
+            maxTokens = defaultMaxTokens
+            if (defaultTools != null) {
+                tools = defaultTools
             }
         }
 
@@ -301,18 +313,3 @@ class AnthropicConfigException(
 ) : AnthropicException(
     msg, cause
 )
-
-internal fun List<Content>.resolveTools(toolMap: Map<String, Tool>) {
-    filterIsInstance<ToolUse>().forEach { toolUse ->
-        val tool = toolMap[toolUse.name]
-        if (tool != null) {
-            toolUse.tool = tool
-        } else {
-            // Sometimes it happens that Claude is sending non-defined tool name in tool use
-            // TODO in the future it should go to the stderr
-            println("Error!!! Unexpected tool use: ${toolUse.name}")
-        }
-    }
-}
-
-private val MessageRequest.toolMap: Map<String, Tool> get() = tools?.associateBy { it.name } ?: emptyMap()

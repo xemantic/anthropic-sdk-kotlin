@@ -18,11 +18,7 @@ package com.xemantic.ai.anthropic.message
 
 import com.xemantic.ai.anthropic.content.Text
 import com.xemantic.ai.anthropic.json.anthropicJson
-import com.xemantic.ai.anthropic.tool.Tool
-import com.xemantic.ai.anthropic.tool.ToolChoice
-import com.xemantic.ai.anthropic.tool.computer.BashTool
-import com.xemantic.ai.anthropic.tool.computer.ComputerTool
-import com.xemantic.ai.anthropic.tool.computer.TextEditorTool
+import com.xemantic.ai.anthropic.tool.*
 import com.xemantic.ai.tool.schema.meta.Description
 import io.kotest.assertions.json.shouldEqualJson
 import kotlinx.serialization.SerialName
@@ -45,7 +41,7 @@ class MessageRequestTest {
         val json = anthropicJson.encodeToString(request)
 
         // then
-        json shouldEqualJson /* language=json */ """
+        json shouldEqualJson """
             {
               "model": "claude-sonnet-4-0",
               "messages": [
@@ -79,7 +75,7 @@ class MessageRequestTest {
         val json = anthropicJson.encodeToString(request)
 
         // then
-        json shouldEqualJson /* language=json */ """
+        json shouldEqualJson """
             {
               "model": "claude-sonnet-4-0",
               "messages": [
@@ -113,7 +109,7 @@ class MessageRequestTest {
         val json = anthropicJson.encodeToString(request)
 
         // then
-        json shouldEqualJson /* language=json */ """
+        json shouldEqualJson """
             {
               "model": "claude-sonnet-4-0",
               "messages": [
@@ -161,15 +157,13 @@ class MessageRequestTest {
             }
             tools = listOf(
                 // built in tools
-                ComputerTool(
-                    builder = {
-                        displayWidthPx = 1024
-                        displayHeightPx = 768
-                        displayNumber = 1
-                    }
-                ) {},
-                TextEditorTool {},
-                BashTool {},
+                Computer {
+                    displayWidthPx = 1024
+                    displayHeightPx = 768
+                    displayNumber = 1
+                },
+                TextEditor {},
+                Bash {},
                 // custom tool
                 Tool<GetWeather>("get_weather")
             )
@@ -179,7 +173,7 @@ class MessageRequestTest {
         val json = anthropicJson.encodeToString(request)
 
         // then
-        json shouldEqualJson /* language=json */ """
+        json shouldEqualJson """
             {
               "model": "claude-sonnet-4-0",
               "messages": [
@@ -253,7 +247,7 @@ class MessageRequestTest {
         val json = anthropicJson.encodeToString(request)
 
         // then
-        json shouldEqualJson /* language=json */ """
+        json shouldEqualJson """
             {
               "model": "claude-sonnet-4-0",
               "messages": [
@@ -301,7 +295,7 @@ class MessageRequestTest {
     @Test
     fun `should deserialize MessageRequest - for example a JSON stored on disk`() {
         // given
-        val request = /* language=json */ """
+        val request = """
             {
               "model": "claude-sonnet-4-0",
               "messages": [

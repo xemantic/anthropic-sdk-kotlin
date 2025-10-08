@@ -203,7 +203,7 @@ class ImageTest {
                 data = TEST_IMAGE
             }
             cacheControl = CacheControl.Ephemeral()
-        }.toString() shouldEqualJson /* language=json */ """
+        }.toString() shouldEqualJson """
             {
               "source": {
                 "type": "base64",

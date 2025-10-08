@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-package com.xemantic.ai.anthropic.tool.computer
+package com.xemantic.ai.anthropic.tool.builtin
 
 import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.ai.anthropic.message.Message
 import com.xemantic.ai.anthropic.message.StopReason
 import com.xemantic.ai.anthropic.test.testAnthropic
+import com.xemantic.ai.anthropic.tool.Bash
 import com.xemantic.ai.anthropic.tool.Tool
+import com.xemantic.ai.anthropic.tool.Toolbox
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
@@ -28,19 +30,23 @@ import io.kotest.assertions.json.shouldEqualJson
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 
-class BashToolTest {
+class BashTest {
 
     @Test
-    fun `should use BashTool`() = runTest {
+    fun `should use Bash tool`() = runTest {
         // given
-        var actualInput: BashTool.Input? = null
-        val tool = BashTool { actualInput = this }
+        var receivedInput: Bash.Input? = null
+        val toolbox = Toolbox {
+            tool(Bash()) {
+                receivedInput = this
+            }
+        }
         val anthropic = testAnthropic()
 
         // when
         val response = anthropic.messages.create {
             +Message { +"List files in the current folder" }
-            tools = listOf(tool)
+            tools = toolbox.tools
         }
 
         // then
@@ -49,10 +55,10 @@ class BashToolTest {
         }
 
         // when
-        response.useTools()
+        response.useTools(toolbox)
 
         // then
-        actualInput should {
+        receivedInput should {
             have(command!!.startsWith("ls"))
             have(restart == null)
         }
@@ -61,8 +67,8 @@ class BashToolTest {
     @Test
     fun `should serialize BashTool`() {
         anthropicJson.encodeToString(
-            BashTool {}
-        ) shouldEqualJson /* language=json */ """
+            Bash {}
+        ) shouldEqualJson """
             {
               "name": "bash",
               "type": "bash_20250124"
@@ -81,14 +87,14 @@ class BashToolTest {
             """
         ) should {
             have(name == "bash")
-            be<BashTool>()
+            be<Bash>()
             have(type == "bash_20250124")
         }
     }
 
     @Test
-    fun `should return JSON for BashTool toString`() {
-        BashTool {}.toString() shouldEqualJson /* language=json */ """
+    fun `should return JSON for Bash tool toString`() {
+        Bash {}.toString() shouldEqualJson """
             {
               "name": "bash",
               "type": "bash_20250124"
@@ -97,8 +103,8 @@ class BashToolTest {
     }
 
     @Test
-    fun `should deserialize BashTool Input`() {
-        anthropicJson.decodeFromString<BashTool.Input>(
+    fun `should deserialize Bash tool input`() {
+        anthropicJson.decodeFromString<Bash.Input>(
             """
             {
               "command": "ls"
@@ -111,17 +117,17 @@ class BashToolTest {
     }
 
     @Test
-    fun `should serialize empty BashTool Input`() {
-        anthropicJson.encodeToString(BashTool.Input {}) shouldEqualJson /* language=json */ """
+    fun `should serialize empty Bash tool input`() {
+        anthropicJson.encodeToString(Bash.Input {}) shouldEqualJson """
             {}
         """
     }
 
     @Test
-    fun `should serialize BashTool Input with command`() {
-        anthropicJson.encodeToString(BashTool.Input {
+    fun `should serialize Bash tool input with command`() {
+        anthropicJson.encodeToString(Bash.Input {
             command = "ls"
-        }) shouldEqualJson /* language=json */ """
+        }) shouldEqualJson """
             {
               "command": "ls"
             }
@@ -129,10 +135,10 @@ class BashToolTest {
     }
 
     @Test
-    fun `should serialize BashTool Input with restart`() {
-        anthropicJson.encodeToString(BashTool.Input {
+    fun `should serialize Bash tool input with restart`() {
+        anthropicJson.encodeToString(Bash.Input {
             restart = true
-        }) shouldEqualJson /* language=json */ """
+        }) shouldEqualJson """
             {
               "restart": true
             }

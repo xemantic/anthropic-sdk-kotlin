@@ -43,20 +43,23 @@ class QueryDatabaseToolTest {
     @Test
     @Ignore // it would be nice to actually use embedded database here
     fun `should query database`() = runTest {
-        val anthropic = Anthropic()
-        val dbTools = listOf(
-            Tool<QueryDatabase> {
+        // given
+        val toolbox = Toolbox {
+            tool<QueryDatabase> {
                 dataSource.connection.use {
                     it.queryDatabase(sql)
                 }
             }
-        )
+        }
+
+        val anthropic = Anthropic()
+
         val response = anthropic.messages.create {
             +Message { +"Select all the users who never logged into the the system" }
-            tools = dbTools
+            tools = toolbox.tools
             toolChoice = ToolChoice.Tool<QueryDatabase>()
         }
-        val result = response.useTools()
+        val result = response.useTools(toolbox)
         println(result)
     }
 

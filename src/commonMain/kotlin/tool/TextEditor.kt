@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-package com.xemantic.ai.anthropic.tool.computer
+package com.xemantic.ai.anthropic.tool
 
-import com.xemantic.ai.anthropic.tool.BuiltInTool
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.serializer
 
 @Serializable
 @SerialName("str_replace_editor")
-class TextEditorTool private constructor() : BuiltInTool(
+class TextEditor private constructor() : BuiltInTool<TextEditor.Input>(
     name = "str_replace_editor",
     type = "text_editor_20250124"
 ) {
@@ -90,7 +88,7 @@ class TextEditorTool private constructor() : BuiltInTool(
 
     class Builder {
 
-        fun build(): TextEditorTool = TextEditorTool()
+        fun build(): TextEditor = TextEditor()
 
     }
 
@@ -104,10 +102,6 @@ class TextEditorTool private constructor() : BuiltInTool(
 
 }
 
-fun TextEditorTool(
-    builder: TextEditorTool.Builder.() -> Unit = {},
-    run: suspend TextEditorTool.Input.() -> Unit
-): TextEditorTool = TextEditorTool.Builder().apply(builder).build().apply {
-    inputSerializer = serializer<TextEditorTool.Input>()
-    runner = { input -> run(input as TextEditorTool.Input) }
-}
+fun TextEditor(
+    builder: TextEditor.Builder.() -> Unit = {},
+): TextEditor = TextEditor.Builder().apply(builder).build()

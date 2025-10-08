@@ -26,7 +26,7 @@ class EphemeralCacheControlToStringTest {
 
     @Test
     fun `should return pretty toString JSON of Ephemeral CacheControl`() {
-        CacheControl.Ephemeral().toString() shouldEqualJson /* language=json */ """
+        CacheControl.Ephemeral().toString() shouldEqualJson """
             {
               "type": "ephemeral"
             }
@@ -44,7 +44,7 @@ class EphemeralCacheControlToStringTest {
                 put("foo", "bar")
             }
             additionalProperties["nullProperty"] = null
-        }.toString() shouldEqualJson /* language=json */ """
+        }.toString() shouldEqualJson """
             {
               "type": "ephemeral",
               "booleanProperty": true,

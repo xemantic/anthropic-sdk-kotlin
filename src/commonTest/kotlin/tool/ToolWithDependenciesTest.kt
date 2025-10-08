@@ -61,17 +61,17 @@ class ToolWithDependenciesTest {
     @Test
     fun `should use tool with dependencies`() = runTest {
         // given
-        val dbTools = listOf(
-            Tool<QueryDatabase> {
+        val toolbox = Toolbox {
+            tool<QueryDatabase> {
                 testDatabase.execute(sql)
             }
-        )
+        }
         val anthropic = testAnthropic()
 
         // when
         val response = anthropic.messages.create {
             +Message { +"List data in CUSTOMER table" }
-            tools = dbTools
+            tools = toolbox.tools
             toolChoice = ToolChoice.Tool<QueryDatabase>()
         }
 
@@ -84,7 +84,7 @@ class ToolWithDependenciesTest {
         }
 
         // when
-        response.useTools()
+        response.useTools(toolbox)
 
         // then
         testDatabase should {

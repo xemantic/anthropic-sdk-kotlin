@@ -58,7 +58,7 @@ class ToolUseTest {
             id = "42"
             name = "foo"
             input = buildJsonObject {}
-        }.toString() shouldEqualJson /* language=json */ """
+        }.toString() shouldEqualJson """
             {
               "type": "tool_use",
               "id": "42",

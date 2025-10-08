@@ -30,7 +30,7 @@ class ErrorResponseTest {
 
     @Test
     fun `should deserialize ErrorResponse`() {
-        anthropicJson.decodeFromString<Response>(/* language=json */ """
+        anthropicJson.decodeFromString<Response>("""
             {
               "type": "error",
               "error": {

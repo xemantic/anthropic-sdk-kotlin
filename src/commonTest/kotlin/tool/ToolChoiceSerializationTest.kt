@@ -29,7 +29,7 @@ class ToolChoiceSerializationTest {
     @Test
     fun `should serialize ToolChoice Auto`() {
 
-        ToolChoice.Auto().encodeToString() shouldEqualJson /* language=json */ """
+        ToolChoice.Auto().encodeToString() shouldEqualJson """
             {
               "type": "auto"
             }
@@ -37,7 +37,7 @@ class ToolChoiceSerializationTest {
 
         ToolChoice.Auto {
             disableParallelToolUse = true
-        }.encodeToString() shouldEqualJson /* language=json */ """
+        }.encodeToString() shouldEqualJson """
             {
               "type": "auto",
               "disable_parallel_tool_use": true
@@ -49,7 +49,7 @@ class ToolChoiceSerializationTest {
     @Test
     fun `should serialize ToolChoice Any`() {
 
-        ToolChoice.Any().encodeToString() shouldEqualJson /* language=json */ """
+        ToolChoice.Any().encodeToString() shouldEqualJson """
             {
               "type": "any"
             }
@@ -57,7 +57,7 @@ class ToolChoiceSerializationTest {
 
         ToolChoice.Any {
             disableParallelToolUse = true
-        }.encodeToString() shouldEqualJson /* language=json */ """
+        }.encodeToString() shouldEqualJson """
             {
               "type": "any",
               "disable_parallel_tool_use": true
@@ -69,7 +69,7 @@ class ToolChoiceSerializationTest {
     @Test
     fun `should serialize ToolChoice Tool`() {
 
-        ToolChoice.Tool("foo").encodeToString() shouldEqualJson /* language=json */ """
+        ToolChoice.Tool("foo").encodeToString() shouldEqualJson """
             {
               "type": "tool",
               "name": "foo"
@@ -78,7 +78,7 @@ class ToolChoiceSerializationTest {
 
         ToolChoice.Tool("foo") {
             disableParallelToolUse = true
-        }.encodeToString() shouldEqualJson /* language=json */ """
+        }.encodeToString() shouldEqualJson """
             {
               "type": "tool",
               "name": "foo",
@@ -88,7 +88,7 @@ class ToolChoiceSerializationTest {
 
         ToolChoice.Tool<Calculator> {
             disableParallelToolUse = true
-        }.encodeToString() shouldEqualJson /* language=json */ """
+        }.encodeToString() shouldEqualJson """
             {
               "type": "tool",
               "name": "calculator",

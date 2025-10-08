@@ -14,23 +14,21 @@
  * limitations under the License.
  */
 
-package com.xemantic.ai.anthropic.tool.computer
+package com.xemantic.ai.anthropic.tool
 
-import com.xemantic.ai.anthropic.tool.BuiltInTool
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.serializer
 
 @Serializable
 @SerialName("computer")
-class ComputerTool private constructor(
+class Computer private constructor(
     @SerialName("display_width_px")
     val displayWidthPx: Int,
     @SerialName("display_height_px")
     val displayHeightPx: Int,
     @SerialName("display_number")
     val displayNumber: Int? = null
-) : BuiltInTool(
+) : BuiltInTool<Computer.Input>(
     name = "computer",
     type = "computer_20250124"
 ) {
@@ -101,7 +99,7 @@ class ComputerTool private constructor(
         var displayHeightPx: Int? = null
         var displayNumber: Int? = null
 
-        fun build(): ComputerTool = ComputerTool(
+        fun build(): Computer = Computer(
             requireNotNull(displayWidthPx) { "displayWidthPx cannot be null" },
             requireNotNull(displayHeightPx) { "displayHeightPx cannot be null" },
             displayNumber
@@ -119,10 +117,6 @@ class ComputerTool private constructor(
 
 }
 
-fun ComputerTool(
-    builder: ComputerTool.Builder.() -> Unit,
-    run: suspend ComputerTool.Input.() -> Unit
-): ComputerTool = ComputerTool.Builder().apply(builder).build().apply {
-    inputSerializer = serializer<ComputerTool.Input>()
-    runner = { input -> run(input as ComputerTool.Input) }
-}
+fun Computer(
+    builder: Computer.Builder.() -> Unit,
+): Computer = Computer.Builder().apply(builder).build()

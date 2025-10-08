@@ -29,13 +29,13 @@ class ToolCacheControlTest {
     @Test
     fun `should cache Calculator tool definition`() = runTest {
         // given
-        val mathTools = listOf(
-            Tool<Calculator>(
-                builder = {
-                    cacheControl = CacheControl.Ephemeral()
-                }
-            ) { calculate() }
-        )
+        val toolbox = Toolbox {
+            tool<Calculator>({
+                cacheControl = CacheControl.Ephemeral()
+            }) {
+                calculate()
+            }
+        }
         val client = testAnthropic()
         val conversation = mutableListOf<Message>()
         conversation += "What's 15 multiplied by 7?"
@@ -43,7 +43,7 @@ class ToolCacheControlTest {
         // when
         val initialResponse = client.messages.create {
             messages = conversation
-            tools = mathTools
+            tools = toolbox.tools
             toolChoice = ToolChoice.Tool<Calculator>()
         }
         conversation += initialResponse

@@ -28,7 +28,7 @@ class ToolSerializationTest {
     @Test
     fun `should serialize Calculator tool`() {
         val tool = Tool<FibonacciCalculator>()
-        anthropicJson.encodeToString(tool) shouldEqualJson /* language=json */ """
+        anthropicJson.encodeToString(tool) shouldEqualJson """
             {
               "name": "fibonacci_calculator",
               "description": "Calculates the n-th fibonacci number",
@@ -49,7 +49,7 @@ class ToolSerializationTest {
 
     @Test
     fun `should deserialize Calculator tool`() {
-        anthropicJson.decodeFromString<Tool>(/* language=json */ """
+        anthropicJson.decodeFromString<Tool>("""
             {
               "name": "fibonacci_calculator",
               "description": "Calculates the n-th fibonacci number",

@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-package com.xemantic.ai.anthropic.tool.computer
+package com.xemantic.ai.anthropic.tool.builtin
 
 import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.ai.anthropic.message.Message
 import com.xemantic.ai.anthropic.message.StopReason
 import com.xemantic.ai.anthropic.test.testAnthropic
+import com.xemantic.ai.anthropic.tool.TextEditor
 import com.xemantic.ai.anthropic.tool.Tool
+import com.xemantic.ai.anthropic.tool.Toolbox
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
@@ -28,19 +30,25 @@ import io.kotest.assertions.json.shouldEqualJson
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 
-class TextEditorToolTest {
+class TextEditorTest {
 
     @Test
-    fun `should use TextEditorTool`() = runTest {
+    fun `should use TextEditor tool`() = runTest {
         // given
-        var actualInput: TextEditorTool.Input? = null
-        val tool = TextEditorTool { actualInput = this }
-        val anthropic = testAnthropic()
+        var receivedInput: TextEditor.Input? = null
+        val toolbox = Toolbox {
+            tool(TextEditor()) {
+                receivedInput = this
+            }
+        }
+        val anthropic = testAnthropic {
+            defaultTools = toolbox.tools
+        }
 
         // when
         val response = anthropic.messages.create {
             +Message { +"Look at the /tmp/foo.txt file" }
-            tools = listOf(tool)
+            tools = toolbox.tools
         }
 
         // then
@@ -49,11 +57,11 @@ class TextEditorToolTest {
         }
 
         // when
-        response.useTools()
+        response.useTools(toolbox)
 
         // then
-        actualInput should {
-            have(command == TextEditorTool.Command.VIEW)
+        receivedInput should {
+            have(command == TextEditor.Command.VIEW)
             have(path == "/tmp/foo.txt")
         }
     }
@@ -61,8 +69,8 @@ class TextEditorToolTest {
     @Test
     fun `should serialize TextEditorTool`() {
         anthropicJson.encodeToString(
-            TextEditorTool {}
-        ) shouldEqualJson /* language=json */ """
+            TextEditor {}
+        ) shouldEqualJson """
             {
               "name": "str_replace_editor",
               "type": "text_editor_20250124"
@@ -81,14 +89,14 @@ class TextEditorToolTest {
            """
         ) should {
             have(name == "str_replace_editor")
-            be<TextEditorTool>()
+            be<TextEditor>()
             have(type == "text_editor_20250124")
         }
     }
 
     @Test
     fun `should return JSON for TextEditorTool toString`() {
-        TextEditorTool {}.toString() shouldEqualJson /* language=json */ """
+        TextEditor {}.toString() shouldEqualJson """
             {
               "name": "str_replace_editor",
               "type": "text_editor_20250124"
@@ -98,7 +106,7 @@ class TextEditorToolTest {
 
     @Test
     fun `should deserialize TextEditorTool Input`() {
-        anthropicJson.decodeFromString<TextEditorTool.Input>(
+        anthropicJson.decodeFromString<TextEditor.Input>(
             """
             {
               "command": "view",
@@ -106,7 +114,7 @@ class TextEditorToolTest {
             }
             """
         ) should {
-            have(command == TextEditorTool.Command.VIEW)
+            have(command == TextEditor.Command.VIEW)
             have(path == "/tmp/foo.txt")
             have(fileText == null)
             have(insertLine == null)
@@ -118,10 +126,10 @@ class TextEditorToolTest {
 
     @Test
     fun `should serialize TextEditorTool Input with command`() {
-        anthropicJson.encodeToString(TextEditorTool.Input {
-            command = TextEditorTool.Command.VIEW
+        anthropicJson.encodeToString(TextEditor.Companion.Input {
+            command = TextEditor.Command.VIEW
             path = "/tmp/foo.txt"
-        }) shouldEqualJson /* language=json */ """
+        }) shouldEqualJson """
             {
               "command": "view",
               "path": "/tmp/foo.txt"

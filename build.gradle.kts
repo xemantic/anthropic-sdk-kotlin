@@ -117,6 +117,7 @@ kotlin {
         extraWarnings.set(true)
         progressiveMode = true
         optIn.addAll("kotlin.time.ExperimentalTime")
+        coreLibrariesVersion = libs.versions.kotlin.get()
     }
 
     jvm {

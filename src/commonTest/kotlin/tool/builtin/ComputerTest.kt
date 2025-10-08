@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
-package com.xemantic.ai.anthropic.tool.computer
+package com.xemantic.ai.anthropic.tool.builtin
 
 import com.xemantic.ai.anthropic.Anthropic
 import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.ai.anthropic.message.Message
 import com.xemantic.ai.anthropic.message.StopReason
 import com.xemantic.ai.anthropic.test.testAnthropic
+import com.xemantic.ai.anthropic.tool.Computer
 import com.xemantic.ai.anthropic.tool.Tool
+import com.xemantic.ai.anthropic.tool.Toolbox
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
@@ -29,26 +31,32 @@ import io.kotest.assertions.json.shouldEqualJson
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 
-class ComputerToolTest {
+class ComputerTest {
 
     @Test
-    fun `should use ComputerTool`() = runTest {
+    fun `should use Computer tool`() = runTest {
         // given
-        var actualInput: ComputerTool.Input? = null
-        val tool = ComputerTool(
-            builder = {
-                displayWidthPx = 1024
-                displayHeightPx = 768
+        var receivedInput: Computer.Input? = null
+        val toolbox = Toolbox {
+            tool(
+                Computer {
+                    displayWidthPx = 1024
+                    displayHeightPx = 768
+                }
+            ) {
+                receivedInput = this
             }
-        ) { actualInput = this }
+        }
+
         val anthropic = testAnthropic {
-            anthropicBeta += Anthropic.Beta.COMPUTER_USE_2025_01_24.id
+            +Anthropic.Beta.COMPUTER_USE_2025_01_24
+            defaultTools = toolbox.tools
         }
 
         // when
         val response = anthropic.messages.create {
             +Message { +"Take a screenshot" }
-            tools = listOf(tool)
+            tools = toolbox.tools
         }
 
         // then
@@ -57,27 +65,25 @@ class ComputerToolTest {
         }
 
         // when
-        response.useTools()
+        response.useTools(toolbox)
 
         // then
-        actualInput should {
-            have(action == ComputerTool.Action.SCREENSHOT)
+        receivedInput should {
+            have(action == Computer.Action.SCREENSHOT)
             have(coordinate == null)
             have(text == null)
         }
     }
 
     @Test
-    fun `should serialize ComputerTool`() {
+    fun `should serialize Computer tool`() {
         anthropicJson.encodeToString(
-            ComputerTool(
-                builder = {
-                    displayWidthPx = 1024
-                    displayHeightPx = 768
-                    displayNumber = 0
-                }
-            ) {}
-        ) shouldEqualJson /* language=json */ """
+            Computer {
+                displayWidthPx = 1024
+                displayHeightPx = 768
+                displayNumber = 0
+            }
+        ) shouldEqualJson """
             {
               "name": "computer",
               "type": "computer_20250124",
@@ -89,7 +95,7 @@ class ComputerToolTest {
     }
 
     @Test
-    fun `should deserialize ComputerTool`() {
+    fun `should deserialize Computer tool`() {
         anthropicJson.decodeFromString<Tool>(
             """
             {
@@ -102,7 +108,7 @@ class ComputerToolTest {
             """
         ) should {
             have(name == "computer")
-            be<ComputerTool>()
+            be<Computer>()
             have(type == "computer_20250124")
             have(displayWidthPx == 1024)
             have(displayHeightPx == 768)
@@ -111,14 +117,12 @@ class ComputerToolTest {
     }
 
     @Test
-    fun `should return JSON for ComputerTool toString`() {
-        ComputerTool(
-            builder = {
-                displayWidthPx = 1024
-                displayHeightPx = 768
-                displayNumber = 0
-            }
-        ) {}.toString() shouldEqualJson /* language=json */ """
+    fun `should return JSON for Computer tool toString`() {
+        Computer {
+            displayWidthPx = 1024
+            displayHeightPx = 768
+            displayNumber = 0
+        }.toString() shouldEqualJson """
             {
               "name": "computer",
               "type": "computer_20250124",
@@ -130,25 +134,25 @@ class ComputerToolTest {
     }
 
     @Test
-    fun `should deserialize ComputerTool Input`() {
-        anthropicJson.decodeFromString<ComputerTool.Input>(
+    fun `should deserialize Computer tool Input`() {
+        anthropicJson.decodeFromString<Computer.Input>(
             """
             {
               "action": "screenshot"
             }
             """
         ) should {
-            have(action == ComputerTool.Action.SCREENSHOT)
+            have(action == Computer.Action.SCREENSHOT)
             have(coordinate == null)
             have(text == null)
         }
     }
 
     @Test
-    fun `should serialize ComputerTool Input with action`() {
-        anthropicJson.encodeToString(ComputerTool.Input {
-            action = ComputerTool.Action.SCREENSHOT
-        }) shouldEqualJson /* language=json */ """
+    fun `should serialize Computer tool Input with action`() {
+        anthropicJson.encodeToString(Computer.Companion.Input {
+            action = Computer.Action.SCREENSHOT
+        }) shouldEqualJson """
             {
               "action": "screenshot"
             }

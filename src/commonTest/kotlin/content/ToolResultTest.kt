@@ -96,7 +96,7 @@ class ToolResultTest {
             content = listOf(Text("foo"))
             isError = true
             cacheControl = CacheControl.Ephemeral()
-        }.toString() shouldEqualJson /* language=json */ """
+        }.toString() shouldEqualJson """
             {
               "type": "tool_result",
               "tool_use_id": "42",

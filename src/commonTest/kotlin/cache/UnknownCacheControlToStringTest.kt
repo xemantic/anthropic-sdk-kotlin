@@ -27,7 +27,7 @@ class UnknownCacheControlToStringTest {
         CacheControl.Unknown {
             type = "persistent"
             additionalProperties["max_storage"] = 100000
-        }.toString() shouldEqualJson /* language=json */ """
+        }.toString() shouldEqualJson """
             {
               "type": "persistent",
               "max_storage": 100000

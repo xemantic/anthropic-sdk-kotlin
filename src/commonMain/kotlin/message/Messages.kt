@@ -22,14 +22,17 @@ import com.xemantic.ai.anthropic.Response
 import com.xemantic.ai.anthropic.cache.CacheControl
 import com.xemantic.ai.anthropic.content.*
 import com.xemantic.ai.anthropic.cost.CostWithUsage
+import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.ai.anthropic.json.toPrettyJson
 import com.xemantic.ai.anthropic.tool.Tool
+import com.xemantic.ai.anthropic.tool.Toolbox
 import com.xemantic.ai.anthropic.tool.ToolChoice
 import com.xemantic.ai.anthropic.usage.Usage
 import com.xemantic.kotlin.core.collections.mapLast
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
+import kotlinx.serialization.json.Json
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
@@ -263,15 +266,21 @@ data class MessageResponse(
         content += this@MessageResponse.content
     }
 
-    suspend fun useTools(): Message {
+    suspend fun useTools(
+        toolbox: Toolbox
+    ): Message {
+
         check(stopReason == StopReason.TOOL_USE) {
             "You can only use tools if the stopReason is TOOL_USE"
         }
-        val builder = ToolResultMessageBuilder()
-        content.filterIsInstance<ToolUse>().map { toolUse ->
-            builder.add(toolUse.use())
+
+        val results = content.filterIsInstance<ToolUse>().map { toolUse ->
+            toolbox.use(toolUse)
         }
-        return builder.build()
+
+        return Message {
+            content = results
+        }
     }
 
     val text: String?
@@ -284,40 +293,16 @@ data class MessageResponse(
             if (isEmpty()) null else first()
         }
 
-    val toolUses: List<ToolUse> get() = content.filterIsInstance<ToolUse>()
+    inline fun <reified T> toolUseInput(
+        json: Json = anthropicJson
+    ) = toolUse!!.decodeInput<T>(json)
 
-    val requestsToolUse: Boolean get() = stopReason == StopReason.TOOL_USE
+    val toolUses: List<ToolUse> get() = content.filterIsInstance<ToolUse>()
 
     val costWithUsage: CostWithUsage get() = CostWithUsage(
         cost = resolvedModel.cost * usage,
         usage = usage
     )
-
-}
-
-class ToolResultMessageBuilder {
-
-    private val documents = mutableListOf<Document>()
-
-    private val toolResults = mutableListOf<ToolResult>()
-
-    fun add(toolResult: ToolResult) {
-        val toolResult = toolResult.copy {
-            content = content.map { contentElement ->
-                if (contentElement is Document) {
-                    documents += contentElement
-                    Text("Document tool_result added as separate content to the message")
-                } else {
-                    contentElement
-                }
-            }
-        }
-        toolResults += toolResult
-    }
-
-    fun build(): Message = Message {
-        content += (toolResults + documents)
-    }
 
 }
 
