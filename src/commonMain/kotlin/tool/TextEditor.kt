@@ -20,10 +20,13 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-@SerialName("str_replace_editor")
-class TextEditor private constructor() : BuiltInTool<TextEditor.Input>(
-    name = "str_replace_editor",
-    type = "text_editor_20250124"
+@SerialName("str_replace_based_edit_tool")
+class TextEditor private constructor(
+    @SerialName("max_characters")
+    val maxCharacters: Int? = null
+) : BuiltInTool<TextEditor.Input>(
+    name = "str_replace_based_edit_tool",
+    type = "text_editor_20250728"
 ) {
 
     @Suppress("unused")
@@ -39,10 +42,7 @@ class TextEditor private constructor() : BuiltInTool<TextEditor.Input>(
         STR_REPLACE,
 
         @SerialName("insert")
-        INSERT,
-
-        @SerialName("undo_edit")
-        UNDO_EDIT
+        INSERT
     }
 
     @Serializable
@@ -70,7 +70,7 @@ class TextEditor private constructor() : BuiltInTool<TextEditor.Input>(
             var newStr: String? = null
             var oldStr: String? = null
             var path: String? = null
-            val viewRange: List<Int>? = null
+            var viewRange: List<Int>? = null
 
             fun build(): Input = Input(
                 requireNotNull(command) { "command cannot be null" },
@@ -88,7 +88,11 @@ class TextEditor private constructor() : BuiltInTool<TextEditor.Input>(
 
     class Builder {
 
-        fun build(): TextEditor = TextEditor()
+        var maxCharacters: Int? = null
+
+        fun build(): TextEditor = TextEditor(
+            maxCharacters = maxCharacters
+        )
 
     }
 

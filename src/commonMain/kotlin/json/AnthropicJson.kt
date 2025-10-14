@@ -159,7 +159,7 @@ object ToolSerializer : KSerializer<Tool> {
         } else {
             when (val name = tree.stringProperty("name")) {
                 "computer" -> Computer.serializer()
-                "str_replace_editor" -> TextEditor.serializer()
+                "str_replace_based_edit_tool" -> TextEditor.serializer()
                 "bash" -> Bash.serializer()
                 else -> throw SerializationException("Unsupported Tool name: $name")
             }

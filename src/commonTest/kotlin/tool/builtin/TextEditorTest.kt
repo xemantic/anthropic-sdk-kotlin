@@ -72,8 +72,8 @@ class TextEditorTest {
             TextEditor {}
         ) shouldEqualJson """
             {
-              "name": "str_replace_editor",
-              "type": "text_editor_20250124"
+              "name": "str_replace_based_edit_tool",
+              "type": "text_editor_20250728"
             }
         """
     }
@@ -83,14 +83,14 @@ class TextEditorTest {
         anthropicJson.decodeFromString<Tool>(
             """
            {
-             "name": "str_replace_editor",
-             "type": "text_editor_20250124"
+             "name": "str_replace_based_edit_tool",
+             "type": "text_editor_20250728"
            }
            """
         ) should {
-            have(name == "str_replace_editor")
+            have(name == "str_replace_based_edit_tool")
             be<TextEditor>()
-            have(type == "text_editor_20250124")
+            have(type == "text_editor_20250728")
         }
     }
 
@@ -98,8 +98,8 @@ class TextEditorTest {
     fun `should return JSON for TextEditorTool toString`() {
         TextEditor {}.toString() shouldEqualJson """
             {
-              "name": "str_replace_editor",
-              "type": "text_editor_20250124"
+              "name": "str_replace_based_edit_tool",
+              "type": "text_editor_20250728"
             }
         """
     }

@@ -24,8 +24,8 @@ import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
 import kotlinx.coroutines.test.runTest
-import org.junit.Test
 import java.io.File
+import kotlin.test.Test
 
 class JvmImageTest {
 

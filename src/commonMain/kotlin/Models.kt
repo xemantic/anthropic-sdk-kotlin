@@ -31,6 +31,7 @@ interface AnthropicModel {
     val maxOutput: Int
     val messageBatchesApi: Boolean
     val cost: Cost
+    val deprecated: Boolean
 
 }
 
@@ -43,39 +44,17 @@ val String.dollarsPerMillion: Money get() = Money(this) * ANTHROPIC_TOKEN_COST_R
  *
  * It could include Vertex AI (Google Cloud), or Bedrock (AWS) models in the future.
  */
-// TODO model should be interface AnthropicApi models should be enum
 enum class Model(
     override val id: String,
     override val contextWindow: Int,
     override val maxOutput: Int,
     override val messageBatchesApi: Boolean,
-    override val cost: Cost
+    override val cost: Cost,
+    override val deprecated: Boolean = false
 ) : AnthropicModel {
 
-    CLAUDE_4_OPUS(
-        id = "claude-opus-4-0",
-        contextWindow = 200000,
-        maxOutput = 32000,
-        messageBatchesApi = true,
-        cost = Cost {
-            inputTokens = "15".dollarsPerMillion
-            outputTokens = "75".dollarsPerMillion
-        }
-    ),
-
-    CLAUDE_4_OPUS_20250514(
-        id = "claude-opus-4-20250514",
-        contextWindow = 200000,
-        maxOutput = 32000,
-        messageBatchesApi = true,
-        cost = Cost {
-            inputTokens = "15".dollarsPerMillion
-            outputTokens = "75".dollarsPerMillion
-        }
-    ),
-
-    CLAUDE_4_SONNET(
-        id = "claude-sonnet-4-0",
+    CLAUDE_SONNET_4_5_20250929(
+        id = "claude-sonnet-4-5-20250929",
         contextWindow = 200000,
         maxOutput = 64000,
         messageBatchesApi = true,
@@ -85,19 +64,19 @@ enum class Model(
         }
     ),
 
-    CLAUDE_4_SONNET_20250514(
+    CLAUDE_OPUS_4_1_20250805(
+        id = "claude-opus-4-1-20250805",
+        contextWindow = 200000,
+        maxOutput = 32000,
+        messageBatchesApi = true,
+        cost = Cost {
+            inputTokens = "15".dollarsPerMillion
+            outputTokens = "75".dollarsPerMillion
+        }
+    ),
+
+    CLAUDE_SONNET_4_20250514(
         id = "claude-sonnet-4-20250514",
-        contextWindow = 200000,
-        maxOutput = 64000,
-        messageBatchesApi = true,
-        cost = Cost {
-            inputTokens = "3".dollarsPerMillion
-            outputTokens = "15".dollarsPerMillion
-        }
-    ),
-
-    CLAUDE_3_7_SONNET(
-        id = "claude-3-7-sonnet-latest",
         contextWindow = 200000,
         maxOutput = 64000,
         messageBatchesApi = true,
@@ -118,70 +97,38 @@ enum class Model(
         }
     ),
 
-    CLAUDE_3_5_SONNET(
-        id = "claude-3-5-sonnet-latest",
+    CLAUDE_3_5_HAIKU_20241022(
+        id = "claude-3-5-haiku-20241022",
         contextWindow = 200000,
-        maxOutput = 8182,
+        maxOutput = 8192,
         messageBatchesApi = true,
         cost = Cost {
-            inputTokens = "3".dollarsPerMillion
-            outputTokens = "15".dollarsPerMillion
+            inputTokens = "0.80".dollarsPerMillion
+            outputTokens = "4".dollarsPerMillion
         }
     ),
 
     CLAUDE_3_5_SONNET_20241022(
         id = "claude-3-5-sonnet-20241022",
         contextWindow = 200000,
-        maxOutput = 8182,
+        maxOutput = 8192,
         messageBatchesApi = true,
         cost = Cost {
             inputTokens = "3".dollarsPerMillion
             outputTokens = "15".dollarsPerMillion
-        }
-    ),
-
-    CLAUDE_3_5_HAIKU(
-        id = "claude-3-5-haiku-latest",
-        contextWindow = 200000,
-        maxOutput = 8182,
-        messageBatchesApi = true,
-        cost = Cost {
-            inputTokens = "0.80".dollarsPerMillion
-            outputTokens = "4".dollarsPerMillion
-        }
-    ),
-
-    CLAUDE_3_5_HAIKU_20241022(
-        id = "claude-3-5-haiku-20241022",
-        contextWindow = 200000,
-        maxOutput = 8182,
-        messageBatchesApi = true,
-        cost = Cost {
-            inputTokens = "0.80".dollarsPerMillion
-            outputTokens = "4".dollarsPerMillion
         }
     ),
 
     CLAUDE_3_5_SONNET_20240620(
         id = "claude-3-5-sonnet-20240620",
         contextWindow = 200000,
-        maxOutput = 8182,
+        maxOutput = 8192,
         messageBatchesApi = true,
         cost = Cost {
             inputTokens = "3".dollarsPerMillion
             outputTokens = "15".dollarsPerMillion
-        }
-    ),
-
-    CLAUDE_3_OPUS(
-        id = "claude-3-opus-latest",
-        contextWindow = 200000,
-        maxOutput = 4096,
-        messageBatchesApi = true,
-        cost = Cost {
-            inputTokens = "15".dollarsPerMillion
-            outputTokens = "75".dollarsPerMillion
-        }
+        },
+        deprecated = true
     ),
 
     CLAUDE_3_OPUS_20240229(
@@ -192,18 +139,8 @@ enum class Model(
         cost = Cost {
             inputTokens = "15".dollarsPerMillion
             outputTokens = "75".dollarsPerMillion
-        }
-    ),
-
-    CLAUDE_3_SONNET_20240229(
-        id = "claude-3-sonnet-20240229",
-        contextWindow = 200000,
-        maxOutput = 4096,
-        messageBatchesApi = true,
-        cost = Cost {
-            inputTokens = "3".dollarsPerMillion
-            outputTokens = "15".dollarsPerMillion
-        }
+        },
+        deprecated = true
     ),
 
     CLAUDE_3_HAIKU_20240307(
@@ -219,8 +156,17 @@ enum class Model(
 
     companion object {
 
-        val DEFAULT: Model = CLAUDE_4_SONNET
+        val DEFAULT: Model = CLAUDE_SONNET_4_5_20250929
 
     }
 
 }
+
+data class UnknownModel(
+    override val id: String,
+    override val contextWindow: Int,
+    override val maxOutput: Int,
+    override val messageBatchesApi: Boolean,
+    override val cost: Cost,
+    override val deprecated: Boolean = false
+) : AnthropicModel

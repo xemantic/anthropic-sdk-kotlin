@@ -43,7 +43,7 @@ class MessageRequestTest {
         // then
         json shouldEqualJson """
             {
-              "model": "claude-sonnet-4-0",
+              "model": "claude-sonnet-4-5-20250929",
               "messages": [
                 {
                   "role": "user",
@@ -77,7 +77,7 @@ class MessageRequestTest {
         // then
         json shouldEqualJson """
             {
-              "model": "claude-sonnet-4-0",
+              "model": "claude-sonnet-4-5-20250929",
               "messages": [
                 {
                   "role": "user",
@@ -111,7 +111,7 @@ class MessageRequestTest {
         // then
         json shouldEqualJson """
             {
-              "model": "claude-sonnet-4-0",
+              "model": "claude-sonnet-4-5-20250929",
               "messages": [
                 {
                   "role": "user",
@@ -175,7 +175,7 @@ class MessageRequestTest {
         // then
         json shouldEqualJson """
             {
-              "model": "claude-sonnet-4-0",
+              "model": "claude-sonnet-4-5-20250929",
               "messages": [
                 {
                   "role": "user",
@@ -197,8 +197,8 @@ class MessageRequestTest {
                   "display_number": 1
                 },
                 {
-                  "type": "text_editor_20250124",
-                  "name": "str_replace_editor"
+                  "type": "text_editor_20250728",
+                  "name": "str_replace_based_edit_tool"
                 },
                 {
                   "type": "bash_20250124",
@@ -249,7 +249,7 @@ class MessageRequestTest {
         // then
         json shouldEqualJson """
             {
-              "model": "claude-sonnet-4-0",
+              "model": "claude-sonnet-4-5-20250929",
               "messages": [
                 {
                   "role": "user",
@@ -297,7 +297,7 @@ class MessageRequestTest {
         // given
         val request = """
             {
-              "model": "claude-sonnet-4-0",
+              "model": "claude-sonnet-4-5-20250929",
               "messages": [
                 {
                   "role": "user",
@@ -319,8 +319,8 @@ class MessageRequestTest {
                   "display_number": 1
                 },
                 {
-                  "type": "text_editor_20241022",
-                  "name": "str_replace_editor"
+                  "type": "text_editor_20250728",
+                  "name": "str_replace_based_edit_tool"
                 },
                 {
                   "type": "bash_20241022",
