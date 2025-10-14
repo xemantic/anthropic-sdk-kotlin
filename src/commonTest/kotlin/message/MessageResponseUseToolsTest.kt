@@ -57,7 +57,7 @@ class MessageResponseUseToolsTest {
                 }
             }
         ),
-        model = Model.CLAUDE_4_OPUS.id,
+        model = Model.CLAUDE_SONNET_4_5_20250929.id,
         stopReason = StopReason.TOOL_USE,
         stopSequence = null,
         usage = Usage {

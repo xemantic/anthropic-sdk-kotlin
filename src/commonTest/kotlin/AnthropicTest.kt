@@ -17,6 +17,7 @@
 package com.xemantic.ai.anthropic
 
 import com.xemantic.ai.anthropic.content.Text
+import com.xemantic.ai.anthropic.cost.Cost
 import com.xemantic.ai.anthropic.cost.CostWithUsage
 import com.xemantic.ai.anthropic.error.AnthropicApiException
 import com.xemantic.ai.anthropic.message.Role
@@ -24,6 +25,7 @@ import com.xemantic.ai.anthropic.message.StopReason
 import com.xemantic.ai.anthropic.test.testAnthropic
 import com.xemantic.ai.money.Money
 import com.xemantic.ai.money.ZERO
+import com.xemantic.kotlin.test.assert
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
@@ -77,6 +79,7 @@ class AnthropicTest {
         // when
         val response = anthropic.messages.create {
             +"Hello World! What's your name?"
+            model = Model.CLAUDE_SONNET_4_20250514.id // the latest sonnet does not allow to set up both
             topK = 40
             topP = 0.7
             temperature = 0.3
@@ -135,7 +138,8 @@ class AnthropicTest {
             cost should {
                 have(inputTokens >= Money.ZERO && inputTokens == Money("0.000063"))
                 have(outputTokens >= Money.ZERO && inputTokens <= Money("0.0005"))
-                have(cacheCreationInputTokens == Money.ZERO)
+                have(cache5mCreationInputTokens == Money.ZERO)
+                have(cache1hCreationInputTokens == Money.ZERO)
                 have(cacheReadInputTokens == Money.ZERO)
             }
         }
@@ -182,9 +186,68 @@ class AnthropicTest {
             have(httpStatusCode == HttpStatusCode.BadRequest)
             error should {
                 have(type == "invalid_request_error")
-                have(message == "max_tokens: 1000000000 > 64000, which is the maximum allowed number of output tokens for claude-sonnet-4-20250514")
+                have(message == "max_tokens: 1000000000 > 64000, which is the maximum allowed number of output tokens for claude-sonnet-4-5-20250929")
             }
         }
+    }
+
+    @Test
+    fun `should receive an introduction from Claude for UnknownModel`() = runTest {
+        // given
+        val theLatestClaudeModel = UnknownModel(
+            id = "claude-sonnet-4-5-20250929",
+            contextWindow = 200000,
+            maxOutput = 64000,
+            messageBatchesApi = true,
+            cost = Cost {
+                inputTokens = "15".dollarsPerMillion
+                outputTokens = "75".dollarsPerMillion
+            }
+        )
+        val anthropic = testAnthropic {
+            modelMap["claude-sonnet-4-5-20250929"] = theLatestClaudeModel
+            defaultModel = theLatestClaudeModel
+        }
+
+        // when
+        val response = anthropic.messages.create {
+            +"Hello World! What's your name?"
+        }
+
+        // then
+        response should {
+            have(role == Role.ASSISTANT)
+            have(model == "claude-sonnet-4-5-20250929")
+            have(stopReason == StopReason.END_TURN)
+            have(content.size == 1)
+            content[0] should {
+                be<Text>()
+                have("Claude" in text)
+            }
+            have(stopSequence == null)
+            usage should {
+                have(inputTokens == 15)
+                have(outputTokens > 0)
+            }
+        }
+    }
+
+    @Test
+    fun `should fail with a message when creating a message request for unknown model`() = runTest {
+        // given
+        val anthropic = testAnthropic {
+            modelMap.remove(Model.DEFAULT.id)
+        }
+
+        // when
+        val exception = assertFailsWith<IllegalArgumentException> {
+            anthropic.messages.create {
+                +"Hello World! What's your name?"
+            }
+        }
+
+        // then
+        assert(exception.message == "Unknown model '${Model.DEFAULT.id}', consider adding modelMap[\"${Model.DEFAULT.id}\"] = UnknownModel(...) when creating Anthropic client instance.")
     }
 
 }

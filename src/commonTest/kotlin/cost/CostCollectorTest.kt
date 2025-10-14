@@ -17,11 +17,12 @@
 package com.xemantic.ai.anthropic.cost
 
 import com.xemantic.ai.anthropic.Model
+import com.xemantic.ai.anthropic.usage.CacheCreation
 import com.xemantic.ai.anthropic.usage.Usage
 import com.xemantic.ai.money.Money
 import com.xemantic.ai.money.ZERO
-import com.xemantic.kotlin.test.assert
 import com.xemantic.kotlin.test.have
+import com.xemantic.kotlin.test.sameAs
 import com.xemantic.kotlin.test.should
 import kotlin.test.Test
 
@@ -35,25 +36,31 @@ class CostCollectorTest {
     }
 
     @Test
-    fun `toString should return String representation of UsageCollector`() {
-        assert(
-            CostCollector().toString() == """
-                CostCollector {
-                  "cost": {
-                    "inputTokens": "0",
-                    "outputTokens": "0",
-                    "cacheCreationInputTokens": "0",
-                    "cacheReadInputTokens": "0"
-                  },
-                  "usage": {
-                    "input_tokens": 0,
-                    "output_tokens": 0,
-                    "cache_creation_input_tokens": 0,
-                    "cache_read_input_tokens": 0
-                  }
-                }
-            """.trimIndent()
-        )
+    fun `toString should return String representation of CostCollector`() {
+        // given
+        val collector = CostCollector()
+
+        // when
+        val asString = collector.toString()
+
+        // then
+        asString sameAs  """
+            CostCollector {
+              "cost": {
+                "inputTokens": "0",
+                "outputTokens": "0",
+                "cache5mCreationInputTokens": "0",
+                "cache1hCreationInputTokens": "0",
+                "cacheReadInputTokens": "0"
+              },
+              "usage": {
+                "input_tokens": 0,
+                "output_tokens": 0,
+                "cache_creation_input_tokens": 0,
+                "cache_read_input_tokens": 0
+              }
+            }
+        """.trimIndent()
     }
 
     @Test
@@ -84,7 +91,8 @@ class CostCollectorTest {
                 cost == Cost {
                     inputTokens = Money(".003")
                     outputTokens = Money(".015")
-                    cacheCreationInputTokens = Money.ZERO
+                    cache5mCreationInputTokens = Money.ZERO
+                    cache1hCreationInputTokens = Money.ZERO
                     cacheReadInputTokens = Money.ZERO
                 }
             )
@@ -100,19 +108,23 @@ class CostCollectorTest {
             outputTokens = 1000
             cacheCreationInputTokens = 1000
             cacheReadInputTokens = 1000
+            cacheCreation = CacheCreation {
+                ephemeral5mInputTokens = 600
+                ephemeral1hInputTokens = 400
+            }
         }
 
         // when
         collector += CostWithUsage(
-            cost = Model.CLAUDE_3_5_SONNET.cost * testUsage,
+            cost = Model.CLAUDE_SONNET_4_5_20250929.cost * testUsage,
             usage = testUsage,
         )
         collector += CostWithUsage(
-            cost = Model.CLAUDE_3_5_HAIKU.cost * testUsage,
+            cost = Model.CLAUDE_3_5_HAIKU_20241022.cost * testUsage,
             usage = testUsage
         )
         collector += CostWithUsage(
-            cost = Model.CLAUDE_3_OPUS.cost * testUsage,
+            cost = Model.CLAUDE_OPUS_4_1_20250805.cost * testUsage,
             usage = testUsage
         )
 
@@ -127,7 +139,8 @@ class CostCollectorTest {
             cost should {
                 have(inputTokens == Money("0.0188")) // 0.003 + 0.0008 + 0.015
                 have(outputTokens == Money("0.094")) // 0.015 + 0.004 + 0.075
-                have(cacheCreationInputTokens == Money("0.0235")) // 0.00375 + 0.001 + 0.01875
+                have(cache5mCreationInputTokens == Money("0.0141")) // (600 × 0.003 × 1.25) + (600 × 0.0008 × 1.25) + (600 × 0.015 × 1.25)
+                have(cache1hCreationInputTokens == Money("0.01504")) // (400 × 0.003 × 2) + (400 × 0.0008 × 2) + (400 × 0.015 × 2)
                 have(cacheReadInputTokens == Money("0.00188")) // 0.0003 + 0.00008 + 0.0015
             }
         }

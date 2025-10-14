@@ -21,8 +21,9 @@ import com.xemantic.ai.anthropic.content.Text
 import com.xemantic.ai.anthropic.message.MessageResponse
 import com.xemantic.ai.anthropic.message.Role
 import com.xemantic.ai.anthropic.message.StopReason
+import com.xemantic.ai.anthropic.usage.CacheCreation
 import com.xemantic.ai.anthropic.usage.Usage
-import com.xemantic.kotlin.test.assert
+import com.xemantic.kotlin.test.sameAs
 import kotlin.test.Test
 
 class CostReportTest {
@@ -37,18 +38,24 @@ class CostReportTest {
             content = listOf(
                 Text("bar")
             ),
-            model = "claude-3-7-sonnet-20250219",
+            model = Model.CLAUDE_SONNET_4_5_20250929.id,
             stopReason = StopReason.END_TURN,
             stopSequence = null,
             usage = Usage {
-                inputTokens = 419
-                outputTokens = 86
+                inputTokens = 1000
+                outputTokens = 200
+                cacheCreationInputTokens = 700
+                cacheReadInputTokens = 3000
+                cacheCreation = CacheCreation {
+                    ephemeral5mInputTokens = 400
+                    ephemeral1hInputTokens = 300
+                }
             }
         ).apply {
             resolvedModel = Model.DEFAULT
         }
-        val usageWithCost = response.costWithUsage
-        collector += usageWithCost
+        val costWithUsage = response.costWithUsage
+        collector += costWithUsage
 
         // when
         val report = costReport(
@@ -57,20 +64,18 @@ class CostReportTest {
         )
 
         // then
-        assert(
-            report == $$"""
-            |             | request tokens | total tokens | request cost | total cost |
-            |-------------|----------------|--------------|--------------|------------|
-            | input       |            419 |          419 |    $0.001257 |  $0.001257 |
-            | output      |             86 |           86 |     $0.00129 |   $0.00129 |
-            | cache write |              0 |            0 |           $0 |         $0 |
-            | cache read  |              0 |            0 |           $0 |         $0 |
-            |             |                |              |              |            |
-            |             |                |              |    $0.002547 |  $0.002547 |
+        report sameAs $$"""
+            |                | request tokens | total tokens | request cost | total cost |
+            |----------------|----------------|--------------|--------------|------------|
+            | input          |           1000 |         1000 |       $0.003 |     $0.003 |
+            | output         |            200 |          200 |       $0.003 |     $0.003 |
+            | cache 5m write |            400 |          400 |      $0.0015 |    $0.0015 |
+            | cache 1h write |            300 |          300 |      $0.0018 |    $0.0018 |
+            | cache read     |           3000 |         3000 |      $0.0009 |    $0.0009 |
+            |                |                |              |              |            |
+            |                |                |              |      $0.0102 |    $0.0102 |
 
         """.trimIndent()
-        )
-
     }
 
 }

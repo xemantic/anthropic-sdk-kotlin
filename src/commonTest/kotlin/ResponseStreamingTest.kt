@@ -122,7 +122,7 @@ class ResponseStreamingTest {
         // then
         exception.error should {
             have(type == "invalid_request_error")
-            have(message == "max_tokens: 1000000000 > 64000, which is the maximum allowed number of output tokens for claude-sonnet-4-20250514")
+            have(message == "max_tokens: 1000000000 > 64000, which is the maximum allowed number of output tokens for claude-sonnet-4-5-20250929")
         }
     }
 

@@ -36,11 +36,18 @@ fun costReport(
         "$${totalStats.cost.outputTokens}",
     )
     row(
-        "cache write",
-        stats.usage.cacheCreationInputTokens ?: 0,
-        totalStats.usage.cacheCreationInputTokens ?: 0,
-        "$${stats.cost.cacheCreationInputTokens}",
-        "$${totalStats.cost.cacheCreationInputTokens}"
+        "cache 5m write",
+        stats.usage.cacheCreation?.ephemeral5mInputTokens ?: 0,
+        totalStats.usage.cacheCreation?.ephemeral5mInputTokens ?: 0,
+        "$${stats.cost.cache5mCreationInputTokens}",
+        "$${totalStats.cost.cache5mCreationInputTokens}"
+    )
+    row(
+        "cache 1h write",
+        stats.usage.cacheCreation?.ephemeral1hInputTokens ?: 0,
+        totalStats.usage.cacheCreation?.ephemeral1hInputTokens ?: 0,
+        "$${stats.cost.cache1hCreationInputTokens}",
+        "$${totalStats.cost.cache1hCreationInputTokens}"
     )
     row(
         "cache read",

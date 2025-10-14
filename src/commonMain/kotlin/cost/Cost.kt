@@ -30,7 +30,8 @@ import kotlin.contracts.contract
 class Cost private constructor(
     val inputTokens: Money,
     val outputTokens: Money,
-    val cacheCreationInputTokens: Money,
+    val cache5mCreationInputTokens: Money,
+    val cache1hCreationInputTokens: Money,
     val cacheReadInputTokens: Money,
 ) {
 
@@ -38,16 +39,22 @@ class Cost private constructor(
 
         var inputTokens: Money? = null
         var outputTokens: Money? = null
-        var cacheCreationInputTokens: Money? = null
+        var cache5mCreationInputTokens: Money? = null
+        var cache1hCreationInputTokens: Money? = null
         var cacheReadInputTokens: Money? = null
 
         fun build(): Cost = Cost(
             inputTokens = requireNotNull(inputTokens) { "inputTokens cannot be null" },
             outputTokens = requireNotNull(outputTokens) { "outputTokens cannot be null" },
-            cacheCreationInputTokens = if (cacheCreationInputTokens != null) {
-                cacheCreationInputTokens!!
+            cache5mCreationInputTokens = if (cache5mCreationInputTokens != null) {
+                cache5mCreationInputTokens!!
             } else {
                 inputTokens!! * Money.Ratio("1.25")
+            },
+            cache1hCreationInputTokens = if (cache1hCreationInputTokens != null) {
+                cache1hCreationInputTokens!!
+            } else {
+                inputTokens!! * Money.Ratio("2.0")
             },
             cacheReadInputTokens = if (cacheReadInputTokens != null) {
                 cacheReadInputTokens!!
@@ -61,36 +68,46 @@ class Cost private constructor(
     operator fun plus(cost: Cost): Cost = Cost(
         inputTokens = inputTokens + cost.inputTokens,
         outputTokens = outputTokens + cost.outputTokens,
-        cacheCreationInputTokens = cacheCreationInputTokens + cost.cacheCreationInputTokens,
+        cache5mCreationInputTokens = cache5mCreationInputTokens + cost.cache5mCreationInputTokens,
+        cache1hCreationInputTokens = cache1hCreationInputTokens + cost.cache1hCreationInputTokens,
         cacheReadInputTokens = cacheReadInputTokens + cost.cacheReadInputTokens
     )
 
     operator fun times(amount: Money): Cost = Cost(
         inputTokens = inputTokens * amount,
         outputTokens = outputTokens * amount,
-        cacheCreationInputTokens = cacheCreationInputTokens * amount,
+        cache5mCreationInputTokens = cache5mCreationInputTokens * amount,
+        cache1hCreationInputTokens = cache1hCreationInputTokens * amount,
         cacheReadInputTokens = cacheReadInputTokens * amount
     )
 
-    operator fun times(usage: Usage): Cost = Cost(
-        inputTokens = inputTokens * usage.inputTokens,
-        outputTokens = outputTokens * usage.outputTokens,
-        cacheCreationInputTokens = cacheCreationInputTokens * (usage.cacheReadInputTokens ?: 0),
-        cacheReadInputTokens = cacheReadInputTokens * (usage.cacheReadInputTokens ?: 0)
-    )
+    operator fun times(usage: Usage): Cost {
+        val cache5m = usage.cacheCreation?.ephemeral5mInputTokens ?: 0
+        val cache1h = usage.cacheCreation?.ephemeral1hInputTokens ?: 0
+
+        return Cost(
+            inputTokens = inputTokens * usage.inputTokens,
+            outputTokens = outputTokens * usage.outputTokens,
+            cache5mCreationInputTokens = cache5mCreationInputTokens * cache5m,
+            cache1hCreationInputTokens = cache1hCreationInputTokens * cache1h,
+            cacheReadInputTokens = cacheReadInputTokens * (usage.cacheReadInputTokens ?: 0)
+        )
+    }
 
     val total: Money
         get() =
             inputTokens +
                     outputTokens +
-                    cacheCreationInputTokens +
+                    cache5mCreationInputTokens +
+                    cache1hCreationInputTokens +
                     cacheReadInputTokens
 
     companion object {
         val ZERO = Cost(
             inputTokens = Money.ZERO,
             outputTokens = Money.ZERO,
-            cacheCreationInputTokens = Money.ZERO,
+            cache5mCreationInputTokens = Money.ZERO,
+            cache1hCreationInputTokens = Money.ZERO,
             cacheReadInputTokens = Money.ZERO
         )
     }
@@ -103,7 +120,8 @@ class Cost private constructor(
 
         if (inputTokens != other.inputTokens) return false
         if (outputTokens != other.outputTokens) return false
-        if (cacheCreationInputTokens != other.cacheCreationInputTokens) return false
+        if (cache5mCreationInputTokens != other.cache5mCreationInputTokens) return false
+        if (cache1hCreationInputTokens != other.cache1hCreationInputTokens) return false
         if (cacheReadInputTokens != other.cacheReadInputTokens) return false
 
         return true
@@ -112,7 +130,8 @@ class Cost private constructor(
     override fun hashCode(): Int {
         var result = inputTokens.hashCode()
         result = 31 * result + outputTokens.hashCode()
-        result = 31 * result + cacheCreationInputTokens.hashCode()
+        result = 31 * result + cache5mCreationInputTokens.hashCode()
+        result = 31 * result + cache1hCreationInputTokens.hashCode()
         result = 31 * result + cacheReadInputTokens.hashCode()
         return result
     }

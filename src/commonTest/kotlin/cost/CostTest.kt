@@ -29,12 +29,14 @@ class CostTest {
         Cost {
             inputTokens = Money("0.001")
             outputTokens = Money("0.002")
-            cacheCreationInputTokens = Money("0.00025")
+            cache5mCreationInputTokens = Money("0.00025")
+            cache1hCreationInputTokens = Money("0.0003")
             cacheReadInputTokens = Money("0.0005")
         } should {
             have(inputTokens == Money("0.001"))
             have(outputTokens == Money("0.002"))
-            have(cacheCreationInputTokens == Money("0.00025"))
+            have(cache5mCreationInputTokens == Money("0.00025"))
+            have(cache1hCreationInputTokens == Money("0.0003"))
             have(cacheReadInputTokens == Money("0.0005"))
         }
     }
@@ -50,7 +52,8 @@ class CostTest {
         } should {
             have(inputTokens == Money("0.001"))
             have(outputTokens == Money("0.002"))
-            have(cacheCreationInputTokens == Money("0.00125"))
+            have(cache5mCreationInputTokens == Money("0.00125"))
+            have(cache1hCreationInputTokens == Money("0.002"))
             have(cacheReadInputTokens == Money("0.0001"))
         }
     }
@@ -61,13 +64,15 @@ class CostTest {
         val cost1 = Cost {
             inputTokens = Money("0.001")
             outputTokens = Money("0.002")
-            cacheCreationInputTokens = Money.ZERO
+            cache5mCreationInputTokens = Money.ZERO
+            cache1hCreationInputTokens = Money.ZERO
             cacheReadInputTokens = Money.ZERO
         }
         val cost2 = Cost {
             inputTokens = Money("0.003")
             outputTokens = Money("0.004")
-            cacheCreationInputTokens = Money.ZERO
+            cache5mCreationInputTokens = Money.ZERO
+            cache1hCreationInputTokens = Money.ZERO
             cacheReadInputTokens = Money.ZERO
         }
 
@@ -78,7 +83,8 @@ class CostTest {
         result should {
             have(inputTokens == Money("0.004"))
             have(outputTokens == Money("0.006"))
-            have(cacheCreationInputTokens == Money.ZERO)
+            have(cache5mCreationInputTokens == Money.ZERO)
+            have(cache1hCreationInputTokens == Money.ZERO)
             have(cacheReadInputTokens == Money.ZERO)
         }
     }
@@ -89,13 +95,15 @@ class CostTest {
         val cost1 = Cost {
             inputTokens = Money("0.001")
             outputTokens = Money("0.002")
-            cacheCreationInputTokens = Money("0.0001")
+            cache5mCreationInputTokens = Money("0.0001")
+            cache1hCreationInputTokens = Money("0.00015")
             cacheReadInputTokens = Money("0.0002")
         }
         val cost2 = Cost {
             inputTokens = Money("0.003")
             outputTokens = Money("0.004")
-            cacheCreationInputTokens = Money("0.0003")
+            cache5mCreationInputTokens = Money("0.0003")
+            cache1hCreationInputTokens = Money("0.00035")
             cacheReadInputTokens = Money("0.0004")
         }
 
@@ -106,7 +114,8 @@ class CostTest {
         result should {
             have(inputTokens == Money("0.004"))
             have(outputTokens == Money("0.006"))
-            have(cacheCreationInputTokens == Money("0.0004"))
+            have(cache5mCreationInputTokens == Money("0.0004"))
+            have(cache1hCreationInputTokens == Money("0.0005"))
             have(cacheReadInputTokens == Money("0.0006"))
         }
     }
@@ -116,10 +125,11 @@ class CostTest {
         Cost {
             inputTokens = Money("0.001")
             outputTokens = Money("0.002")
-            cacheCreationInputTokens = Money("0.0005")
+            cache5mCreationInputTokens = Money("0.0005")
+            cache1hCreationInputTokens = Money("0.0006")
             cacheReadInputTokens = Money("0.0007")
         } should {
-            have(total == Money("0.0042"))
+            have(total == Money("0.0048"))
         }
     }
 
@@ -128,7 +138,8 @@ class CostTest {
         Cost.ZERO should {
             have(inputTokens == Money.ZERO)
             have(outputTokens == Money.ZERO)
-            have(cacheCreationInputTokens == Money.ZERO)
+            have(cache5mCreationInputTokens == Money.ZERO)
+            have(cache1hCreationInputTokens == Money.ZERO)
             have(cacheReadInputTokens == Money.ZERO)
         }
     }

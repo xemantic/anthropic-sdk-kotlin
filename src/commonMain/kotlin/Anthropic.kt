@@ -117,7 +117,8 @@ class Anthropic internal constructor(
         var directBrowserAccess: Boolean = false
         var logHttp: Boolean = false
 
-        var modelMap: Map<String, AnthropicModel> = Model.entries.associateBy { it.id }
+        var modelMap: MutableMap<String, AnthropicModel> =
+            Model.entries.associateBy { it.id }.toMutableMap()
 
         operator fun Beta.unaryPlus() {
             anthropicBeta += this.id
@@ -296,7 +297,7 @@ class Anthropic internal constructor(
         get() = requireNotNull(
             modelMap[model]
         ) {
-            "The model returned in the response is not known to Anthropic API client: $id"
+            "Unknown model '$model', consider adding modelMap[\"$model\"] = UnknownModel(...) when creating Anthropic client instance."
         }
 
     override fun toString(): String = "Anthropic($costWithUsage)"
