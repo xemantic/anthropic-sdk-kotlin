@@ -154,23 +154,22 @@ kotlin {
             binaries.library()
         }
 
-//    // wasm targets are still buggy
-//    wasmJs {
-//      browser {
-//        testTask {
-//          // also these tests are stuck
-//          enabled = false
-//        }
-//      }
-//      nodejs()
-//      //d8()
-//      binaries.library()
-//    }
+        wasmJs {
+            browser {
+                testTask {
+                    // these tests are stuck for some reason
+                    enabled = false
+                }
+            }
+            nodejs()
+            //d8()
+            binaries.library()
+        }
 
-//    wasmWasi {
-//      nodejs()
-//      binaries.library()
-//    }
+//        wasmWasi {
+//            nodejs()
+//            binaries.library()
+//        }
 
         // native, see https://kotlinlang.org/docs/native-target-support.html
         // tier 1
