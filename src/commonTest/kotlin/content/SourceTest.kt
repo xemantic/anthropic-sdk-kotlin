@@ -40,7 +40,7 @@ class SourceTest {
               "type": "base64",
               "media_type": "image/png",
               "data": "foo",
-               "bar": "buzz"
+              "bar": "buzz"
             }
         """.trimIndent()
     }
