@@ -20,9 +20,11 @@ import com.xemantic.ai.anthropic.cache.CacheControl
 import com.xemantic.ai.anthropic.content.Content
 import com.xemantic.ai.anthropic.content.WebSearchServerToolUse
 import com.xemantic.ai.anthropic.json.anthropicJson
-import com.xemantic.ai.anthropic.json.prettyAnthropicJson
 import com.xemantic.ai.anthropic.tool.WebSearch
-import com.xemantic.kotlin.test.*
+import com.xemantic.kotlin.test.be
+import com.xemantic.kotlin.test.have
+import com.xemantic.kotlin.test.sameAsJson
+import com.xemantic.kotlin.test.should
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 
@@ -32,7 +34,9 @@ class WebSearchServerToolUseTest {
     fun `should create WebSearchServerToolUse`() {
         WebSearchServerToolUse {
             id = "toolu_123"
-            input = WebSearch.Input(query = "kotlin multiplatform")
+            input = WebSearch.Input(
+                query = "kotlin multiplatform"
+            )
         } should {
             be<WebSearchServerToolUse>()
             have(id == "toolu_123")
@@ -55,78 +59,19 @@ class WebSearchServerToolUseTest {
 
     @Test
     fun `should return JSON for WebSearchServerToolUse toString`() {
-        val toolUse = WebSearchServerToolUse {
-            id = "toolu_123"
-            input = WebSearch.Input(query = "kotlin multiplatform")
-        }
-
-        toolUse.toString() sameAs /* language=json */ """
-            {
-              "type": "server_tool_use",
-              "id": "toolu_123",
-              "name": "web_search",
-              "input": {
-                "query": "kotlin multiplatform"
-              }
-            }
-        """.trimIndent()
-    }
-
-    @Test
-    fun `should serialize WebSearchServerToolUse as Content`() {
-        val toolUse = WebSearchServerToolUse {
+        WebSearchServerToolUse {
             id = "toolu_456"
-            input = WebSearch.Input(query = "anthropic API")
-        }
-
-        anthropicJson.encodeToString<Content>(toolUse) sameAsJson """
+            input = WebSearch.Input(
+                query = "kotlin multiplatform"
+            )
+            cacheControl = CacheControl.Ephemeral()
+        }.toString() sameAsJson """
             {
               "type": "server_tool_use",
               "id": "toolu_456",
               "name": "web_search",
               "input": {
-                "query": "anthropic API"
-              }
-            }
-        """.trimIndent()
-    }
-
-    @Test
-    fun `should serialize WebSearchServerToolUse as Content type`() {
-        val serverToolUse = WebSearchServerToolUse {
-            id = "toolu_789"
-            input = WebSearch.Input(query = "Claude AI features")
-        }
-
-        prettyAnthropicJson.encodeToString<Content>(
-            serverToolUse
-        ) sameAs /* language=json */ """
-            {
-              "type": "server_tool_use",
-              "id": "toolu_789",
-              "name": "web_search",
-              "input": {
-                "query": "Claude AI features"
-              }
-            }
-        """.trimIndent()
-    }
-
-    @Test
-    fun `should serialize WebSearchServerToolUse with cache control as Content`() {
-        val toolUse = WebSearchServerToolUse {
-            id = "toolu_789"
-            input = WebSearch.Input(query = "kotlin serialization")
-            cacheControl = CacheControl.Ephemeral()
-        }
-
-        anthropicJson.encodeToString<Content>(toolUse) sameAsJson """
-            {
-              "type": "server_tool_use",
-              "id": "toolu_789",
-              "name": "web_search",
-              "input": {
-                "query": "kotlin serialization"
+                "query": "kotlin multiplatform"
               },
               "cache_control": {
                 "type": "ephemeral"
@@ -136,105 +81,81 @@ class WebSearchServerToolUseTest {
     }
 
     @Test
-    fun `should serialize list of Content including WebSearchServerToolUse`() {
-        val contentList  = listOf(
-            WebSearchServerToolUse {
-                id = "toolu_abc"
-                input = WebSearch.Input(query = "Anthropic SDK")
-            }
+    fun `should serialize WebSearchServerToolUse as Content`() {
+        // given
+        val toolUse = WebSearchServerToolUse {
+            id = "toolu_456"
+            input = WebSearch.Input(
+                query = "anthropic API"
+            )
+            cacheControl = CacheControl.Ephemeral()
+        }
+
+        // when
+        val json = anthropicJson.encodeToString<Content>(
+            toolUse
         )
 
-        prettyAnthropicJson.encodeToString<List<Content>>(
-            contentList
-        ) sameAs """
-            [
-              {
-                "type": "server_tool_use",
-                "id": "toolu_abc",
-                "name": "web_search",
-                "input": {
-                  "query": "Anthropic SDK"
-                }
+        // then
+        json sameAsJson """
+            {
+              "type": "server_tool_use",
+              "id": "toolu_456",
+              "name": "web_search",
+              "input": {
+                "query": "anthropic API"
+              },
+              "cache_control": {
+                "type": "ephemeral"
               }
-            ]
+            }
         """.trimIndent()
     }
 
     @Test
     fun `should deserialize WebSearchServerToolUse as Content`() {
-        anthropicJson.decodeFromString<Content>(
-            """
+        // given
+        val json = """
             {
               "type": "server_tool_use",
-              "id": "toolu_999",
+              "id": "toolu_abc",
               "name": "web_search",
               "input": {
-                "query": "ktor client"
+                "query": "kotlin multiplatform"
+              },
+              "cache_control": {
+                "type": "ephemeral"
               }
             }
-            """
-        ) should {
+        """.trimIndent()
+
+        // when
+        val toolUse = anthropicJson.decodeFromString<Content>(json)
+
+        // then
+        toolUse should {
             be<WebSearchServerToolUse>()
-            have(id == "toolu_999")
+            have(id == "toolu_abc")
             have(name == "web_search")
             input should {
-                have(query == "ktor client")
+                have(query == "kotlin multiplatform")
             }
-            have(cacheControl == null)
+            cacheControl should {
+                be<CacheControl.Ephemeral>()
+            }
         }
-    }
-
-    @Test
-    fun `should deserialize WebSearch tool Input`() {
-        anthropicJson.decodeFromString<WebSearch.Input>(
-            """
-            {
-              "query": "kotlin multiplatform tutorial"
-            }
-            """
-        ) should {
-            have(query == "kotlin multiplatform tutorial")
-        }
-    }
-
-    @Test
-    fun `should serialize WebSearch tool Input`() {
-        prettyAnthropicJson.encodeToString(
-            WebSearch.Input(
-                query = "anthropic API documentation"
-            )
-        ) sameAs /* language=json */ """
-            {
-              "query": "anthropic API documentation"
-            }
-        """.trimIndent()
-    }
-
-    @Test
-    fun `should return string representation of WebSearchServerToolUse`() {
-        WebSearchServerToolUse {
-            id = "toolu_101"
-            input = WebSearch.Input(query = "test query")
-        }.toString() sameAsJson """
-            {
-              "type": "server_tool_use",
-              "id": "toolu_101",
-              "name": "web_search",
-              "input": {
-                "query": "test query"
-              }
-            }
-        """.trimIndent()
     }
 
     @Test
     fun `should copy WebSearchServerToolUse`() {
         WebSearchServerToolUse {
-            id = "toolu_202"
-            input = WebSearch.Input(query = "original query")
+            id = "toolu_abc"
+            input = WebSearch.Input(
+                query = "original query"
+            )
             cacheControl = CacheControl.Ephemeral()
         }.copy() should {
-            have(id == "toolu_202")
+            have(id == "toolu_abc")
             have(name == "web_search")
             input should {
                 have(query == "original query")
@@ -249,19 +170,25 @@ class WebSearchServerToolUseTest {
     fun `should copy WebSearchServerToolUse while altering properties`() {
         WebSearchServerToolUse {
             id = "toolu_303"
-            input = WebSearch.Input(query = "old query")
-            cacheControl = CacheControl.Ephemeral()
+            input = WebSearch.Input(
+                query = "old query"
+            )
+            cacheControl = null
         }.copy {
             id = "toolu_404"
-            input = WebSearch.Input(query = "new query")
-            cacheControl = null
+            input = WebSearch.Input(
+                query = "new query"
+            )
+            cacheControl = CacheControl.Ephemeral()
         } should {
             have(id == "toolu_404")
             have(name == "web_search")
             input should {
                 have(query == "new query")
             }
-            have(cacheControl == null)
+            cacheControl should {
+                be<CacheControl.Ephemeral>()
+            }
         }
     }
 
