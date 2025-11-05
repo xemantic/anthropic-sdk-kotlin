@@ -129,7 +129,9 @@ class Anthropic internal constructor(
     enum class Beta(val id: String) {
         OUTPUT_128K_2025_02_19("output-128k-2025-02-19"),
         COMPUTER_USE_2025_01_24("computer-use-2025-01-24"),
-        COMPUTER_USE_2024_10_22("computer-use-2024-10-22")
+        COMPUTER_USE_2024_10_22("computer-use-2024-10-22"),
+        WEB_SEARCH_2025_03_05("web-search-2025-03-05"),
+        WEB_FETCH_2025_09_10("web-fetch-2025-09-10")
     }
 
     private val client = HttpClient {

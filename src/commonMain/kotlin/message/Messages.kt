@@ -20,13 +20,16 @@ import com.xemantic.ai.anthropic.AnthropicModel
 import com.xemantic.ai.anthropic.Model
 import com.xemantic.ai.anthropic.Response
 import com.xemantic.ai.anthropic.cache.CacheControl
-import com.xemantic.ai.anthropic.content.*
+import com.xemantic.ai.anthropic.content.Content
+import com.xemantic.ai.anthropic.content.ContentListBuilder
+import com.xemantic.ai.anthropic.content.Text
+import com.xemantic.ai.anthropic.content.ToolUse
 import com.xemantic.ai.anthropic.cost.CostWithUsage
 import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.ai.anthropic.json.toPrettyJson
 import com.xemantic.ai.anthropic.tool.Tool
-import com.xemantic.ai.anthropic.tool.Toolbox
 import com.xemantic.ai.anthropic.tool.ToolChoice
+import com.xemantic.ai.anthropic.tool.Toolbox
 import com.xemantic.ai.anthropic.usage.Usage
 import com.xemantic.kotlin.core.collections.mapLast
 import kotlinx.serialization.SerialName
@@ -247,10 +250,10 @@ operator fun MutableCollection<Message>.plusAssign(
 @Serializable
 @SerialName("message")
 data class MessageResponse(
+    val model: String,
     val id: String,
     val role: Role,
     val content: List<Content>, // limited to Text and ToolUse
-    val model: String,
     @SerialName("stop_reason")
     val stopReason: StopReason?,
     @SerialName("stop_sequence")
@@ -285,7 +288,8 @@ data class MessageResponse(
 
     val text: String?
         get() = content.filterIsInstance<Text>().run {
-            if (isEmpty()) null else joinToString("\n") { it.text }
+            if (isEmpty()) null
+            else joinToString(separator = "") { it.text }
         }
 
     val toolUse: ToolUse?
@@ -303,6 +307,8 @@ data class MessageResponse(
         cost = resolvedModel.cost * usage,
         usage = usage
     )
+
+    override fun toString() = toPrettyJson()
 
 }
 

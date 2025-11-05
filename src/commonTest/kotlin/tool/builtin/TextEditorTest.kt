@@ -25,8 +25,8 @@ import com.xemantic.ai.anthropic.tool.Tool
 import com.xemantic.ai.anthropic.tool.Toolbox
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
+import com.xemantic.kotlin.test.sameAsJson
 import com.xemantic.kotlin.test.should
-import io.kotest.assertions.json.shouldEqualJson
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 
@@ -70,12 +70,12 @@ class TextEditorTest {
     fun `should serialize TextEditorTool`() {
         anthropicJson.encodeToString(
             TextEditor {}
-        ) shouldEqualJson """
+        ) sameAsJson """
             {
               "name": "str_replace_based_edit_tool",
               "type": "text_editor_20250728"
             }
-        """
+        """.trimIndent()
     }
 
     @Test
@@ -96,24 +96,22 @@ class TextEditorTest {
 
     @Test
     fun `should return JSON for TextEditorTool toString`() {
-        TextEditor {}.toString() shouldEqualJson """
+        TextEditor {}.toString() sameAsJson """
             {
               "name": "str_replace_based_edit_tool",
               "type": "text_editor_20250728"
             }
-        """
+        """.trimIndent()
     }
 
     @Test
     fun `should deserialize TextEditorTool Input`() {
-        anthropicJson.decodeFromString<TextEditor.Input>(
-            """
+        anthropicJson.decodeFromString<TextEditor.Input>("""
             {
               "command": "view",
               "path": "/tmp/foo.txt"
             }
-            """
-        ) should {
+        """.trimIndent()) should {
             have(command == TextEditor.Command.VIEW)
             have(path == "/tmp/foo.txt")
             have(fileText == null)
@@ -126,16 +124,15 @@ class TextEditorTest {
 
     @Test
     fun `should serialize TextEditorTool Input with command`() {
-        anthropicJson.encodeToString(TextEditor.Companion.Input {
+        anthropicJson.encodeToString(TextEditor.Input {
             command = TextEditor.Command.VIEW
             path = "/tmp/foo.txt"
-        }) shouldEqualJson """
+        }) sameAsJson """
             {
               "command": "view",
               "path": "/tmp/foo.txt"
             }
-        """
+        """.trimIndent()
     }
-
 
 }

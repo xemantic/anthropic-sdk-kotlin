@@ -17,17 +17,15 @@
 package com.xemantic.ai.anthropic.message
 
 import com.xemantic.ai.anthropic.Response
-import com.xemantic.ai.anthropic.content.Text
-import com.xemantic.ai.anthropic.content.ToolUse
+import com.xemantic.ai.anthropic.content.*
 import com.xemantic.ai.anthropic.json.anthropicJson
+import com.xemantic.ai.anthropic.tool.WebFetch
 import com.xemantic.ai.anthropic.usage.Usage
-import com.xemantic.kotlin.test.assert
-import com.xemantic.kotlin.test.be
-import com.xemantic.kotlin.test.have
-import com.xemantic.kotlin.test.should
+import com.xemantic.kotlin.test.*
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlin.test.Test
+import kotlin.time.Instant
 
 /**
  * Tests the JSON format of deserialized Anthropic API message responses.
@@ -42,7 +40,7 @@ class MessageResponseTest {
               "id": "msg_01PspkNzNG3nrf5upeTsmWLF",
               "type": "message",
               "role": "assistant",
-              "model": "claude-3-5-sonnet-20241022",
+              "model": "claude-sonnet-4-5-20250929",
               "content": [
                 {
                   "type": "tool_use",
@@ -72,7 +70,7 @@ class MessageResponseTest {
             be<MessageResponse>()
             have(id == "msg_01PspkNzNG3nrf5upeTsmWLF")
             have(role == Role.ASSISTANT)
-            have(model == "claude-3-5-sonnet-20241022")
+            have(model == "claude-sonnet-4-5-20250929")
             have(content.size == 1)
             have(stopReason == StopReason.TOOL_USE)
             have(stopSequence == null)
@@ -121,7 +119,7 @@ class MessageResponseTest {
             id = "foo",
             role = Role.ASSISTANT,
             content = listOf(
-                Text("bar"),
+                Text("bar "),
                 Text("buzz")
             ),
             model = "claude-3-5-sonnet-20241022",
@@ -132,7 +130,7 @@ class MessageResponseTest {
                 outputTokens = 86
             }
         )
-        assert(response.text == "bar\nbuzz")
+        assert(response.text == "bar buzz")
     }
 
     // most likely never happens, but let's check anyway
@@ -299,6 +297,87 @@ class MessageResponseTest {
         response should {
             have(toolUses.isEmpty())
         }
+    }
+
+    @Test
+    fun `should serialize complex MessageResponse with WebFetch content to JSON via toString`() {
+        val response = MessageResponse(
+            model = "claude-sonnet-4-5-20250929",
+            id = "msg_01WebFetchTest123",
+            role = Role.ASSISTANT,
+            content = listOf(
+                Text("I'll fetch that information for you."),
+                WebFetchServerToolUse {
+                    id = "toolu_webfetch_123"
+                    input = WebFetch.Input(url = "https://www.anthropic.com")
+                },
+                WebFetchToolResult {
+                    toolUseId = "toolu_webfetch_123"
+                    content = WebFetchToolResult.Result(
+                        url = "https://www.anthropic.com",
+                        retrievedAt = Instant.parse("2025-10-17T15:22:49.286000+00:00"),
+                        content = Document {
+                            title = "Anthropic"
+                            source = Source.Text {
+                                data = "Welcome to Anthropic"
+                            }
+                        }
+                    )
+                }
+            ),
+            stopReason = StopReason.END_TURN,
+            stopSequence = null,
+            usage = Usage {
+                inputTokens = 512
+                outputTokens = 128
+            }
+        )
+
+        response.toString() sameAs /* language=json */ """
+            {
+              "type": "message",
+              "model": "claude-sonnet-4-5-20250929",
+              "id": "msg_01WebFetchTest123",
+              "role": "assistant",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "I'll fetch that information for you."
+                },
+                {
+                  "type": "server_tool_use",
+                  "id": "toolu_webfetch_123",
+                  "name": "web_fetch",
+                  "input": {
+                    "url": "https://www.anthropic.com"
+                  }
+                },
+                {
+                  "type": "web_fetch_tool_result",
+                  "tool_use_id": "toolu_webfetch_123",
+                  "content": {
+                    "type": "web_fetch_result",
+                    "url": "https://www.anthropic.com",
+                    "retrieved_at": "2025-10-17T15:22:49.286Z",
+                    "content": {
+                      "type": "document",
+                      "source": {
+                        "type": "text",
+                        "media_type": "text/plain",
+                        "data": "Welcome to Anthropic"
+                      },
+                      "title": "Anthropic"
+                    }
+                  }
+                }
+              ],
+              "stop_reason": "end_turn",
+              "usage": {
+                "input_tokens": 512,
+                "output_tokens": 128
+              }
+            }
+        """.trimIndent()
     }
 
 }

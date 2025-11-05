@@ -76,6 +76,28 @@ abstract class Source : WithAdditionalProperties { // TODO cross check with offi
     }
 
     @Serializable
+    @SerialName("text")
+    class Text private constructor(
+        @SerialName("media_type")
+        val mediaType: String = "text/plain",
+        val data: String,
+        override val additionalProperties: Map<String, JsonElement?>? = null
+    ) : Source() {
+
+        class Builder : WithAdditionalProperties.Builder() {
+
+            var data: String? = null
+
+            fun build(): Text = Text(
+                data = requireNotNull(data) { "data cannot be null" },
+                additionalProperties = additionalProperties
+            )
+
+        }
+
+    }
+
+    @Serializable
     class Unknown private constructor(
         val type: String,
         override val additionalProperties: Map<String, JsonElement?>? = null
@@ -111,6 +133,10 @@ abstract class Source : WithAdditionalProperties { // TODO cross check with offi
             it.url = url
             block(it)
         }.build()
+
+        fun Text(
+            block: Text.Builder.() -> Unit
+        ): Text = Text.Builder().apply(block).build()
 
         fun Unknown(
             block: Unknown.Builder.() -> Unit

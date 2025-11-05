@@ -26,8 +26,8 @@ import com.xemantic.ai.anthropic.tool.Tool
 import com.xemantic.ai.anthropic.tool.Toolbox
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
+import com.xemantic.kotlin.test.sameAsJson
 import com.xemantic.kotlin.test.should
-import io.kotest.assertions.json.shouldEqualJson
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 
@@ -83,7 +83,7 @@ class ComputerTest {
                 displayHeightPx = 768
                 displayNumber = 0
             }
-        ) shouldEqualJson """
+        ) sameAsJson """
             {
               "name": "computer",
               "type": "computer_20250124",
@@ -91,13 +91,12 @@ class ComputerTest {
               "display_height_px": 768,
               "display_number": 0
             }
-        """
+        """.trimIndent()
     }
 
     @Test
     fun `should deserialize Computer tool`() {
-        anthropicJson.decodeFromString<Tool>(
-            """
+        anthropicJson.decodeFromString<Tool>("""
             {
               "name": "computer",
               "type": "computer_20250124",
@@ -105,8 +104,7 @@ class ComputerTest {
               "display_height_px": 768,
               "display_number": 0
             }
-            """
-        ) should {
+        """.trimIndent()) should {
             have(name == "computer")
             be<Computer>()
             have(type == "computer_20250124")
@@ -122,7 +120,7 @@ class ComputerTest {
             displayWidthPx = 1024
             displayHeightPx = 768
             displayNumber = 0
-        }.toString() shouldEqualJson """
+        }.toString() sameAsJson """
             {
               "name": "computer",
               "type": "computer_20250124",
@@ -130,18 +128,16 @@ class ComputerTest {
               "display_height_px": 768,
               "display_number": 0
             }
-        """
+        """.trimIndent()
     }
 
     @Test
     fun `should deserialize Computer tool Input`() {
-        anthropicJson.decodeFromString<Computer.Input>(
-            """
+        anthropicJson.decodeFromString<Computer.Input>("""
             {
               "action": "screenshot"
             }
-            """
-        ) should {
+        """.trimIndent()) should {
             have(action == Computer.Action.SCREENSHOT)
             have(coordinate == null)
             have(text == null)
@@ -150,13 +146,13 @@ class ComputerTest {
 
     @Test
     fun `should serialize Computer tool Input with action`() {
-        anthropicJson.encodeToString(Computer.Companion.Input {
+        anthropicJson.encodeToString(Computer.Input {
             action = Computer.Action.SCREENSHOT
-        }) shouldEqualJson """
+        }) sameAsJson """
             {
               "action": "screenshot"
             }
-        """
+        """.trimIndent()
     }
 
 }

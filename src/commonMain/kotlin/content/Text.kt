@@ -17,6 +17,7 @@
 package com.xemantic.ai.anthropic.content
 
 import com.xemantic.ai.anthropic.cache.CacheControl
+import com.xemantic.ai.anthropic.citation.Citation
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.contracts.ExperimentalContracts
@@ -29,16 +30,19 @@ class Text private constructor(
     val text: String,
     @SerialName("cache_control")
     override val cacheControl: CacheControl? = null,
-) : Content() {
+    override val citations: List<Citation>? = null
+) : Content(), WithCitations {
 
     class Builder {
 
         var text: String? = null
         var cacheControl: CacheControl? = null
+        var citations: List<Citation>? = null
 
         fun build(): Text = Text(
             requireNotNull(text) { "text cannot be null" },
-            cacheControl
+            cacheControl,
+            citations
         )
 
     }
@@ -53,6 +57,7 @@ class Text private constructor(
         return Builder().also {
             it.text = text
             it.cacheControl = cacheControl
+            it.citations = citations
             block(it)
 
         }.build()

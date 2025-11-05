@@ -17,6 +17,7 @@
 package com.xemantic.ai.anthropic.content
 
 import com.xemantic.ai.anthropic.cache.CacheControl
+import com.xemantic.ai.anthropic.citation.Citation
 import com.xemantic.ai.file.magic.MediaType
 import kotlinx.io.files.Path
 import kotlinx.serialization.SerialName
@@ -29,17 +30,21 @@ import kotlin.contracts.contract
 @SerialName("document")
 class Document private constructor(
     val source: Source,
+    val title: String? = null,
     @SerialName("cache_control")
-    override val cacheControl: CacheControl? = null
-) : Content() {
+    override val cacheControl: CacheControl? = null,
+    override val citations: List<Citation>? = null
+) : Content(), WithCitations {
 
     class Builder : BinaryContentBuilder(
         supportedMediaTypes = SUPPORTED_MEDIA_TYPES
     ) {
 
+        var title: String? = null
         var cacheControl: CacheControl? = null
 
         fun build(): Document = Document(
+            title = title,
             source = requireNotNull(source),
             cacheControl = cacheControl
         )
@@ -52,7 +57,7 @@ class Document private constructor(
          * The set of [MediaType]s supported by the [Document].
          */
         val SUPPORTED_MEDIA_TYPES = setOf(
-            MediaType.PDF
+            MediaType.PDF, MediaType.TEXT
         )
 
     }

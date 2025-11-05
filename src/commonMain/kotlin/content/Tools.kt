@@ -18,6 +18,7 @@ package com.xemantic.ai.anthropic.content
 
 import com.xemantic.ai.anthropic.cache.CacheControl
 import com.xemantic.ai.anthropic.json.anthropicJson
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -86,6 +87,17 @@ fun ToolUse(
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
     return ToolUse.Builder().apply(block).build()
+}
+
+@OptIn(ExperimentalSerializationApi::class)
+@Serializable
+@SerialName("server_tool_use")
+abstract class ServerToolUse<Input> : Content() {
+
+    abstract val id: String
+    abstract val name: String
+    abstract val input: Input
+
 }
 
 @Serializable
