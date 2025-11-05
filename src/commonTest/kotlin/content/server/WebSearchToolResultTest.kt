@@ -18,6 +18,7 @@ package com.xemantic.ai.anthropic.content.server
 
 import com.xemantic.ai.anthropic.cache.CacheControl
 import com.xemantic.ai.anthropic.content.Content
+import com.xemantic.ai.anthropic.content.WebSearchResult
 import com.xemantic.ai.anthropic.content.WebSearchToolResult
 import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.kotlin.test.be
@@ -89,6 +90,7 @@ class WebSearchToolResultTest {
               "tool_use_id": "toolu_result_1",
               "content": [
                 {
+                  "type": "web_search_result",
                   "title": "Kotlin Multiplatform",
                   "url": "https://kotlinlang.org/docs/multiplatform.html",
                   "encrypted_content": "encrypted123",
@@ -186,24 +188,19 @@ class WebSearchToolResultTest {
 
     @Test
     fun `should return string representation of WebSearchToolResult with Results`() {
-        val result = anthropicJson.decodeFromString<WebSearchToolResult>(
-            """
-            {
-              "type": "web_search_tool_result",
-              "tool_use_id": "toolu_string",
-              "content": [
-                {
-                  "title": "ToString Test",
-                  "url": "https://tostring.com",
-                  "encrypted_content": "str123"
-                }
-              ],
-              "cache_control": {
-                "type": "ephemeral"
-              }
-            }
-            """
-        )
+        val result = WebSearchToolResult {
+            toolUseId = "toolu_string"
+            content = WebSearchToolResult.Results(
+                results = listOf(
+                    WebSearchResult(
+                        title = "ToString Test",
+                        url = "https://tostring.com",
+                        encryptedContent = "str123"
+                    )
+                )
+            )
+            cacheControl = CacheControl.Ephemeral()
+        }
 
         result.toString() sameAsJson """
             {
@@ -211,6 +208,7 @@ class WebSearchToolResultTest {
               "tool_use_id": "toolu_string",
               "content": [
                 {
+                  "type": "web_search_result",
                   "title": "ToString Test",
                   "url": "https://tostring.com",
                   "encrypted_content": "str123"

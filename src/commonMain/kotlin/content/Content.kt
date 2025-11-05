@@ -17,21 +17,19 @@
 package com.xemantic.ai.anthropic.content
 
 import com.xemantic.ai.anthropic.cache.CacheControl
+import com.xemantic.ai.anthropic.citation.Citation
+import com.xemantic.ai.anthropic.json.ContentSerializer
 import com.xemantic.ai.anthropic.json.toPrettyJson
 import com.xemantic.ai.file.magic.MediaType
 import com.xemantic.ai.file.magic.detectMediaType
 import com.xemantic.ai.file.magic.readBytes
 import kotlinx.io.files.Path
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
-@Serializable
-@JsonClassDiscriminator("type")
-@OptIn(ExperimentalSerializationApi::class)
+@Serializable(with = ContentSerializer::class)
 sealed class Content {
 
     @SerialName("cache_control")
@@ -46,8 +44,23 @@ sealed class Content {
         is Image -> copy { this.cacheControl = cacheControl }
         is Document -> copy { this.cacheControl = cacheControl }
         is ToolUse -> copy { this.cacheControl = cacheControl }
+        is WebSearchServerToolUse -> copy { this.cacheControl = cacheControl }
+        is WebFetchServerToolUse -> copy { this.cacheControl = cacheControl }
+        is WebSearchToolResult -> copy { this.cacheControl = cacheControl }
+        is WebFetchToolResult -> copy { this.cacheControl = cacheControl }
         is ToolResult -> copy { this.cacheControl = cacheControl }
+        is ServerToolUse<*> -> {
+            throw IllegalStateException(
+                "Unsupported ServerToolUse: $this"
+            )
+        }
     }
+
+}
+
+interface WithCitations {
+
+    val citations: List<Citation>?
 
 }
 

@@ -21,28 +21,28 @@ import com.xemantic.ai.anthropic.json.set
 import com.xemantic.ai.file.magic.MediaType
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
+import com.xemantic.kotlin.test.sameAsJson
 import com.xemantic.kotlin.test.should
-import io.kotest.assertions.json.shouldEqualJson
 import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
 
 class SourceTest {
 
     @Test
-    fun `should created Base64 Source with additional properties`() {
+    fun `should create Base64 Source with additional properties`() {
         val source = Source.Base64 {
             data = "foo"
             mediaType(MediaType.PNG)
             additionalProperties["bar"] = "buzz"
         }
-        anthropicJson.encodeToString<Source>(source) shouldEqualJson """
+        anthropicJson.encodeToString<Source>(source) sameAsJson """
             {
               "type": "base64",
               "media_type": "image/png",
               "data": "foo",
                "bar": "buzz"
             }
-        """
+        """.trimIndent()
     }
 
     @Test
@@ -71,43 +71,43 @@ class SourceTest {
     }
 
     @Test
-    fun `should created URL Source`() {
+    fun `should create URL Source`() {
         val source = Source.Url("https://example.com/image.png")
-        anthropicJson.encodeToString<Source>(source) shouldEqualJson """
+        anthropicJson.encodeToString<Source>(source) sameAsJson """
             {
               "type": "url",
               "url": "https://example.com/image.png"
             }
-        """
+        """.trimIndent()
     }
 
     @Test
-    fun `should created URL Source with additional properties`() {
+    fun `should create URL Source with additional properties`() {
         val source = Source.Url("https://example.com/image.png") {
             additionalProperties["bar"] = "buzz"
         }
-        anthropicJson.encodeToString<Source>(source) shouldEqualJson """
+        anthropicJson.encodeToString<Source>(source) sameAsJson """
             {
               "type": "url",
               "url": "https://example.com/image.png",
               "bar": "buzz"
             }
-        """
+        """.trimIndent()
     }
 
     @Test
-    fun `should created URL Source with url passed in builder and with additional properties`() {
+    fun `should create URL Source with url passed in builder and with additional properties`() {
         val source = Source.Url {
             url = "https://example.com/image.png"
             additionalProperties["bar"] = "buzz"
         }
-        anthropicJson.encodeToString<Source>(source) shouldEqualJson """
+        anthropicJson.encodeToString<Source>(source) sameAsJson """
             {
               "type": "url",
               "url": "https://example.com/image.png",
               "bar": "buzz"
             }
-        """
+        """.trimIndent()
     }
 
     @Test
@@ -134,17 +134,58 @@ class SourceTest {
     }
 
     @Test
+    fun `should create Text Source with additional properties`() {
+        val source = Source.Text {
+            data = "Hello World"
+            additionalProperties["bar"] = "buzz"
+        }
+        anthropicJson.encodeToString<Source>(source) sameAsJson """
+            {
+              "type": "text",
+              "media_type": "text/plain",
+              "data": "Hello World",
+              "bar": "buzz"
+            }
+        """.trimIndent()
+    }
+
+    @Test
+    fun `should deserialize Text Source with additional properties`() {
+        // given
+        val json = """
+            {
+              "type": "text",
+              "media_type": "text/plain",
+              "data": "Hello World",
+              "bar": "buzz"
+            }
+        """
+
+        // when
+        val source = anthropicJson.decodeFromString<Source>(json)
+
+        // then
+        source should {
+            be<Source.Text>()
+            have(mediaType == "text/plain")
+            have(data == "Hello World")
+            have(additionalProperties != null && additionalProperties.isNotEmpty())
+            have(additionalProperties!!["bar"] == JsonPrimitive("buzz"))
+        }
+    }
+
+    @Test
     fun `should created Unknown Source like if it was URL source`() {
         val source = Source.Unknown {
             type = "url"
             additionalProperties["url"] = "https://example.com/image.png"
         }
-        anthropicJson.encodeToString<Source>(source) shouldEqualJson """
+        anthropicJson.encodeToString<Source>(source) sameAsJson """
             {
               "type": "url",
               "url": "https://example.com/image.png"
             }
-        """
+        """.trimIndent()
     }
 
     @Test
@@ -168,7 +209,7 @@ class SourceTest {
                 have(isNotEmpty())
                 have(get("url") == JsonPrimitive("https://example.com/image.png"))
             }
-            have(additionalProperties != null && additionalProperties.isNotEmpty())
+            have(additionalProperties.isNotEmpty())
         }
     }
 

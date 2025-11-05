@@ -24,6 +24,22 @@ import kotlin.test.assertFails
 
 class UsageTest {
 
+    // given - ServerToolUse instances
+    val serverToolUse1 = ServerToolUse {
+        webSearchRequests = 5
+        webFetchRequests = 3
+    }
+
+    val serverToolUse2 = ServerToolUse {
+        webSearchRequests = 5
+        webFetchRequests = 3
+    }
+
+    val serverToolUse3 = ServerToolUse {
+        webSearchRequests = 10
+        webFetchRequests = 7
+    }
+
     // given - CacheCreation instances
     val cacheCreation1 = CacheCreation {
         ephemeral5mInputTokens = 10
@@ -239,6 +255,112 @@ class UsageTest {
             have(outputTokens == 0)
             have(cacheCreationInputTokens == 0)
             have(cacheReadInputTokens == 0)
+        }
+    }
+
+    @Test
+    fun `should create ServerToolUse instance`() {
+        ServerToolUse {
+            webSearchRequests = 5
+            webFetchRequests = 3
+        } should {
+            have(webSearchRequests == 5)
+            have(webFetchRequests == 3)
+        }
+    }
+
+    @Test
+    fun `should create ServerToolUse instance with no properties`() {
+        ServerToolUse {} should {
+            have(webSearchRequests == null)
+            have(webFetchRequests == null)
+        }
+    }
+
+    @Test
+    fun `should return true for equal ServerToolUse objects and false for non-equal`() {
+        @Suppress("KotlinConstantConditions")
+        assert(serverToolUse1 == serverToolUse1)
+        assert(serverToolUse1 == serverToolUse2)
+        assert(serverToolUse1 != serverToolUse3)
+    }
+
+    @Test
+    fun `should return the same hashCode for equal ServerToolUse objects`() {
+        assert(serverToolUse1.hashCode() == serverToolUse1.hashCode())
+        assert(serverToolUse1.hashCode() == serverToolUse2.hashCode())
+        assert(serverToolUse1.hashCode() != serverToolUse3.hashCode())
+    }
+
+    @Test
+    fun `should add two ServerToolUse objects`() {
+        // when
+        val result = serverToolUse1 + serverToolUse3
+
+        // then
+        result should {
+            have(webSearchRequests == 15)
+            have(webFetchRequests == 10)
+        }
+    }
+
+    @Test
+    fun `should use ServerToolUse ZERO constant`() {
+        ServerToolUse.ZERO should {
+            have(webSearchRequests == 0)
+            have(webFetchRequests == 0)
+        }
+    }
+
+    @Test
+    fun `should create Usage instance with serverToolUse`() {
+        Usage {
+            inputTokens = 1
+            outputTokens = 2
+            serverToolUse = serverToolUse1
+        } should {
+            have(inputTokens == 1)
+            have(outputTokens == 2)
+            have(serverToolUse == serverToolUse1)
+        }
+    }
+
+    @Test
+    fun `should add Usage objects with ServerToolUse`() {
+        // given
+        val usageWithServerTool1 = Usage {
+            inputTokens = 100
+            outputTokens = 200
+            serverToolUse = serverToolUse1
+        }
+        val usageWithServerTool2 = Usage {
+            inputTokens = 300
+            outputTokens = 400
+            serverToolUse = serverToolUse3
+        }
+
+        // when
+        val result = usageWithServerTool1 + usageWithServerTool2
+
+        // then
+        result should {
+            have(inputTokens == 400)
+            have(outputTokens == 600)
+            have(serverToolUse != null)
+        }
+        result.serverToolUse should {
+            have(webSearchRequests == 15)
+            have(webFetchRequests == 10)
+        }
+    }
+
+    @Test
+    fun `should create ServerToolUse with only webFetchRequests`() {
+        ServerToolUse {
+            webFetchRequests = 8
+        } should {
+            have(webSearchRequests == null)
+            have(webFetchRequests == 8)
         }
     }
 
