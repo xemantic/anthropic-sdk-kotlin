@@ -42,7 +42,6 @@ class WebFetchTest {
         }
         val anthropic = testAnthropic {
             +Anthropic.Beta.WEB_FETCH_2025_09_10
-            logHttp = true
         }
 
         // when

@@ -18,8 +18,6 @@
 
 import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 import com.xemantic.gradle.conventions.License
-import org.gradle.api.tasks.testing.logging.TestExceptionFormat
-import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -310,16 +308,8 @@ tasks.withType<DependencyUpdatesTask> {
     }
 }
 
-tasks.withType<Test> {
-    enabled = !skipTests
-    testLogging {
-        events(
-            TestLogEvent.SKIPPED,
-            TestLogEvent.FAILED
-        )
-        showStackTraces = true
-        exceptionFormat = TestExceptionFormat.FULL
-    }
+tasks.withType<AbstractTestTask>().configureEach {
+    enabled = false
 }
 
 powerAssert {

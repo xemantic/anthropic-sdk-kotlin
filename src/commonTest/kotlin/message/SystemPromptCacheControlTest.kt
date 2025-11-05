@@ -32,9 +32,7 @@ class SystemPromptCacheControlTest {
     @Ignore
     fun `should cache system prompt across conversation`() = runTest {
         // given
-        val client = Anthropic {
-            logHttp = true
-        }
+        val client = Anthropic()
         val conversation = mutableListOf<Message>()
         val systemPrompt = System(
             text = "This system prompt should be cached.",
