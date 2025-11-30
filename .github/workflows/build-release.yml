@@ -20,7 +20,7 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Checkout sources
-        uses: actions/checkout@v5.0.0
+        uses: actions/checkout@v6.0.0
 
       - name: Setup Java
         uses: actions/setup-java@v5.0.0
@@ -66,7 +66,7 @@ jobs:
           echo "TARGET_BRANCH=$TARGET_BRANCH" >> $GITHUB_ENV
 
       - name: Checkout target branch
-        uses: actions/checkout@v5.0.0
+        uses: actions/checkout@v6.0.0
         with:
           ref: ${{ env.TARGET_BRANCH }}
           fetch-depth: 0
