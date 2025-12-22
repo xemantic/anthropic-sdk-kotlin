@@ -28,12 +28,17 @@ abstract class CacheControl : WithAdditionalProperties {
     @Serializable
     @SerialName("ephemeral")
     class Ephemeral private constructor(
+        @SerialName("ttl")
+        val ttl: String? = null,
         override val additionalProperties: Map<String, JsonElement?>? = null
     ) : CacheControl() {
 
         class Builder : WithAdditionalProperties.Builder() {
 
+            var ttl: String? = null
+
             fun build(): Ephemeral = Ephemeral(
+                ttl = ttl,
                 additionalProperties = additionalProperties
             )
 
