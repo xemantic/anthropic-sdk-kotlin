@@ -218,6 +218,9 @@ object ContentSerializer : KSerializer<Content> {
             is WebFetchToolResult -> serializeWithType(jsonEncoder, WebFetchToolResult.serializer(), value, "web_fetch_tool_result")
             is ToolResult -> serializeWithType(jsonEncoder, ToolResult.serializer(), value, "tool_result")
             is Document -> serializeWithType(jsonEncoder, Document.serializer(), value, "document")
+            is ThinkingBlock -> serializeWithType(jsonEncoder, ThinkingBlock.serializer(), value, "thinking")
+            is ThinkingBlockParam -> serializeWithType(jsonEncoder, ThinkingBlockParam.serializer(), value, "thinking")
+            is RedactedThinkingBlock -> serializeWithType(jsonEncoder, RedactedThinkingBlock.serializer(), value, "redacted_thinking")
             else -> throw SerializationException("Unsupported Content type: ${value::class}")
         }
     }
@@ -255,6 +258,8 @@ object ContentSerializer : KSerializer<Content> {
             "web_fetch_tool_result" -> WebFetchToolResult.serializer()
             "tool_result" -> ToolResult.serializer()
             "document" -> Document.serializer()
+            "thinking" -> ThinkingBlock.serializer()
+            "redacted_thinking" -> RedactedThinkingBlock.serializer()
             else -> throw SerializationException(
                 "Unsupported Content type: $type, element: $tree"
             )
