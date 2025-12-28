@@ -89,7 +89,7 @@ class CacheControlSerializationTest {
         anthropicJson.encodeToString(
             serializer = CacheControl.serializer(),
             value = CacheControl.Ephemeral {
-                ttl = "5m"
+                ttl = CacheControl.Ephemeral.TTL.FIVE_MINUTES
             }
         ) shouldEqualJson """
             {
@@ -104,7 +104,7 @@ class CacheControlSerializationTest {
         anthropicJson.encodeToString(
             serializer = CacheControl.serializer(),
             value = CacheControl.Ephemeral {
-                ttl = "1h"
+                ttl = CacheControl.Ephemeral.TTL.ONE_HOUR
             }
         ) shouldEqualJson """
             {
@@ -125,7 +125,7 @@ class CacheControlSerializationTest {
             """
         ) should {
             be<CacheControl.Ephemeral>()
-            have(ttl == "5m")
+            have(ttl == CacheControl.Ephemeral.TTL.FIVE_MINUTES)
         }
     }
 
@@ -140,7 +140,7 @@ class CacheControlSerializationTest {
             """
         ) should {
             be<CacheControl.Ephemeral>()
-            have(ttl == "1h")
+            have(ttl == CacheControl.Ephemeral.TTL.ONE_HOUR)
         }
     }
 

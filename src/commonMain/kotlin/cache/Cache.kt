@@ -21,6 +21,9 @@ import com.xemantic.ai.anthropic.json.toPrettyJson
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
 
 @Serializable
 abstract class CacheControl : WithAdditionalProperties {
@@ -28,14 +31,21 @@ abstract class CacheControl : WithAdditionalProperties {
     @Serializable
     @SerialName("ephemeral")
     class Ephemeral private constructor(
-        @SerialName("ttl")
-        val ttl: String? = null,
+        val ttl: TTL? = null,
         override val additionalProperties: Map<String, JsonElement?>? = null
     ) : CacheControl() {
 
+        @Serializable
+        enum class TTL(val duration: Duration) {
+            @SerialName("5m")
+            FIVE_MINUTES(5.minutes),
+            @SerialName("1h")
+            ONE_HOUR(1.hours)
+        }
+
         class Builder : WithAdditionalProperties.Builder() {
 
-            var ttl: String? = null
+            var ttl: TTL? = null
 
             fun build(): Ephemeral = Ephemeral(
                 ttl = ttl,
