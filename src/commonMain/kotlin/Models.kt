@@ -97,6 +97,17 @@ enum class Model(
         }
     ),
 
+    CLAUDE_HAIKU_4_5_20251001(
+        id = "claude-haiku-4-5-20251001",
+        contextWindow = 200000,
+        maxOutput = 64000,
+        messageBatchesApi = true,
+        cost = Cost {
+            inputTokens = "1".dollarsPerMillion
+            outputTokens = "5".dollarsPerMillion
+        }
+    ),
+
     CLAUDE_3_5_HAIKU_20241022(
         id = "claude-3-5-haiku-20241022",
         contextWindow = 200000,
