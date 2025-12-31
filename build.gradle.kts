@@ -183,7 +183,7 @@ kotlin {
         androidNativeX86()
         androidNativeX64()
         mingwX64()
-        watchosDeviceArm64()
+        //watchosDeviceArm64()
 
         swiftExport {}
 
