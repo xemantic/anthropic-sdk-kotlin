@@ -80,6 +80,67 @@ class CacheControlSerializationTest {
             """
         ) should {
             be<CacheControl.Ephemeral>()
+            have(ttl == null)
+        }
+    }
+
+    @Test
+    fun `should serialize Ephemeral CacheControl with 5m ttl`() {
+        anthropicJson.encodeToString(
+            serializer = CacheControl.serializer(),
+            value = CacheControl.Ephemeral {
+                ttl = CacheControl.Ephemeral.TTL.FIVE_MINUTES
+            }
+        ) shouldEqualJson """
+            {
+              "type": "ephemeral",
+              "ttl": "5m"
+            }
+        """
+    }
+
+    @Test
+    fun `should serialize Ephemeral CacheControl with 1h ttl`() {
+        anthropicJson.encodeToString(
+            serializer = CacheControl.serializer(),
+            value = CacheControl.Ephemeral {
+                ttl = CacheControl.Ephemeral.TTL.ONE_HOUR
+            }
+        ) shouldEqualJson """
+            {
+              "type": "ephemeral",
+              "ttl": "1h"
+            }
+        """
+    }
+
+    @Test
+    fun `should deserialize Ephemeral CacheControl with 5m ttl`() {
+        anthropicJson.decodeFromString<CacheControl>(
+            """
+            {
+              "type": "ephemeral",
+              "ttl": "5m"
+            }
+            """
+        ) should {
+            be<CacheControl.Ephemeral>()
+            have(ttl == CacheControl.Ephemeral.TTL.FIVE_MINUTES)
+        }
+    }
+
+    @Test
+    fun `should deserialize Ephemeral CacheControl with 1h ttl`() {
+        anthropicJson.decodeFromString<CacheControl>(
+            """
+            {
+              "type": "ephemeral",
+              "ttl": "1h"
+            }
+            """
+        ) should {
+            be<CacheControl.Ephemeral>()
+            have(ttl == CacheControl.Ephemeral.TTL.ONE_HOUR)
         }
     }
 
