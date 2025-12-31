@@ -18,7 +18,7 @@ package com.xemantic.ai.anthropic.tool
 
 import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.ai.anthropic.tool.test.Calculator
-import io.kotest.assertions.json.shouldEqualJson
+import com.xemantic.kotlin.test.sameAsJson
 import kotlin.test.Test
 
 class ToolChoiceSerializationTest {
@@ -29,72 +29,72 @@ class ToolChoiceSerializationTest {
     @Test
     fun `should serialize ToolChoice Auto`() {
 
-        ToolChoice.Auto().encodeToString() shouldEqualJson """
+        ToolChoice.Auto().encodeToString() sameAsJson """
             {
               "type": "auto"
             }
-        """
+        """.trimIndent()
 
         ToolChoice.Auto {
             disableParallelToolUse = true
-        }.encodeToString() shouldEqualJson """
+        }.encodeToString() sameAsJson """
             {
               "type": "auto",
               "disable_parallel_tool_use": true
             }
-        """
+        """.trimIndent()
 
     }
 
     @Test
     fun `should serialize ToolChoice Any`() {
 
-        ToolChoice.Any().encodeToString() shouldEqualJson """
+        ToolChoice.Any().encodeToString() sameAsJson """
             {
               "type": "any"
             }
-        """
+        """.trimIndent()
 
         ToolChoice.Any {
             disableParallelToolUse = true
-        }.encodeToString() shouldEqualJson """
+        }.encodeToString() sameAsJson """
             {
               "type": "any",
               "disable_parallel_tool_use": true
             }
-        """
+        """.trimIndent()
 
     }
 
     @Test
     fun `should serialize ToolChoice Tool`() {
 
-        ToolChoice.Tool("foo").encodeToString() shouldEqualJson """
+        ToolChoice.Tool("foo").encodeToString() sameAsJson """
             {
               "type": "tool",
               "name": "foo"
             }
-        """
+        """.trimIndent()
 
         ToolChoice.Tool("foo") {
             disableParallelToolUse = true
-        }.encodeToString() shouldEqualJson """
+        }.encodeToString() sameAsJson """
             {
               "type": "tool",
               "name": "foo",
               "disable_parallel_tool_use": true
             }
-        """
+        """.trimIndent()
 
         ToolChoice.Tool<Calculator> {
             disableParallelToolUse = true
-        }.encodeToString() shouldEqualJson """
+        }.encodeToString() sameAsJson """
             {
               "type": "tool",
               "name": "calculator",
               "disable_parallel_tool_use": true
             }
-        """
+        """.trimIndent()
 
     }
 

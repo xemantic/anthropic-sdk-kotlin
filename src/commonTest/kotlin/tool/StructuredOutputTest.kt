@@ -24,8 +24,8 @@ import com.xemantic.ai.anthropic.message.Message
 import com.xemantic.ai.anthropic.message.StopReason
 import com.xemantic.ai.anthropic.test.testAnthropic
 import com.xemantic.kotlin.test.have
+import com.xemantic.kotlin.test.sameAsJson
 import com.xemantic.kotlin.test.should
-import io.kotest.assertions.json.shouldEqualJson
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -111,7 +111,7 @@ class StructuredOutputTest {
 
         val document = response.toolUseInput<Document>()
         val json = prettyAnthropicJson.encodeToString(document)
-        json shouldEqualJson """
+        json sameAsJson """
             {
               "title": "The AI Fluency Framework",
               "authors": [

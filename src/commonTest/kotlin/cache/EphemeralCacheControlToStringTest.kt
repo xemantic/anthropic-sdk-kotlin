@@ -17,7 +17,7 @@
 package com.xemantic.ai.anthropic.cache
 
 import com.xemantic.ai.anthropic.json.set
-import io.kotest.assertions.json.shouldEqualJson
+import com.xemantic.kotlin.test.sameAsJson
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlin.test.Test
@@ -26,11 +26,11 @@ class EphemeralCacheControlToStringTest {
 
     @Test
     fun `should return pretty toString JSON of Ephemeral CacheControl`() {
-        CacheControl.Ephemeral().toString() shouldEqualJson """
+        CacheControl.Ephemeral().toString() sameAsJson """
             {
               "type": "ephemeral"
             }
-        """
+        """.trimIndent()
     }
 
     @Test
@@ -44,7 +44,7 @@ class EphemeralCacheControlToStringTest {
                 put("foo", "bar")
             }
             additionalProperties["nullProperty"] = null
-        }.toString() shouldEqualJson """
+        }.toString() sameAsJson """
             {
               "type": "ephemeral",
               "booleanProperty": true,
@@ -56,7 +56,7 @@ class EphemeralCacheControlToStringTest {
               },
               "nullProperty": null
             }
-        """
+        """.trimIndent()
     }
 
 }

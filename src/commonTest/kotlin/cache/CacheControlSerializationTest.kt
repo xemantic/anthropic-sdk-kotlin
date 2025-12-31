@@ -20,8 +20,8 @@ import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.ai.anthropic.json.set
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
+import com.xemantic.kotlin.test.sameAsJson
 import com.xemantic.kotlin.test.should
-import io.kotest.assertions.json.shouldEqualJson
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -34,11 +34,11 @@ class CacheControlSerializationTest {
         anthropicJson.encodeToString(
             serializer = CacheControl.serializer(),
             value = CacheControl.Ephemeral()
-        ) shouldEqualJson """
+        ) sameAsJson """
             {
               "type": "ephemeral"
             }
-        """
+        """.trimIndent()
     }
 
     @Test
@@ -55,7 +55,7 @@ class CacheControlSerializationTest {
                 }
                 additionalProperties["nullProperty"] = null
             }
-        ) shouldEqualJson """
+        ) sameAsJson """
             {
               "type": "ephemeral",
               "booleanProperty": true,
@@ -67,7 +67,7 @@ class CacheControlSerializationTest {
               },
               "nullProperty": null
             }
-        """
+        """.trimIndent()
     }
 
     @Test
@@ -77,7 +77,7 @@ class CacheControlSerializationTest {
             {
               "type": "ephemeral"
             }
-            """
+            """.trimIndent()
         ) should {
             be<CacheControl.Ephemeral>()
             have(ttl == null)
@@ -152,7 +152,7 @@ class CacheControlSerializationTest {
               "type": "ephemeral",
               "foo": "bar"
             }
-            """
+            """.trimIndent()
         ) should {
             be<CacheControl.Ephemeral>()
             additionalProperties should {
@@ -170,12 +170,12 @@ class CacheControlSerializationTest {
                 type = "persistent"
                 additionalProperties["foo"] = "bar"
             }
-        ) shouldEqualJson """
+        ) sameAsJson """
             {
               "type": "persistent",
               "foo": "bar"
             }
-        """
+        """.trimIndent()
     }
 
     @Test
@@ -186,12 +186,12 @@ class CacheControlSerializationTest {
                 type = "persistent"
                 additionalProperties["foo"] = "bar"
             }
-        ) shouldEqualJson """
+        ) sameAsJson """
             {
               "type": "persistent",
               "foo": "bar"
             }
-        """
+        """.trimIndent()
     }
 
     @Test
@@ -201,7 +201,7 @@ class CacheControlSerializationTest {
             {
               "type": "persistent"
             }
-            """
+            """.trimIndent()
         ) should {
             be<CacheControl.Unknown>()
             have(type == "persistent")
@@ -216,7 +216,7 @@ class CacheControlSerializationTest {
               "type": "persistent",
               "max_storage": 10000
             }
-            """
+            """.trimIndent()
         ) should {
             be<CacheControl.Unknown>()
             have(type == "persistent")

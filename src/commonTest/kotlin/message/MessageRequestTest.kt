@@ -20,7 +20,7 @@ import com.xemantic.ai.anthropic.content.Text
 import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.ai.anthropic.tool.*
 import com.xemantic.ai.tool.schema.meta.Description
-import io.kotest.assertions.json.shouldEqualJson
+import com.xemantic.kotlin.test.sameAsJson
 import kotlinx.serialization.SerialName
 import kotlin.test.Ignore
 import kotlin.test.Test
@@ -41,7 +41,7 @@ class MessageRequestTest {
         val json = anthropicJson.encodeToString(request)
 
         // then
-        json shouldEqualJson """
+        json sameAsJson """
             {
               "model": "claude-sonnet-4-5-20250929",
               "messages": [
@@ -57,7 +57,7 @@ class MessageRequestTest {
               ],
               "max_tokens": 64000
             }
-        """
+        """.trimIndent()
         // Note: max_tokens value will default to the max for a given model
         // claude-3-7-sonnet-latest ist the default model
     }
@@ -75,7 +75,7 @@ class MessageRequestTest {
         val json = anthropicJson.encodeToString(request)
 
         // then
-        json shouldEqualJson """
+        json sameAsJson """
             {
               "model": "claude-sonnet-4-5-20250929",
               "messages": [
@@ -91,7 +91,7 @@ class MessageRequestTest {
               ],
               "max_tokens": 64000
             }
-        """
+        """.trimIndent()
         // Note: max_tokens value will default to the max for a given model
         // claude-3-7-sonnet-latest ist the default model
     }
@@ -109,7 +109,7 @@ class MessageRequestTest {
         val json = anthropicJson.encodeToString(request)
 
         // then
-        json shouldEqualJson """
+        json sameAsJson """
             {
               "model": "claude-sonnet-4-5-20250929",
               "messages": [
@@ -125,7 +125,7 @@ class MessageRequestTest {
               ],
               "max_tokens": 64000
             }
-        """
+        """.trimIndent()
         // Note: max_tokens value will default to the max for a given model
         // claude-3-7-sonnet-latest ist the default model
     }
@@ -173,7 +173,7 @@ class MessageRequestTest {
         val json = anthropicJson.encodeToString(request)
 
         // then
-        json shouldEqualJson """
+        json sameAsJson """
             {
               "model": "claude-sonnet-4-5-20250929",
               "messages": [
@@ -190,19 +190,19 @@ class MessageRequestTest {
               "max_tokens": 64000,
               "tools": [
                 {
-                  "type": "computer_20250124",
                   "name": "computer",
+                  "type": "computer_20250124",
                   "display_width_px": 1024,
                   "display_height_px": 768,
                   "display_number": 1
                 },
                 {
-                  "type": "text_editor_20250728",
-                  "name": "str_replace_based_edit_tool"
+                  "name": "str_replace_based_edit_tool",
+                  "type": "text_editor_20250728"
                 },
                 {
-                  "type": "bash_20250124",
-                  "name": "bash"
+                  "name": "bash",
+                  "type": "bash_20250124"
                 },
                 {
                   "name": "get_weather",
@@ -217,15 +217,20 @@ class MessageRequestTest {
                       "unit": {
                         "type": "string",
                         "description": "The unit of temperature, either 'celsius' or 'fahrenheit'",
-                        "enum": ["celsius", "fahrenheit"]
+                        "enum": [
+                          "celsius",
+                          "fahrenheit"
+                        ]
                       }
                     },
-                    "required": ["location"]
+                    "required": [
+                      "location"
+                    ]
                   }
-                }          
+                }
               ]
             }
-        """
+        """.trimIndent()
     }
 
     @Test
@@ -247,7 +252,7 @@ class MessageRequestTest {
         val json = anthropicJson.encodeToString(request)
 
         // then
-        json shouldEqualJson """
+        json sameAsJson """
             {
               "model": "claude-sonnet-4-5-20250929",
               "messages": [
@@ -280,16 +285,21 @@ class MessageRequestTest {
                       },
                       "unit": {
                         "type": "string",
-                        "enum": ["celsius", "fahrenheit"],
-                        "description": "The unit of temperature, either 'celsius' or 'fahrenheit'"
+                        "description": "The unit of temperature, either 'celsius' or 'fahrenheit'",
+                        "enum": [
+                          "celsius",
+                          "fahrenheit"
+                        ]
                       }
                     },
-                    "required": ["location"]
+                    "required": [
+                      "location"
+                    ]
                   }
-                }          
+                }
               ]
             }
-        """
+        """.trimIndent()
     }
 
     @Test
@@ -312,19 +322,19 @@ class MessageRequestTest {
               "max_tokens": 8182,
               "tools": [
                 {
-                  "type": "computer_20250124",
                   "name": "computer",
+                  "type": "computer_20250124",
                   "display_width_px": 1024,
                   "display_height_px": 768,
                   "display_number": 1
                 },
                 {
-                  "type": "text_editor_20250728",
-                  "name": "str_replace_based_edit_tool"
+                  "name": "str_replace_based_edit_tool",
+                  "type": "text_editor_20250728"
                 },
                 {
-                  "type": "bash_20241022",
-                  "name": "bash"
+                  "name": "bash",
+                  "type": "bash_20241022"
                 },
                 {
                   "name": "get_weather",
@@ -338,22 +348,27 @@ class MessageRequestTest {
                       },
                       "unit": {
                         "type": "string",
-                        "enum": ["celsius", "fahrenheit"],
-                        "description": "The unit of temperature, either 'celsius' or 'fahrenheit'"
+                        "description": "The unit of temperature, either 'celsius' or 'fahrenheit'",
+                        "enum": [
+                          "celsius",
+                          "fahrenheit"
+                        ]
                       }
                     },
-                    "required": ["location"]
+                    "required": [
+                      "location"
+                    ]
                   }
-                }          
+                }
               ]
             }
-        """
+        """.trimIndent()
 
         // when
         val messageRequest = anthropicJson.decodeFromString<MessageRequest>(request)
 
         // then
-        messageRequest.toString() shouldEqualJson request
+        messageRequest.toString() sameAsJson request
     }
 
     @Test

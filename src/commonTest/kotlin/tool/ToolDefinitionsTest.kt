@@ -20,8 +20,8 @@ import com.xemantic.ai.anthropic.cache.CacheControl
 import com.xemantic.ai.tool.schema.meta.Description
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
+import com.xemantic.kotlin.test.sameAsJson
 import com.xemantic.kotlin.test.should
-import io.kotest.assertions.json.shouldEqualJson
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -90,7 +90,7 @@ class ToolDefinitionsTest {
             have(name == "message_repeater")
             have(description == "A test tool receiving a message and outputting it back")
             have(cacheControl == null)
-            inputSchema.toString() shouldEqualJson """
+            inputSchema.toString() sameAsJson """
                 {
                   "type": "object",
                   "properties": {
@@ -103,7 +103,7 @@ class ToolDefinitionsTest {
                     "message"
                   ]
                 }
-           """
+           """.trimIndent()
         }
     }
 
@@ -120,20 +120,20 @@ class ToolDefinitionsTest {
             cacheControl should {
                 be<CacheControl.Ephemeral>()
             }
-            inputSchema.toString() shouldEqualJson """
-            {
-              "type": "object",
-              "properties": {
-                "message": {
-                  "type": "string",
-                  "description": "the message"
+            inputSchema.toString() sameAsJson """
+                {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "the message"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ]
                 }
-              },
-              "required": [
-                "message"
-              ]
-            }
-            """
+            """.trimIndent()
         }
     }
 
@@ -151,7 +151,7 @@ class ToolDefinitionsTest {
         Tool<Pair<Int, Int>>() should {
             have(name == "kotlin_Pair")
             have(description == null)
-            inputSchema.toString() shouldEqualJson """
+            inputSchema.toString() sameAsJson """
                 {
                   "type": "object",
                   "properties": {
@@ -167,7 +167,7 @@ class ToolDefinitionsTest {
                     "second"
                   ]
                 }
-            """
+            """.trimIndent()
         }
     }
 

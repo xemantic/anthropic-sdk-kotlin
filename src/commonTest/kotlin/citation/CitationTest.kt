@@ -21,7 +21,6 @@ import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.sameAsJson
 import com.xemantic.kotlin.test.should
-import io.kotest.assertions.json.shouldEqualJson
 import kotlin.test.Test
 
 class CitationTest {
@@ -60,7 +59,7 @@ class CitationTest {
               "start_char_index": 21,
               "end_char_index": 37
             }
-            """
+            """.trimIndent()
         ) should {
             be<Citation.CharLocation>()
             have(citedText == "The sky is blue.")
@@ -102,7 +101,7 @@ class CitationTest {
                 startPageNumber = 1
                 endPageNumber = 2
             }
-        ) shouldEqualJson """
+        ) sameAsJson """
             {
               "type": "page_location",
               "cited_text": "Text from PDF page",
@@ -111,7 +110,7 @@ class CitationTest {
               "start_page_number": 1,
               "end_page_number": 2
             }
-        """
+        """.trimIndent()
     }
 
     @Test
@@ -126,7 +125,7 @@ class CitationTest {
               "start_page_number": 5,
               "end_page_number": 8
             }
-            """
+            """.trimIndent()
         ) should {
             be<Citation.PageLocation>()
             have(citedText == "Multi-page content")
@@ -171,7 +170,7 @@ class CitationTest {
               "start_block_index": 3,
               "end_block_index": 7
             }
-            """
+            """.trimIndent()
         ) should {
             be<Citation.ContentBlockLocation>()
             have(citedText == "Multiple blocks")
@@ -213,7 +212,7 @@ class CitationTest {
               "title": "Claude Shannon Biography",
               "encrypted_index": "xyz123abc"
             }
-            """
+            """.trimIndent()
         ) should {
             be<Citation.WebSearchResultLocation>()
             have(citedText == "Claude Shannon was an American mathematician...")
@@ -257,7 +256,7 @@ class CitationTest {
                 "encrypted_index": "abc123"
               }
             ]
-            """
+            """.trimIndent()
         )
 
         citations should {
