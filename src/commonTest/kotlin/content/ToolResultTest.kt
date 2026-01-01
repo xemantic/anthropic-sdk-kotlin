@@ -19,8 +19,8 @@ package com.xemantic.ai.anthropic.content
 import com.xemantic.ai.anthropic.cache.CacheControl
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
+import com.xemantic.kotlin.test.sameAsJson
 import com.xemantic.kotlin.test.should
-import io.kotest.assertions.json.shouldEqualJson
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 
@@ -96,7 +96,7 @@ class ToolResultTest {
             content = listOf(Text("foo"))
             isError = true
             cacheControl = CacheControl.Ephemeral()
-        }.toString() shouldEqualJson """
+        }.toString() sameAsJson """
             {
               "type": "tool_result",
               "tool_use_id": "42",

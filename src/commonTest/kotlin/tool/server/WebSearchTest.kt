@@ -30,11 +30,13 @@ import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.sameAsJson
 import com.xemantic.kotlin.test.should
 import kotlinx.coroutines.test.runTest
+import kotlin.test.Ignore
 import kotlin.test.Test
 
 class WebSearchTest {
 
     @Test
+    @Ignore // these tests pass, but are too expensive to run
     fun `should use WebSearch tool`() = runTest {
         // given
         val webSearch = WebSearch {
@@ -85,6 +87,7 @@ class WebSearchTest {
     }
 
     @Test
+    @Ignore // these tests pass, but are too expensive to run
     fun `should handle WebSearch error when max_uses exceeded`() = runTest {
         // given
         val webSearch = WebSearch {

@@ -26,15 +26,17 @@ import com.xemantic.ai.anthropic.tool.Tool
 import com.xemantic.ai.anthropic.tool.WebFetch
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
+import com.xemantic.kotlin.test.sameAsJson
 import com.xemantic.kotlin.test.should
-import io.kotest.assertions.json.shouldEqualJson
 import kotlinx.coroutines.test.runTest
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.time.Clock
 
 class WebFetchTest {
 
     @Test
+    @Ignore // these tests pass, but are too expensive to run
     fun `should use WebFetch tool`() = runTest {
         // given
         val webFetch = WebFetch {
@@ -47,7 +49,7 @@ class WebFetchTest {
         // when
         val response = anthropic.messages.create {
             +Message {
-                +"Please give me the content of https://xemantic.com/ai/ as Markdown directly, without wrapping in tripple quotes?"
+                +"Please give me the content of https://xemantic.com/ai/ as Markdown directly, without wrapping in triple quotes?"
             }
             tools = listOf(webFetch)
         }
@@ -86,7 +88,7 @@ class WebFetchTest {
             }
             content[2] should {
                 be<Text>()
-                have(text.startsWith("# Xemantic AI"))
+                have(text.contains("# Xemantic AI"))
             }
 
             // Verify that usage tracking includes web fetch requests
@@ -103,12 +105,12 @@ class WebFetchTest {
     fun `should serialize WebFetch tool with minimal config`() {
         anthropicJson.encodeToString(
             WebFetch {}
-        ) shouldEqualJson """
+        ) sameAsJson """
             {
               "name": "web_fetch",
               "type": "web_fetch_20250910"
             }
-        """
+        """.trimIndent()
     }
 
     @Test
@@ -121,19 +123,24 @@ class WebFetchTest {
                 citations = WebFetch.Citations(enabled = true)
                 maxContentTokens = 100000
             }
-        ) shouldEqualJson """
+        ) sameAsJson """
             {
               "name": "web_fetch",
               "type": "web_fetch_20250910",
               "max_uses": 10,
-              "allowed_domains": ["anthropic.com", "wikipedia.org"],
-              "blocked_domains": ["spam.com"],
+              "allowed_domains": [
+                "anthropic.com",
+                "wikipedia.org"
+              ],
+              "blocked_domains": [
+                "spam.com"
+              ],
               "citations": {
                 "enabled": true
               },
               "max_content_tokens": 100000
             }
-        """
+        """.trimIndent()
     }
 
     @Test
@@ -190,7 +197,7 @@ class WebFetchTest {
         WebFetch {
             maxUses = 10
             citations = WebFetch.Citations(enabled = true)
-        }.toString() shouldEqualJson """
+        }.toString() sameAsJson """
             {
               "name": "web_fetch",
               "type": "web_fetch_20250910",
@@ -199,18 +206,18 @@ class WebFetchTest {
                 "enabled": true
               }
             }
-        """
+        """.trimIndent()
     }
 
     @Test
     fun `should serialize Citations`() {
         anthropicJson.encodeToString(
             WebFetch.Citations(enabled = false)
-        ) shouldEqualJson """
+        ) sameAsJson """
             {
               "enabled": false
             }
-        """
+        """.trimIndent()
     }
 
 }

@@ -16,17 +16,18 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v5.1.0
         with:
-          distribution: 'temurin'
-          java-version: 23
+          distribution: ${{ vars.DEFAULT_JAVA_DISTRIBUTION }}
+          java-version: ${{ vars.DEFAULT_JAVA_VERSION }}
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v5.0.0
 
-      - name: Build
-        run: ./gradlew -PjvmOnlyBuild=false build sourcesJar javadocJar publish
+      - name: Build and Publish SNAPSHOT
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          ORG_GRADLE_PROJECT_signingKey: ${{ secrets.SIGNING_KEY }}
-          ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.SIGNING_PASSWORD }}
-          ORG_GRADLE_PROJECT_githubActor: ${{ secrets.GITHUBACTOR }}
-          ORG_GRADLE_PROJECT_githubToken: ${{ secrets.GITHUBTOKEN }}
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_PASSWORD }}
+
+        run: ./gradlew -PjvmOnlyBuild=false build publishToMavenCentral --no-configuration-cache

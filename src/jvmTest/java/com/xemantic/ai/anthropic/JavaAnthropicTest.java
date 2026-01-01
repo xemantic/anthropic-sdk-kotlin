@@ -17,7 +17,7 @@
 package com.xemantic.ai.anthropic;
 
 import com.xemantic.ai.anthropic.message.Role;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 import java.util.List;
 
