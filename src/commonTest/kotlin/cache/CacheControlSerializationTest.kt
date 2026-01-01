@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2026 Xemantic contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -91,12 +91,12 @@ class CacheControlSerializationTest {
             value = CacheControl.Ephemeral {
                 ttl = CacheControl.Ephemeral.TTL.FIVE_MINUTES
             }
-        ) shouldEqualJson """
+        ) sameAsJson """
             {
               "type": "ephemeral",
               "ttl": "5m"
             }
-        """
+        """.trimIndent()
     }
 
     @Test
@@ -106,12 +106,12 @@ class CacheControlSerializationTest {
             value = CacheControl.Ephemeral {
                 ttl = CacheControl.Ephemeral.TTL.ONE_HOUR
             }
-        ) shouldEqualJson """
+        ) sameAsJson  """
             {
               "type": "ephemeral",
               "ttl": "1h"
             }
-        """
+        """.trimIndent()
     }
 
     @Test
@@ -122,7 +122,7 @@ class CacheControlSerializationTest {
               "type": "ephemeral",
               "ttl": "5m"
             }
-            """
+            """.trimIndent()
         ) should {
             be<CacheControl.Ephemeral>()
             have(ttl == CacheControl.Ephemeral.TTL.FIVE_MINUTES)
@@ -137,7 +137,7 @@ class CacheControlSerializationTest {
               "type": "ephemeral",
               "ttl": "1h"
             }
-            """
+            """.trimIndent()
         ) should {
             be<CacheControl.Ephemeral>()
             have(ttl == CacheControl.Ephemeral.TTL.ONE_HOUR)

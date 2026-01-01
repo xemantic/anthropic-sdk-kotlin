@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2026 Xemantic contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,16 @@
 
 package com.xemantic.ai.anthropic.message
 
-import com.xemantic.ai.anthropic.Anthropic
 import com.xemantic.ai.anthropic.cache.CacheControl
 import com.xemantic.ai.anthropic.content.Text
+import com.xemantic.ai.anthropic.test.testAnthropic
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 class SystemPromptCacheControlTest {
 
@@ -145,14 +147,15 @@ class SystemPromptCacheControlTest {
         readers and writers to engage confidently with this ancient and ever-evolving art form.
     """.trimIndent()
 
-    private fun randomSuffix() = "\n\nRandom: ${(0..999999).random()}"
+    @OptIn(ExperimentalUuidApi::class)
+    private fun uniqueSuffix() = "\n\nSuffix: ${Uuid.random()}"
 
     @Test
     fun `should cache system prompt across conversation with 5m ttl`() = runTest {
         // given
-        val prompt = poetryPrompt + randomSuffix()
+        val prompt = poetryPrompt + uniqueSuffix()
         val ttl = CacheControl.Ephemeral.TTL.FIVE_MINUTES
-        val anthropic = Anthropic()
+        val anthropic = testAnthropic()
         val conversation = mutableListOf<Message>()
 
         val systemPrompt = System(
@@ -162,9 +165,7 @@ class SystemPromptCacheControlTest {
             }
         )
 
-        conversation += Message {
-            +"Hi claude, I will ask a question soon."
-        }
+        conversation += "Hi claude, I will ask a question soon."
 
         // when
         val response1 = anthropic.messages.create {
@@ -181,16 +182,17 @@ class SystemPromptCacheControlTest {
                 be<Text>()
             }
             usage should {
-                // Should create cache on first request (or read if cached by previous test run)
+                // Should create cache on first request
                 have(cacheCreationInputTokens!! > 0)
-                have(cacheReadInputTokens == 0 || cacheReadInputTokens!! > 0)
+                cacheCreation should {
+                    have(ephemeral5mInputTokens == cacheCreationInputTokens)
+                }
+                have(cacheReadInputTokens == 0)
             }
         }
 
         // given
-        conversation += Message {
-            +"Did you cache my system prompt?"
-        }
+        conversation += "Did you cache my system prompt?"
 
         // when
         val response2 = anthropic.messages.create {
@@ -206,7 +208,7 @@ class SystemPromptCacheControlTest {
                 be<Text>()
             }
             usage should {
-                have(cacheReadInputTokens!! > 0)
+                have(cacheReadInputTokens == response1.usage.cacheCreationInputTokens)
                 have(cacheCreationInputTokens == 0)
             }
         }
@@ -215,9 +217,9 @@ class SystemPromptCacheControlTest {
     @Test
     fun `should cache system prompt across conversation with 1h ttl`() = runTest {
         // given
-        val prompt = poetryPrompt + randomSuffix()
+        val prompt = poetryPrompt + uniqueSuffix()
         val ttl = CacheControl.Ephemeral.TTL.ONE_HOUR
-        val anthropic = Anthropic()
+        val anthropic = testAnthropic()
         val conversation = mutableListOf<Message>()
 
         val systemPrompt = System(
@@ -227,9 +229,7 @@ class SystemPromptCacheControlTest {
             }
         )
 
-        conversation += Message {
-            +"Hi claude, I will ask a question soon."
-        }
+        conversation += "Hi claude, I will ask a question soon."
 
         // when
         val response1 = anthropic.messages.create {
@@ -246,16 +246,17 @@ class SystemPromptCacheControlTest {
                 be<Text>()
             }
             usage should {
-                // Should create cache on first request (or read if cached by previous test run)
+                // Should create cache on first request
                 have(cacheCreationInputTokens!! > 0)
-                have(cacheReadInputTokens == 0 || cacheReadInputTokens!! > 0)
+                cacheCreation should {
+                    have(ephemeral1hInputTokens == cacheCreationInputTokens)
+                }
+                have(cacheReadInputTokens == 0)
             }
         }
 
         // given
-        conversation += Message {
-            +"Did you cache my system prompt?"
-        }
+        conversation += "Did you cache my system prompt?"
 
         // when
         val response2 = anthropic.messages.create {
@@ -271,7 +272,7 @@ class SystemPromptCacheControlTest {
                 be<Text>()
             }
             usage should {
-                have(cacheReadInputTokens!! > 0)
+                have(cacheReadInputTokens == response1.usage.cacheCreationInputTokens)
                 have(cacheCreationInputTokens == 0)
             }
         }
