@@ -25,21 +25,19 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v5.1.0
         with:
-          distribution: 'temurin'
-          java-version: 23
+          distribution: ${{ vars.DEFAULT_JAVA_DISTRIBUTION }}
+          java-version: ${{ vars.DEFAULT_JAVA_VERSION }}
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v5.0.0
 
-      - name: Build
+      - name: Build and Publish release
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          ORG_GRADLE_PROJECT_githubActor: ${{ secrets.GITHUBACTOR }}
-          ORG_GRADLE_PROJECT_githubToken: ${{ secrets.GITHUBTOKEN }}
-          ORG_GRADLE_PROJECT_signingKey: ${{ secrets.SIGNING_KEY }}
-          ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.SIGNING_PASSWORD }}
-          JRELEASER_DEPLOY_MAVEN_MAVENCENTRAL_MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
-          JRELEASER_DEPLOY_MAVEN_MAVENCENTRAL_MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_PASSWORD }}
           JRELEASER_DISCORD_WEBHOOK: ${{ secrets.DISCORD_ANNOUCEMENTS_WEBHOOK }}
           JRELEASER_LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
           JRELEASER_LINKEDIN_OWNER: ${{ secrets.LINKEDIN_OWNER }}
@@ -47,16 +45,7 @@ jobs:
           JRELEASER_BLUESKY_HANDLE: ${{ vars.BLUESKY_HANDLE }}
           JRELEASER_BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
 
-        run: ./gradlew -Pversion=$VERSION -PjvmOnlyBuild=false build sourcesJar javadocJar publish jreleaserFullRelease
-
-      - name: Display JReleaser trace.log
-        run: |
-          if [ -f build/jreleaser/trace.log ]; then
-            echo "trace.log Content:"
-            cat build/jreleaser/trace.log
-          else
-            echo "trace.log file not found"
-          fi
+        run: ./gradlew -Pversion=$VERSION -PjvmOnlyBuild=false build publishToMavenCentral jreleaserAnnounce --no-configuration-cache
 
       - name: Get target branch for tag
         run: |
@@ -71,11 +60,11 @@ jobs:
           ref: ${{ env.TARGET_BRANCH }}
           fetch-depth: 0
 
-      - name: Update README
-        run: ./gradlew -Pversion=$VERSION updateVersionInReadme
+      - name: Update versions after release
+        run: ./gradlew -Pversion=$VERSION updateVersionsAfterRelease
 
-      - name: Commit README.md pointing to released version
+      - name: Commit version updates after release
         uses: stefanzweifel/git-auto-commit-action@v7.1.0
         with:
-          commit_message: Dependency version in README.md updated to ${{ env.VERSION }}
-          file_pattern: 'README.md'
+          commit_message: Version updated to ${{ env.VERSION }} in README.md, next snapshot in gradle.properties
+          file_pattern: 'README.md gradle.properties'
