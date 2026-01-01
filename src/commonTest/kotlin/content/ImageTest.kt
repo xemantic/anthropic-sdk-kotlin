@@ -23,11 +23,7 @@ import com.xemantic.ai.anthropic.test.testAnthropic
 import com.xemantic.ai.anthropic.test.testDataDir
 import com.xemantic.ai.file.magic.MediaType
 import com.xemantic.ai.file.magic.readBytes
-import com.xemantic.kotlin.test.be
-import com.xemantic.kotlin.test.have
-import com.xemantic.kotlin.test.isBrowserPlatform
-import com.xemantic.kotlin.test.should
-import io.kotest.assertions.json.shouldEqualJson
+import com.xemantic.kotlin.test.*
 import kotlinx.coroutines.test.runTest
 import kotlinx.io.files.Path
 import kotlin.test.Test
@@ -203,7 +199,7 @@ class ImageTest {
                 data = TEST_IMAGE
             }
             cacheControl = CacheControl.Ephemeral()
-        }.toString() shouldEqualJson """
+        }.toString() sameAsJson """
             {
               "source": {
                 "type": "base64",
@@ -214,7 +210,7 @@ class ImageTest {
                 "type": "ephemeral"
               }
             }
-        """
+        """.trimIndent()
     }
 
     @Test

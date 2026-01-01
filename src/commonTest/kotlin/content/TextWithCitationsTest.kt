@@ -20,8 +20,8 @@ import com.xemantic.ai.anthropic.citation.Citation
 import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
+import com.xemantic.kotlin.test.sameAsJson
 import com.xemantic.kotlin.test.should
-import io.kotest.assertions.json.shouldEqualJson
 import kotlin.test.Test
 
 class TextWithCitationsTest {
@@ -40,7 +40,7 @@ class TextWithCitationsTest {
                     }
                 )
             }
-        ) shouldEqualJson """
+        ) sameAsJson """
             {
               "type": "text",
               "text": "the grass is green",
@@ -55,7 +55,7 @@ class TextWithCitationsTest {
                 }
               ]
             }
-        """
+        """.trimIndent()
     }
 
     @Test
@@ -108,7 +108,7 @@ class TextWithCitationsTest {
                     }
                 )
             }
-        ) shouldEqualJson """
+        ) sameAsJson """
             {
               "type": "text",
               "text": "PDF content summary",
@@ -123,7 +123,7 @@ class TextWithCitationsTest {
                 }
               ]
             }
-        """
+        """.trimIndent()
     }
 
     @Test
@@ -154,7 +154,7 @@ class TextWithCitationsTest {
                     }
                 )
             }
-        ) shouldEqualJson """
+        ) sameAsJson """
             {
               "type": "text",
               "text": "Summary from multiple sources",
@@ -185,19 +185,19 @@ class TextWithCitationsTest {
                 }
               ]
             }
-        """
+        """.trimIndent()
     }
 
     @Test
     fun `should serialize Text without citations`() {
         anthropicJson.encodeToString<Content>(
             Text("Simple text without citations")
-        ) shouldEqualJson """
+        ) sameAsJson """
             {
               "type": "text",
               "text": "Simple text without citations"
             }
-        """
+        """.trimIndent()
     }
 
     @Test

@@ -29,11 +29,13 @@ import com.xemantic.ai.anthropic.tool.WebSearch
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
 import kotlinx.coroutines.test.runTest
+import kotlin.test.Ignore
 import kotlin.test.Test
 
 class WebSearchAndFetchTest {
 
     @Test
+    @Ignore // these tests pass, but are too expensive to run
     fun `should use WebSearch and WebFetch together in single turn`() = runTest {
         // given
         val webSearch = WebSearch {
@@ -98,6 +100,7 @@ class WebSearchAndFetchTest {
     }
 
     @Test
+    @Ignore // these tests pass, but are too expensive to run
     fun `should use WebSearch first then WebFetch in follow-up with filtered messages`() = runTest {
         // given
         val webSearch = WebSearch {

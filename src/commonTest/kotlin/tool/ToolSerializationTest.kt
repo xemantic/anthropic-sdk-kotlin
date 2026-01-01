@@ -19,8 +19,8 @@ package com.xemantic.ai.anthropic.tool
 import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.ai.anthropic.tool.test.FibonacciCalculator
 import com.xemantic.kotlin.test.have
+import com.xemantic.kotlin.test.sameAsJson
 import com.xemantic.kotlin.test.should
-import io.kotest.assertions.json.shouldEqualJson
 import kotlin.test.Test
 
 class ToolSerializationTest {
@@ -28,7 +28,7 @@ class ToolSerializationTest {
     @Test
     fun `should serialize Calculator tool`() {
         val tool = Tool<FibonacciCalculator>()
-        anthropicJson.encodeToString(tool) shouldEqualJson """
+        anthropicJson.encodeToString(tool) sameAsJson """
             {
               "name": "fibonacci_calculator",
               "description": "Calculates the n-th fibonacci number",
@@ -44,7 +44,7 @@ class ToolSerializationTest {
                 ]
               }
             }
-        """
+        """.trimIndent()
     }
 
     @Test
@@ -69,7 +69,7 @@ class ToolSerializationTest {
         ) should {
             have(name == "fibonacci_calculator")
             have(description == "Calculates the n-th fibonacci number")
-            inputSchema.toString() shouldEqualJson """
+            inputSchema.toString() sameAsJson """
                 {
                   "type": "object",
                   "properties": {
@@ -81,7 +81,7 @@ class ToolSerializationTest {
                     "n"
                   ]
                 }
-            """
+            """.trimIndent()
         }
     }
 

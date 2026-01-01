@@ -17,7 +17,7 @@
 package com.xemantic.ai.anthropic.cache
 
 import com.xemantic.ai.anthropic.json.set
-import io.kotest.assertions.json.shouldEqualJson
+import com.xemantic.kotlin.test.sameAsJson
 import kotlin.test.Test
 
 class UnknownCacheControlToStringTest {
@@ -27,12 +27,12 @@ class UnknownCacheControlToStringTest {
         CacheControl.Unknown {
             type = "persistent"
             additionalProperties["max_storage"] = 100000
-        }.toString() shouldEqualJson """
+        }.toString() sameAsJson """
             {
               "type": "persistent",
               "max_storage": 100000
             }
-        """
+        """.trimIndent()
     }
 
 }

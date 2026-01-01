@@ -25,8 +25,8 @@ import com.xemantic.ai.anthropic.tool.Tool
 import com.xemantic.ai.anthropic.tool.Toolbox
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
+import com.xemantic.kotlin.test.sameAsJson
 import com.xemantic.kotlin.test.should
-import io.kotest.assertions.json.shouldEqualJson
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 
@@ -68,12 +68,12 @@ class BashTest {
     fun `should serialize BashTool`() {
         anthropicJson.encodeToString(
             Bash {}
-        ) shouldEqualJson """
+        ) sameAsJson """
             {
               "name": "bash",
               "type": "bash_20250124"
-            }            
-        """
+            }
+        """.trimIndent()
     }
 
     @Test
@@ -84,7 +84,7 @@ class BashTest {
               "name": "bash",
               "type": "bash_20250124"
             }
-            """
+            """.trimIndent()
         ) should {
             have(name == "bash")
             be<Bash>()
@@ -94,12 +94,12 @@ class BashTest {
 
     @Test
     fun `should return JSON for Bash tool toString`() {
-        Bash {}.toString() shouldEqualJson """
+        Bash {}.toString() sameAsJson """
             {
               "name": "bash",
               "type": "bash_20250124"
-            } 
-        """
+            }
+        """.trimIndent()
     }
 
     @Test
@@ -109,7 +109,7 @@ class BashTest {
             {
               "command": "ls"
             }
-            """
+            """.trimIndent()
         ) should {
             have(command == "ls")
             have(restart == null)
@@ -118,31 +118,31 @@ class BashTest {
 
     @Test
     fun `should serialize empty Bash tool input`() {
-        anthropicJson.encodeToString(Bash.Input {}) shouldEqualJson """
+        anthropicJson.encodeToString(Bash.Input {}) sameAsJson """
             {}
-        """
+        """.trimIndent()
     }
 
     @Test
     fun `should serialize Bash tool input with command`() {
         anthropicJson.encodeToString(Bash.Input {
             command = "ls"
-        }) shouldEqualJson """
+        }) sameAsJson """
             {
               "command": "ls"
             }
-        """
+        """.trimIndent()
     }
 
     @Test
     fun `should serialize Bash tool input with restart`() {
         anthropicJson.encodeToString(Bash.Input {
             restart = true
-        }) shouldEqualJson """
+        }) sameAsJson """
             {
               "restart": true
             }
-        """
+        """.trimIndent()
     }
 
 }

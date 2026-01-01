@@ -21,11 +21,7 @@ import com.xemantic.ai.anthropic.content.*
 import com.xemantic.ai.anthropic.tool.Toolbox
 import com.xemantic.ai.anthropic.usage.Usage
 import com.xemantic.ai.file.magic.MediaType
-import com.xemantic.kotlin.test.assert
-import com.xemantic.kotlin.test.be
-import com.xemantic.kotlin.test.have
-import com.xemantic.kotlin.test.should
-import io.kotest.assertions.json.shouldEqualJson
+import com.xemantic.kotlin.test.*
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -198,11 +194,11 @@ class MessageResponseUseToolsTest {
                 have(isError == null)
                 content!![0] should {
                     be<Text>()
-                    text shouldEqualJson """
+                    text sameAsJson """
                         {
                           "bar": "buzz"
                         }
-                    """
+                    """.trimIndent()
                 }
             }
         }

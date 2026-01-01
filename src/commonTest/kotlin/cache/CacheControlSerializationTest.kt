@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2026 Xemantic contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,8 @@ import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.ai.anthropic.json.set
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
+import com.xemantic.kotlin.test.sameAsJson
 import com.xemantic.kotlin.test.should
-import io.kotest.assertions.json.shouldEqualJson
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -34,11 +34,11 @@ class CacheControlSerializationTest {
         anthropicJson.encodeToString(
             serializer = CacheControl.serializer(),
             value = CacheControl.Ephemeral()
-        ) shouldEqualJson """
+        ) sameAsJson """
             {
               "type": "ephemeral"
             }
-        """
+        """.trimIndent()
     }
 
     @Test
@@ -55,7 +55,7 @@ class CacheControlSerializationTest {
                 }
                 additionalProperties["nullProperty"] = null
             }
-        ) shouldEqualJson """
+        ) sameAsJson """
             {
               "type": "ephemeral",
               "booleanProperty": true,
@@ -67,7 +67,7 @@ class CacheControlSerializationTest {
               },
               "nullProperty": null
             }
-        """
+        """.trimIndent()
     }
 
     @Test
@@ -77,7 +77,7 @@ class CacheControlSerializationTest {
             {
               "type": "ephemeral"
             }
-            """
+            """.trimIndent()
         ) should {
             be<CacheControl.Ephemeral>()
             have(ttl == null)
@@ -91,12 +91,12 @@ class CacheControlSerializationTest {
             value = CacheControl.Ephemeral {
                 ttl = CacheControl.Ephemeral.TTL.FIVE_MINUTES
             }
-        ) shouldEqualJson """
+        ) sameAsJson """
             {
               "type": "ephemeral",
               "ttl": "5m"
             }
-        """
+        """.trimIndent()
     }
 
     @Test
@@ -106,12 +106,12 @@ class CacheControlSerializationTest {
             value = CacheControl.Ephemeral {
                 ttl = CacheControl.Ephemeral.TTL.ONE_HOUR
             }
-        ) shouldEqualJson """
+        ) sameAsJson  """
             {
               "type": "ephemeral",
               "ttl": "1h"
             }
-        """
+        """.trimIndent()
     }
 
     @Test
@@ -122,7 +122,7 @@ class CacheControlSerializationTest {
               "type": "ephemeral",
               "ttl": "5m"
             }
-            """
+            """.trimIndent()
         ) should {
             be<CacheControl.Ephemeral>()
             have(ttl == CacheControl.Ephemeral.TTL.FIVE_MINUTES)
@@ -137,7 +137,7 @@ class CacheControlSerializationTest {
               "type": "ephemeral",
               "ttl": "1h"
             }
-            """
+            """.trimIndent()
         ) should {
             be<CacheControl.Ephemeral>()
             have(ttl == CacheControl.Ephemeral.TTL.ONE_HOUR)
@@ -152,7 +152,7 @@ class CacheControlSerializationTest {
               "type": "ephemeral",
               "foo": "bar"
             }
-            """
+            """.trimIndent()
         ) should {
             be<CacheControl.Ephemeral>()
             additionalProperties should {
@@ -170,12 +170,12 @@ class CacheControlSerializationTest {
                 type = "persistent"
                 additionalProperties["foo"] = "bar"
             }
-        ) shouldEqualJson """
+        ) sameAsJson """
             {
               "type": "persistent",
               "foo": "bar"
             }
-        """
+        """.trimIndent()
     }
 
     @Test
@@ -186,12 +186,12 @@ class CacheControlSerializationTest {
                 type = "persistent"
                 additionalProperties["foo"] = "bar"
             }
-        ) shouldEqualJson """
+        ) sameAsJson """
             {
               "type": "persistent",
               "foo": "bar"
             }
-        """
+        """.trimIndent()
     }
 
     @Test
@@ -201,7 +201,7 @@ class CacheControlSerializationTest {
             {
               "type": "persistent"
             }
-            """
+            """.trimIndent()
         ) should {
             be<CacheControl.Unknown>()
             have(type == "persistent")
@@ -216,7 +216,7 @@ class CacheControlSerializationTest {
               "type": "persistent",
               "max_storage": 10000
             }
-            """
+            """.trimIndent()
         ) should {
             be<CacheControl.Unknown>()
             have(type == "persistent")
