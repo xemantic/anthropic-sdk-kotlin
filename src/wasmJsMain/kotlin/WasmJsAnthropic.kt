@@ -1,9 +1,9 @@
 package com.xemantic.ai.anthropic
 
-actual val envApiKey: String?
-    get() = getenv("ANTHROPIC_API_KEY")
+internal actual fun getEnvApiKey(provider: String): String? {
+    val envVarName = "${provider.uppercase().replace("-", "_")}_API_KEY"
+    return js("process.env[envVarName]")
+}
 
-actual val missingApiKeyMessage: String
-    get() = "apiKey is missing, it has to be provided as a parameter."
-
-private fun getenv(name: String): String? = js("process.env[name]")
+internal actual val envApiProviderToTest: String?
+    get() = js("process.env.API_PROVIDER_TO_TEST")

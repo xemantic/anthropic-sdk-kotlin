@@ -19,8 +19,23 @@ package com.xemantic.ai.anthropic
 import com.xemantic.ai.anthropic.json.toPrettyJson
 import kotlinx.serialization.Serializable
 
+/**
+ * Base class for all API responses.
+ *
+ * The `type` field defaults to "error" to handle provider compatibility:
+ * - Anthropic API returns: `{ "type": "error", "error": {...} }`
+ * - Some compatible providers (e.g., Moonshot) omit the `type` field: `{ "error": {...} }`
+ *
+ * When the `type` field is missing from the JSON response, kotlinx.serialization
+ * will use the default value. Since responses without an explicit type typically
+ * occur in error scenarios, defaulting to "error" provides graceful handling
+ * of non-compliant but compatible API providers.
+ *
+ * Simply put, if the response doesn't have a valid `type` it should be treated
+ * like error anyway.
+ */
 @Serializable
-abstract class Response(val type: String) {
+abstract class Response(val type: String = "error") {
 
     override fun toString() = toPrettyJson()
 
