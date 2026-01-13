@@ -50,7 +50,7 @@ suspend fun Flow<Event>.toMessageResponse(): MessageResponse {
                         toolUse = ToolUse {
                             id = event.contentBlock.id
                             name = event.contentBlock.name
-                            input = emtpyJson
+                            input = emptyJson
                         }
                     }
                 }
@@ -104,4 +104,4 @@ suspend fun Flow<Event>.toMessageResponse(): MessageResponse {
     return response!!
 }
 
-private val emtpyJson = buildJsonObject {}
+private val emptyJson = buildJsonObject {}
