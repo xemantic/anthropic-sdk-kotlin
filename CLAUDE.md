@@ -102,6 +102,10 @@ Uses `expect`/`actual` declarations for platform-specific functionality like env
 - Release builds skip tests to avoid flakiness during releases
 - Test timeout for JS tests: 60 seconds
 
+## Adding New Models
+
+When adding new models, always search anthropic.com/pricing to verify current pricing.
+
 ## Multiplatform Targets
 
 ### Tier 1 (Fully Supported)
