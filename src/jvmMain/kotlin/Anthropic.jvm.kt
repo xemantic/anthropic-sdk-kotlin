@@ -16,8 +16,10 @@
 
 package com.xemantic.ai.anthropic
 
-actual val envApiKey: String?
-    get() = System.getenv("ANTHROPIC_API_KEY")
+internal actual fun getEnvApiKey(provider: String): String? {
+    val envVarName = "${provider.uppercase().replace("-", "_")}_API_KEY"
+    return System.getenv(envVarName)
+}
 
-actual val missingApiKeyMessage: String
-    get() = "apiKey is missing, it has to be provided as a parameter or as an ANTHROPIC_API_KEY environment variable."
+internal actual val envApiProviderToTest: String?
+    get() = System.getenv("API_PROVIDER_TO_TEST")

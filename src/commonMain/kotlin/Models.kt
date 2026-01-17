@@ -32,6 +32,7 @@ interface AnthropicModel {
     val messageBatchesApi: Boolean
     val cost: Cost
     val deprecated: Boolean
+    val apiProvider: ApiProvider
 
 }
 
@@ -50,7 +51,8 @@ enum class Model(
     override val maxOutput: Int,
     override val messageBatchesApi: Boolean,
     override val cost: Cost,
-    override val deprecated: Boolean = false
+    override val deprecated: Boolean = false,
+    override val apiProvider: ApiProvider = StandardApiProvider.ANTHROPIC,
 ) : AnthropicModel {
 
     CLAUDE_SONNET_4_5_20250929(
@@ -163,6 +165,30 @@ enum class Model(
             inputTokens = "0.25".dollarsPerMillion
             outputTokens = "1.25".dollarsPerMillion
         }
+    ),
+
+    KIMI_K2_0905_PREVIEW(
+        id = "kimi-k2-0905-preview",
+        contextWindow = 262144,
+        maxOutput = 32768,
+        messageBatchesApi = true,
+        cost = Cost {
+            inputTokens = "0.6".dollarsPerMillion
+            outputTokens = "2.50".dollarsPerMillion
+        },
+        apiProvider = StandardApiProvider.MOONSHOT
+    ),
+
+    KIMI_K2_THINKING(
+        id = "kimi-k2-thinking",
+        contextWindow = 262144,
+        maxOutput = 32768,
+        messageBatchesApi = true,
+        cost = Cost {
+            inputTokens = "0.6".dollarsPerMillion
+            outputTokens = "2.50".dollarsPerMillion
+        },
+        apiProvider = StandardApiProvider.MOONSHOT
     );
 
     companion object {
@@ -179,5 +205,6 @@ data class UnknownModel(
     override val maxOutput: Int,
     override val messageBatchesApi: Boolean,
     override val cost: Cost,
-    override val deprecated: Boolean = false
+    override val deprecated: Boolean = false,
+    override val apiProvider: ApiProvider = StandardApiProvider.ANTHROPIC,
 ) : AnthropicModel

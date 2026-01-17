@@ -236,18 +236,18 @@ class AnthropicTest {
     fun `should fail with a message when creating a message request for unknown model`() = runTest {
         // given
         val anthropic = testAnthropic {
-            modelMap.remove(Model.DEFAULT.id)
+            modelMap.remove(defaultModel.id)
         }
 
         // when
-        val exception = assertFailsWith<IllegalArgumentException> {
+        val exception = assertFailsWith<IllegalStateException> {
             anthropic.messages.create {
                 +"Hello World! What's your name?"
             }
         }
 
         // then
-        assert(exception.message == "Unknown model '${Model.DEFAULT.id}', consider adding modelMap[\"${Model.DEFAULT.id}\"] = UnknownModel(...) when creating Anthropic client instance.")
+        assert(exception.message == "Unknown model '${anthropic.defaultModel}', consider adding modelMap[\"${anthropic.defaultModel}\"] = UnknownModel(...) when creating Anthropic client instance.")
     }
 
 }
