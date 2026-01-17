@@ -64,6 +64,17 @@ enum class Model(
         }
     ),
 
+    CLAUDE_OPUS_4_5_20251101(
+        id = "claude-opus-4-5-20251101",
+        contextWindow = 200000,
+        maxOutput = 32000,
+        messageBatchesApi = true,
+        cost = Cost {
+            inputTokens = "15".dollarsPerMillion
+            outputTokens = "75".dollarsPerMillion
+        }
+    ),
+
     CLAUDE_OPUS_4_1_20250805(
         id = "claude-opus-4-1-20250805",
         contextWindow = 200000,
