@@ -104,7 +104,11 @@ Uses `expect`/`actual` declarations for platform-specific functionality like env
 
 ## Adding New Models
 
-When adding new models, always search anthropic.com/pricing to verify current pricing.
+When adding new models to the `Model` enum in `src/commonMain/kotlin/Models.kt`:
+- Always verify current pricing at anthropic.com/pricing
+- Update the `cost` field with accurate `inputTokens` and `outputTokens` values using the `dollarsPerMillion` extension (e.g., `"3".dollarsPerMillion`)
+- Verify `contextWindow`, `maxOutput`, and `messageBatchesApi` support from the official documentation
+- Add the new model enum entry following the existing pattern
 
 ## Multiplatform Targets
 
