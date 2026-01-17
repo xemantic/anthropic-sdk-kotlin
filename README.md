@@ -206,7 +206,7 @@ export ANTHROPIC_API_KEY=your-key-goes-here
 
 Many [unit tests](src/commonTest/kotlin) are actually integration tests calling Anthropic APIs
 and asserting against results. Tests default to Claude Haiku model to reduce API costs.
-This is the reason why they might be flaky from time to time. For example, if the test image
+These integration test might be flaky from time to time. For example, if the test image
 is misinterpreted, or Claude is randomly fantasizing too much.
 
 ## Project dependencies
