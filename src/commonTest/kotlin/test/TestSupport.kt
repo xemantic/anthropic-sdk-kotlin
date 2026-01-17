@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2026 Xemantic contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package com.xemantic.ai.anthropic.test
 
 import com.xemantic.ai.anthropic.Anthropic
+import com.xemantic.ai.anthropic.Model
 import com.xemantic.kotlin.test.gradleRootDir
 import com.xemantic.kotlin.test.isBrowserPlatform
 import kotlinx.io.files.Path
@@ -28,4 +29,6 @@ fun testAnthropic(
 ): Anthropic = Anthropic {
     block()
     directBrowserAccess = isBrowserPlatform
+    // defaulting to HAIKU in tests to reduce costs of integration testing
+    defaultModel = Model.CLAUDE_HAIKU_4_5_20251001
 }
