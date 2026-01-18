@@ -44,8 +44,8 @@ fun uniqueSuffix() = "\n\nSuffix: ${Uuid.random()}"
 
 suspend fun fetchText(
     url: String
-): String = HttpClient().run {
-    get(url).bodyAsText()
+): String = HttpClient().use { client ->
+    client.get(url).bodyAsText()
 }
 
 suspend fun fetchSkillText() = fetchText(
