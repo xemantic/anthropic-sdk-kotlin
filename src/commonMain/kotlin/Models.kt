@@ -64,8 +64,30 @@ enum class Model(
         }
     ),
 
+    CLAUDE_OPUS_4_5_20251101(
+        id = "claude-opus-4-5-20251101",
+        contextWindow = 200000,
+        maxOutput = 64000,
+        messageBatchesApi = true,
+        cost = Cost {
+            inputTokens = "5".dollarsPerMillion
+            outputTokens = "25".dollarsPerMillion
+        }
+    ),
+
     CLAUDE_OPUS_4_1_20250805(
         id = "claude-opus-4-1-20250805",
+        contextWindow = 200000,
+        maxOutput = 32000,
+        messageBatchesApi = true,
+        cost = Cost {
+            inputTokens = "15".dollarsPerMillion
+            outputTokens = "75".dollarsPerMillion
+        }
+    ),
+
+    CLAUDE_OPUS_4_20250514(
+        id = "claude-opus-4-20250514",
         contextWindow = 200000,
         maxOutput = 32000,
         messageBatchesApi = true,
@@ -116,7 +138,8 @@ enum class Model(
         cost = Cost {
             inputTokens = "0.80".dollarsPerMillion
             outputTokens = "4".dollarsPerMillion
-        }
+        },
+        deprecated = true
     ),
 
     CLAUDE_3_5_SONNET_20241022(
@@ -127,7 +150,8 @@ enum class Model(
         cost = Cost {
             inputTokens = "3".dollarsPerMillion
             outputTokens = "15".dollarsPerMillion
-        }
+        },
+        deprecated = true
     ),
 
     CLAUDE_3_5_SONNET_20240620(
