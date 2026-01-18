@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2026 Xemantic contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -136,7 +136,7 @@ class AnthropicTest {
                 have(cacheReadInputTokens == 0)
             }
             cost should {
-                have(inputTokens >= Money.ZERO && inputTokens == Money("0.000063"))
+                have(inputTokens >= Money.ZERO && inputTokens == Money("0.000021"))
                 have(outputTokens >= Money.ZERO && inputTokens <= Money("0.0005"))
                 have(cache5mCreationInputTokens == Money.ZERO)
                 have(cache1hCreationInputTokens == Money.ZERO)
@@ -186,7 +186,7 @@ class AnthropicTest {
             have(httpStatusCode == HttpStatusCode.BadRequest)
             error should {
                 have(type == "invalid_request_error")
-                have(message == "max_tokens: 1000000000 > 64000, which is the maximum allowed number of output tokens for claude-sonnet-4-5-20250929")
+                have(message == "max_tokens: 1000000000 > 64000, which is the maximum allowed number of output tokens for claude-haiku-4-5-20251001")
             }
         }
     }
@@ -194,7 +194,7 @@ class AnthropicTest {
     @Test
     fun `should receive an introduction from Claude for UnknownModel`() = runTest {
         // given
-        val theLatestClaudeModel = UnknownModel(
+        val existingClaudeModel = UnknownModel(
             id = "claude-sonnet-4-5-20250929",
             contextWindow = 200000,
             maxOutput = 64000,
@@ -205,8 +205,8 @@ class AnthropicTest {
             }
         )
         val anthropic = testAnthropic {
-            modelMap["claude-sonnet-4-5-20250929"] = theLatestClaudeModel
-            defaultModel = theLatestClaudeModel
+            modelMap["claude-sonnet-4-5-20250929"] = existingClaudeModel
+            defaultModel = existingClaudeModel
         }
 
         // when
@@ -236,7 +236,7 @@ class AnthropicTest {
     fun `should fail with a message when creating a message request for unknown model`() = runTest {
         // given
         val anthropic = testAnthropic {
-            modelMap.remove(Model.DEFAULT.id)
+            modelMap.remove(Model.CLAUDE_HAIKU_4_5_20251001.id)
         }
 
         // when
@@ -247,7 +247,7 @@ class AnthropicTest {
         }
 
         // then
-        assert(exception.message == "Unknown model '${Model.DEFAULT.id}', consider adding modelMap[\"${Model.DEFAULT.id}\"] = UnknownModel(...) when creating Anthropic client instance.")
+        assert(exception.message == "Unknown model '${Model.CLAUDE_HAIKU_4_5_20251001.id}', consider adding modelMap[\"${Model.CLAUDE_HAIKU_4_5_20251001.id}\"] = UnknownModel(...) when creating Anthropic client instance.")
     }
 
 }

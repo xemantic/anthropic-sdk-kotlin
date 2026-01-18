@@ -97,6 +97,7 @@ Uses `expect`/`actual` declarations for platform-specific functionality like env
 ## Testing Notes
 
 - Many tests are integration tests requiring `ANTHROPIC_API_KEY`
+- Tests default to Claude Haiku model to reduce API costs
 - Tests may be flaky due to AI model variability
 - Some native target tests are disabled on CI
 - Release builds skip tests to avoid flakiness during releases

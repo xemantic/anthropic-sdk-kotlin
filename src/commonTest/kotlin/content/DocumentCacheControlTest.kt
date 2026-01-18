@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2026 Xemantic contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,11 @@
 
 package com.xemantic.ai.anthropic.content
 
-import com.xemantic.ai.anthropic.Anthropic
 import com.xemantic.ai.anthropic.cache.CacheControl
 import com.xemantic.ai.anthropic.message.Message
 import com.xemantic.ai.anthropic.message.StopReason
 import com.xemantic.ai.anthropic.message.plusAssign
+import com.xemantic.ai.anthropic.test.testAnthropic
 import com.xemantic.ai.anthropic.test.testDataDir
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
@@ -36,7 +36,7 @@ class DocumentCacheControlTest {
     fun `should cache PDF document across conversation`() = runTest {
         if (isBrowserPlatform) return@runTest // we cannot access files in the browser
         // given
-        val anthropic = Anthropic()
+        val anthropic = testAnthropic()
         val conversation = mutableListOf<Message>()
         conversation += Message {
             +Document(Path(testDataDir, "test.pdf")) {
@@ -61,7 +61,16 @@ class DocumentCacheControlTest {
             }
             usage should {
                 // it might have been already cached by the previous test run
-                have(cacheCreationInputTokens!! > 0 || cacheReadInputTokens!! > 0)
+                have(
+                    (cacheCreationInputTokens!! > 4096
+                            && cacheReadInputTokens!! == 0
+                            && cacheCreation!!.ephemeral5mInputTokens == cacheCreationInputTokens)
+                            // if we run the test again before 5m passed
+                            || (
+                            cacheCreationInputTokens == 0
+                                    && cacheReadInputTokens!! > 4096
+                                    && cacheCreation!!.ephemeral5mInputTokens == 0)
+                )
             }
         }
 
