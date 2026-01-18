@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2026 Xemantic contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,25 +16,22 @@
 
 package com.xemantic.ai.anthropic
 
-import com.xemantic.ai.anthropic.content.Text
 import com.xemantic.ai.anthropic.error.AnthropicApiException
 import com.xemantic.ai.anthropic.event.Event
 import com.xemantic.ai.anthropic.message.Message
 import com.xemantic.ai.anthropic.message.addCacheBreakpoint
 import com.xemantic.ai.anthropic.message.plusAssign
 import com.xemantic.ai.anthropic.message.toMessageResponse
+import com.xemantic.ai.anthropic.test.fetchSkillText
 import com.xemantic.ai.anthropic.test.testAnthropic
+import com.xemantic.ai.anthropic.test.uniqueSuffix
 import com.xemantic.kotlin.test.assert
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
-import io.ktor.client.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
-import kotlin.test.fail
 
 class ResponseStreamingTest {
 
@@ -61,34 +58,31 @@ class ResponseStreamingTest {
 
     @Test
     fun `should analyze a text big enough to activate caching`() = runTest {
-        val text = fetchText("https://raw.githubusercontent.com/xemantic/anthropic-sdk-kotlin/refs/heads/main/README.md")
+        // given
+        val skillText = fetchSkillText()
         val anthropic = testAnthropic()
         val conversation = mutableListOf<Message>()
+        conversation += "How many times YAML is mentioned? (Answer format: `YAML: count`): ${skillText + uniqueSuffix()}"
 
-        conversation += Message {
-            +Text(text)
-            +"Analyze this text"
-        }
+        // when
         val response1 = anthropic.messages.stream {
             messages = conversation.addCacheBreakpoint()
-        }.onEach {
-            if (it is Event.ContentBlockDelta && it.delta is Event.ContentBlockDelta.Delta.TextDelta) {
-                print(it.delta.text)
-            }
         }.toMessageResponse()
         conversation += response1
 
         response1 should {
-            have(text.contains("anthropic", ignoreCase = true))
-            if (usage.cacheReadInputTokens != null && usage.cacheCreationInputTokens != null) {
-                have(usage.cacheReadInputTokens >= 0)
-                have( usage.cacheCreationInputTokens >= 0)
-            } else {
-                fail("Usage: cacheReadInputTokens and cacheCreationInputTokens must be provided")
+            have(text!!.contains("YAML", ignoreCase = true))
+            usage should {
+                have(cacheReadInputTokens!! == 0)
+                have(cacheCreationInputTokens!! > 4096)
+                cacheCreation should {
+                    have(ephemeral5mInputTokens!! == cacheCreationInputTokens)
+                    have(ephemeral1hInputTokens!! == 0)
+                }
             }
         }
 
-        conversation += "How many times anthropic is mentioned in the README?"
+        conversation += "How many times YAML is mentioned there?"
         val response2 = anthropic.messages.stream {
             messages = conversation.addCacheBreakpoint()
         }.onEach {
@@ -96,12 +90,12 @@ class ResponseStreamingTest {
                 print(it.delta.text)
             }
         }.toMessageResponse()
-        response2 should {
-            if (usage.cacheReadInputTokens != null && usage.cacheCreationInputTokens != null) {
-                have(usage.cacheReadInputTokens > 0)
-                have( usage.cacheCreationInputTokens > 0)
-            } else {
-                fail("Usage: cacheReadInputTokens and cacheCreationInputTokens must be provided")
+        response2.usage should {
+            have(cacheReadInputTokens!! > 4096)
+            have(cacheCreationInputTokens!! > 0)
+            cacheCreation should {
+                have(ephemeral5mInputTokens!! == cacheCreationInputTokens)
+                have(ephemeral1hInputTokens!! == 0)
             }
         }
     }
@@ -122,14 +116,8 @@ class ResponseStreamingTest {
         // then
         exception.error should {
             have(type == "invalid_request_error")
-            have(message == "max_tokens: 1000000000 > 64000, which is the maximum allowed number of output tokens for claude-sonnet-4-5-20250929")
+            have(message == "max_tokens: 1000000000 > 64000, which is the maximum allowed number of output tokens for claude-haiku-4-5-20251001")
         }
     }
 
-}
-
-suspend fun fetchText(
-    url: String
-): String = HttpClient().run {
-    get(url).bodyAsText()
 }

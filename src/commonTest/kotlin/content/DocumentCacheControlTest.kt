@@ -61,7 +61,16 @@ class DocumentCacheControlTest {
             }
             usage should {
                 // it might have been already cached by the previous test run
-                have(cacheCreationInputTokens!! > 0 || cacheReadInputTokens!! > 0)
+                have(
+                    (cacheCreationInputTokens!! > 4096
+                            && cacheReadInputTokens!! == 0
+                            && cacheCreation!!.ephemeral5mInputTokens == cacheCreationInputTokens)
+                            // if we run the test again before 5m passed
+                            || (
+                            cacheCreationInputTokens == 0
+                                    && cacheReadInputTokens!! > 4096
+                                    && cacheCreation!!.ephemeral5mInputTokens == 0)
+                )
             }
         }
 
