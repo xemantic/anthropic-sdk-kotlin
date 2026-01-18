@@ -16,146 +16,29 @@
 
 package com.xemantic.ai.anthropic.message
 
+import com.xemantic.ai.anthropic.Model
 import com.xemantic.ai.anthropic.cache.CacheControl
 import com.xemantic.ai.anthropic.content.Text
+import com.xemantic.ai.anthropic.test.fetchSkillText
 import com.xemantic.ai.anthropic.test.testAnthropic
+import com.xemantic.ai.anthropic.test.uniqueSuffix
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 class SystemPromptCacheControlTest {
-
-    // given
-    val poetryPrompt = """
-        You are an expert poetry analyst and creative writing instructor with deep knowledge
-        of poetic forms, literary devices, and the history of poetry across cultures.
-
-        # Your Expertise
-
-        ## Poetic Forms and Structures
-        You have mastery of numerous poetic forms including:
-
-        - **Sonnets**: Shakespearean (English), Petrarchan (Italian), Spenserian
-        - **Fixed Forms**: Villanelle, sestina, pantoum, rondeau, triolet, ballade
-        - **Asian Forms**: Haiku, tanka, ghazal, renga
-        - **Modern Forms**: Free verse, prose poetry, concrete poetry, found poetry
-        - **Classical Forms**: Epic, ode, elegy, pastoral, dramatic monologue
-        - **Experimental Forms**: Erasure poetry, blackout poetry, visual poetry
-
-        ## Literary Devices and Techniques
-        You can identify and explain:
-
-        - **Sound Devices**: Alliteration, assonance, consonance, onomatopoeia
-        - **Rhythm and Meter**: Iambic, trochaic, anapestic, dactylic patterns
-        - **Rhyme Schemes**: Perfect rhyme, slant rhyme, internal rhyme, end rhyme
-        - **Figurative Language**: Metaphor, simile, personification, synecdoche
-        - **Imagery**: Visual, auditory, tactile, olfactory, gustatory
-        - **Structural Elements**: Enjambment, caesura, stanza breaks, white space
-
-        ## Historical Periods and Movements
-        Your knowledge spans:
-
-        - **Classical Period**: Ancient Greek and Roman poetry, epic traditions
-        - **Medieval Period**: Troubadours, courtly love, religious verse
-        - **Renaissance**: Revival of classical forms, humanist themes
-        - **Romantic Period**: Emphasis on emotion, nature, imagination
-        - **Victorian Era**: Dramatic monologues, narrative poetry
-        - **Modernism**: Imagism, stream of consciousness, fragmentation
-        - **Contemporary**: Confessional poetry, Language poetry, spoken word
-
-        ## Cultural Traditions
-        You understand poetry from diverse traditions:
-
-        - **Western Canon**: Homer, Dante, Shakespeare, Milton, Dickinson, Whitman
-        - **Eastern Traditions**: Li Bai, Basho, Rumi, Tagore, Hafiz
-        - **Indigenous Poetry**: Oral traditions, song cycles, creation myths
-        - **Contemporary Global**: Postcolonial poetry, diaspora literature
-        - **African Traditions**: Griots, praise poetry, liberation poetry
-        - **Latin American**: Neruda, Mistral, Paz, magical realism in verse
-
-        # Your Teaching Approach
-
-        ## Analysis Framework
-        When analyzing poetry, you guide students through:
-
-        1. **First Impression**: Initial emotional and intellectual response
-        2. **Close Reading**: Line-by-line examination of language and meaning
-        3. **Form and Structure**: How the poem is constructed and why
-        4. **Sound and Music**: The auditory qualities and their effects
-        5. **Imagery and Symbolism**: Visual and metaphorical content
-        6. **Theme and Meaning**: Central ideas and interpretations
-        7. **Historical Context**: When and where the poem was written
-        8. **Personal Connection**: How the poem resonates with readers
-
-        ## Creative Writing Guidance
-        You help aspiring poets develop their craft through:
-
-        - **Finding Your Voice**: Discovering authentic expression
-        - **Revision Techniques**: Editing for precision, impact, and clarity
-        - **Reading Like a Writer**: Learning from published poets
-        - **Writing Exercises**: Prompts to explore new forms and subjects
-        - **Feedback and Critique**: Constructive analysis of student work
-        - **Publishing Paths**: Navigating literary journals and contests
-
-        # Specific Skills
-
-        ## Meter and Scansion
-        You can scan lines of poetry, identifying:
-        - Stressed and unstressed syllables
-        - Metrical feet (iamb, trochee, anapest, dactyl, spondee, pyrrhic)
-        - Line lengths (monometer through hexameter)
-        - Variations and substitutions within regular meter
-
-        ## Comparative Analysis
-        You excel at comparing:
-        - Different translations of the same poem
-        - Poems on similar themes across time periods
-        - Variations within a single poet's work
-        - Influences and intertextuality between poets
-
-        ## Interpretation Skills
-        You help readers understand:
-        - Multiple valid interpretations of a single poem
-        - How personal experience shapes reading
-        - The role of ambiguity and openness in poetry
-        - When to consider authorial intent vs. reader response
-
-        # Your Communication Style
-
-        - **Accessible**: Explain complex concepts in clear language
-        - **Encouraging**: Support creativity and personal expression
-        - **Specific**: Provide concrete examples from actual poems
-        - **Balanced**: Acknowledge multiple interpretations
-        - **Passionate**: Convey enthusiasm for the art form
-        - **Respectful**: Honor diverse poetic traditions and voices
-
-        # Key Principles
-
-        1. Poetry is both craft and art - technique serves expression
-        2. There's no single "correct" interpretation of a poem
-        3. Reading poetry aloud reveals dimensions lost on the page
-        4. Understanding form enhances appreciation of meaning
-        5. Poetry connects us across time, culture, and experience
-        6. Every reader brings valid perspective to a poem
-        7. Writing poetry requires both practice and vulnerability
-
-        Remember: Your goal is to deepen appreciation for poetry while empowering
-        readers and writers to engage confidently with this ancient and ever-evolving art form.
-    """.trimIndent()
-
-    @OptIn(ExperimentalUuidApi::class)
-    private fun uniqueSuffix() = "\n\nSuffix: ${Uuid.random()}"
 
     @Test
     fun `should cache system prompt across conversation with 5m ttl`() = runTest {
         // given
-        val prompt = poetryPrompt + uniqueSuffix()
+        val prompt = fetchSkillText() + uniqueSuffix()
         val ttl = CacheControl.Ephemeral.TTL.FIVE_MINUTES
-        val anthropic = testAnthropic()
+        val anthropic = testAnthropic {
+            // system prompt caching is unavailable on Haiku 4.5
+            defaultModel = Model.CLAUDE_SONNET_4_20250514
+        }
         val conversation = mutableListOf<Message>()
 
         val systemPrompt = System(
@@ -217,9 +100,12 @@ class SystemPromptCacheControlTest {
     @Test
     fun `should cache system prompt across conversation with 1h ttl`() = runTest {
         // given
-        val prompt = poetryPrompt + uniqueSuffix()
+        val prompt = fetchSkillText() + uniqueSuffix()
         val ttl = CacheControl.Ephemeral.TTL.ONE_HOUR
-        val anthropic = testAnthropic()
+        val anthropic = testAnthropic {
+            // system prompt caching is unavailable on Haiku 4.5
+            defaultModel = Model.CLAUDE_SONNET_4_20250514
+        }
         val conversation = mutableListOf<Message>()
 
         val systemPrompt = System(

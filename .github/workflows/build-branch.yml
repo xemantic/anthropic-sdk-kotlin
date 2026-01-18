@@ -26,6 +26,6 @@ jobs:
         uses: gradle/actions/setup-gradle@v5.0.0
 
       - name: Build
-        run: ./gradlew -PjvmOnlyBuild=false build
+        run: ./gradlew build
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}

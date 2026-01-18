@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Kazimierz Pogoda / Xemantic
+ * Copyright 2025-2026 Xemantic contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 package com.xemantic.ai.anthropic.tool
 
-import com.xemantic.ai.anthropic.Anthropic
 import com.xemantic.ai.anthropic.message.Message
+import com.xemantic.ai.anthropic.test.testAnthropic
 import com.xemantic.ai.tool.schema.meta.Description
 import kotlinx.coroutines.test.runTest
 import java.sql.Connection
@@ -52,7 +52,7 @@ class QueryDatabaseToolTest {
             }
         }
 
-        val anthropic = Anthropic()
+        val anthropic = testAnthropic()
 
         val response = anthropic.messages.create {
             +Message { +"Select all the users who never logged into the the system" }
