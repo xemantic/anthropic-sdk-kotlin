@@ -14,6 +14,6 @@ jobs:
     uses: xemantic/.github/.github/workflows/build-gradle.yml@main
     with:
       gradle_args: build
-      env: |
+    secrets:
+      env_secrets: |
         ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
-    secrets: inherit
