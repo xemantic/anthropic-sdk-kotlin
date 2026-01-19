@@ -312,6 +312,30 @@ data class MessageResponse(
 
 }
 
+@Serializable
+data class MessageCountTokensRequest(
+    val model: String,
+    val messages: List<Message>,
+    val system: List<System>?,
+    @SerialName("tool_choice")
+    val toolChoice: ToolChoice?,
+    val tools: List<Tool>?
+) {
+
+    override fun toString(): String = toPrettyJson()
+
+}
+
+@Serializable
+data class MessageTokensCount(
+    @SerialName("input_tokens")
+    val inputTokens: Int
+) {
+
+    override fun toString() = toPrettyJson()
+
+}
+
 fun List<Message>.addCacheBreakpoint(): List<Message> = mapLast { message ->
     message.copy {
         content = content.mapLast { contentElement ->
