@@ -97,10 +97,19 @@ Uses `expect`/`actual` declarations for platform-specific functionality like env
 ## Testing Notes
 
 - Many tests are integration tests requiring `ANTHROPIC_API_KEY`
+- Tests default to Claude Haiku model to reduce API costs
 - Tests may be flaky due to AI model variability
 - Some native target tests are disabled on CI
 - Release builds skip tests to avoid flakiness during releases
 - Test timeout for JS tests: 60 seconds
+
+## Adding New Models
+
+When adding new models to the `Model` enum in `src/commonMain/kotlin/Models.kt`:
+- Always verify current pricing at anthropic.com/pricing
+- Update the `cost` field with accurate `inputTokens` and `outputTokens` values using the `dollarsPerMillion` extension (e.g., `"3".dollarsPerMillion`)
+- Verify `contextWindow`, `maxOutput`, and `messageBatchesApi` support from the official documentation
+- Add the new model enum entry following the existing pattern
 
 ## Multiplatform Targets
 
