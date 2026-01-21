@@ -13,7 +13,7 @@ jobs:
   build_branch:
     uses: xemantic/.github/.github/workflows/build-gradle.yml@main
     with:
-      gradle_args: build
+      gradle_args: build -PjvmOnlyBuild=false
     secrets:
       env_secrets: |
         ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
