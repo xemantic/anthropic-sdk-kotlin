@@ -1,9 +1,9 @@
 [versions]
-kotlinTarget = "2.3"
+kotlinTarget = "2.2"
 javaTarget = "17"
 
 # jetbrains
-kotlin = "2.3.10-RC"
+kotlin = "2.2.21"
 kotlinxCoroutines = "1.10.2"
 kotlinxSerialization = "1.9.0"
 ktor = "3.3.3"
