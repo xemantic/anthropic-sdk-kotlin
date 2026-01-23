@@ -6,4 +6,5 @@ actual val envApiKey: String?
 actual val missingApiKeyMessage: String
     get() = "apiKey is missing, it has to be provided as a parameter."
 
+@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)
 private fun getenv(name: String): String? = js("process.env[name]")
