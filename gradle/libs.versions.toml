@@ -1,15 +1,15 @@
 [versions]
-kotlinTarget = "2.3"
+kotlinTarget = "2.2"
 javaTarget = "17"
 
 # jetbrains
-kotlin = "2.3.0"
+kotlin = "2.2.21"
 kotlinxCoroutines = "1.10.2"
 kotlinxSerialization = "1.9.0"
 ktor = "3.3.3"
 
 # xemantic
-xemanticKotlinCore = "0.6.1"
+xemanticKotlinCore = "0.6.4"
 xemanticKotlinTest = "1.16.0"
 xemanticAiToolSchema = "1.2.0"
 xemanticAiMoney = "0.2"
