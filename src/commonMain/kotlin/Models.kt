@@ -32,6 +32,7 @@ interface AnthropicModel {
     val messageBatchesApi: Boolean
     val cost: Cost
     val deprecated: Boolean
+    val cacheMinTokens: Int
 
 }
 
@@ -50,7 +51,8 @@ enum class Model(
     override val maxOutput: Int,
     override val messageBatchesApi: Boolean,
     override val cost: Cost,
-    override val deprecated: Boolean = false
+    override val deprecated: Boolean = false,
+    override val cacheMinTokens: Int
 ) : AnthropicModel {
 
     CLAUDE_SONNET_4_5_20250929(
@@ -61,7 +63,8 @@ enum class Model(
         cost = Cost {
             inputTokens = "3".dollarsPerMillion
             outputTokens = "15".dollarsPerMillion
-        }
+        },
+        cacheMinTokens = 1024
     ),
 
     CLAUDE_OPUS_4_5_20251101(
@@ -72,7 +75,8 @@ enum class Model(
         cost = Cost {
             inputTokens = "5".dollarsPerMillion
             outputTokens = "25".dollarsPerMillion
-        }
+        },
+        cacheMinTokens = 1024
     ),
 
     CLAUDE_OPUS_4_1_20250805(
@@ -83,7 +87,8 @@ enum class Model(
         cost = Cost {
             inputTokens = "15".dollarsPerMillion
             outputTokens = "75".dollarsPerMillion
-        }
+        },
+        cacheMinTokens = 1024
     ),
 
     CLAUDE_OPUS_4_20250514(
@@ -94,7 +99,8 @@ enum class Model(
         cost = Cost {
             inputTokens = "15".dollarsPerMillion
             outputTokens = "75".dollarsPerMillion
-        }
+        },
+        cacheMinTokens = 1024
     ),
 
     CLAUDE_SONNET_4_20250514(
@@ -105,7 +111,8 @@ enum class Model(
         cost = Cost {
             inputTokens = "3".dollarsPerMillion
             outputTokens = "15".dollarsPerMillion
-        }
+        },
+        cacheMinTokens = 1024
     ),
 
     CLAUDE_3_7_SONNET_20250219(
@@ -116,7 +123,8 @@ enum class Model(
         cost = Cost {
             inputTokens = "3".dollarsPerMillion
             outputTokens = "15".dollarsPerMillion
-        }
+        },
+        cacheMinTokens = 1024
     ),
 
     CLAUDE_HAIKU_4_5_20251001(
@@ -127,7 +135,8 @@ enum class Model(
         cost = Cost {
             inputTokens = "1".dollarsPerMillion
             outputTokens = "5".dollarsPerMillion
-        }
+        },
+        cacheMinTokens = 4096
     ),
 
     CLAUDE_3_5_HAIKU_20241022(
@@ -139,7 +148,8 @@ enum class Model(
             inputTokens = "0.80".dollarsPerMillion
             outputTokens = "4".dollarsPerMillion
         },
-        deprecated = true
+        deprecated = true,
+        cacheMinTokens = 2048
     ),
 
     CLAUDE_3_5_SONNET_20241022(
@@ -151,7 +161,8 @@ enum class Model(
             inputTokens = "3".dollarsPerMillion
             outputTokens = "15".dollarsPerMillion
         },
-        deprecated = true
+        deprecated = true,
+        cacheMinTokens = 1024
     ),
 
     CLAUDE_3_5_SONNET_20240620(
@@ -163,7 +174,8 @@ enum class Model(
             inputTokens = "3".dollarsPerMillion
             outputTokens = "15".dollarsPerMillion
         },
-        deprecated = true
+        deprecated = true,
+        cacheMinTokens = 1024
     ),
 
     CLAUDE_3_OPUS_20240229(
@@ -175,7 +187,8 @@ enum class Model(
             inputTokens = "15".dollarsPerMillion
             outputTokens = "75".dollarsPerMillion
         },
-        deprecated = true
+        deprecated = true,
+        cacheMinTokens = 1024
     ),
 
     CLAUDE_3_HAIKU_20240307(
@@ -186,7 +199,8 @@ enum class Model(
         cost = Cost {
             inputTokens = "0.25".dollarsPerMillion
             outputTokens = "1.25".dollarsPerMillion
-        }
+        },
+        cacheMinTokens = 2048
     );
 
     companion object {
@@ -203,5 +217,6 @@ data class UnknownModel(
     override val maxOutput: Int,
     override val messageBatchesApi: Boolean,
     override val cost: Cost,
-    override val deprecated: Boolean = false
+    override val deprecated: Boolean = false,
+    override val cacheMinTokens: Int = 1024
 ) : AnthropicModel
