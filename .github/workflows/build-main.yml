@@ -15,3 +15,4 @@ jobs:
     with:
       gradle_args: -PjvmOnlyBuild=false build publishToMavenCentral --no-configuration-cache
       maven_central: true
+
