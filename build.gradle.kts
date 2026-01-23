@@ -16,8 +16,6 @@
 
 @file:OptIn(ExperimentalKotlinGradlePluginApi::class, ExperimentalWasmDsl::class)
 
-import com.vanniktech.maven.publish.JavadocJar
-import com.vanniktech.maven.publish.KotlinMultiplatform
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -299,25 +297,8 @@ dokka {
 
 mavenPublishing {
 
-    configure(
-        KotlinMultiplatform(
-            javadocJar = JavadocJar.Dokka("dokkaGenerateHtml"),
-            sourcesJar = true
-        )
-    )
-
+    publishToMavenCentral(automaticRelease = true)
     signAllPublications()
-
-    publishToMavenCentral(
-        automaticRelease = true,
-        validateDeployment = false // for kotlin multiplatform projects it might take a while (>900s)
-    )
-
-    coordinates(
-        groupId = group.toString(),
-        artifactId = rootProject.name,
-        version = version.toString()
-    )
 
     pom {
 
