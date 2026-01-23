@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2026 Xemantic contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -313,12 +313,12 @@ data class MessageResponse(
 }
 
 fun List<Message>.addCacheBreakpoint(
-    cacheControl: CacheControl? = null
+    cacheControl: CacheControl = CacheControl.Ephemeral()
 ): List<Message> = mapLast { message ->
     message.copy {
         content = content.mapLast { contentElement ->
             contentElement.alterCacheControl(
-                cacheControl ?: CacheControl.Ephemeral()
+                cacheControl = cacheControl
             )
         }
     }
