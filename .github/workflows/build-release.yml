@@ -19,9 +19,9 @@ jobs:
     needs: extract_version
     uses: xemantic/.github/.github/workflows/build-gradle.yml@main
     secrets:
-      env_secrets: |
-        ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
+      inherit
     with:
       gradle_args: -Pversion=${{ needs.extract_version.outputs.version }} -PjvmOnlyBuild=false build publishToMavenCentral jreleaserAnnounce --no-configuration-cache
       maven_central: true
       jreleaser: true
+      anthropic: true
