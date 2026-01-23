@@ -1,16 +1,11 @@
-# Builds every branch other than main, so that any change pushed to GitHub in a feature branch can be built and tested
-name: Build branch
+# Builds pull requests before merge
+name: Build PR
 
 on:
-  push:
-    branches-ignore:
-      - main
   pull_request:
-    branches-ignore:
-      - main
 
 jobs:
-  build_branch:
+  build:
     uses: xemantic/.github/.github/workflows/build-gradle.yml@main
     with:
       gradle_args: build -PjvmOnlyBuild=false
