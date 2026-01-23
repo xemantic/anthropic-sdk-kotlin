@@ -1,4 +1,4 @@
-# Builds than main branch, and then deploys SNAPSHOT versions to GitHub Packages
+# Builds main branch and deploys SNAPSHOT versions to Maven Central
 name: Build main
 
 on:
@@ -7,27 +7,11 @@ on:
       - main
 
 jobs:
-  build_main:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout sources
-        uses: actions/checkout@v6.0.1
-
-      - name: Setup Java
-        uses: actions/setup-java@v5.1.0
-        with:
-          distribution: ${{ vars.DEFAULT_JAVA_DISTRIBUTION }}
-          java-version: ${{ vars.DEFAULT_JAVA_VERSION }}
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v5.0.0
-
-      - name: Build and Publish SNAPSHOT
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
-          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
-          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
-          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_PASSWORD }}
-
-        run: ./gradlew -PjvmOnlyBuild=false build publishToMavenCentral --no-configuration-cache
+  build:
+    uses: xemantic/.github/.github/workflows/build-gradle.yml@main
+    secrets:
+      env_secrets: |
+        ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
+    with:
+      gradle_args: -PjvmOnlyBuild=false build publishToMavenCentral --no-configuration-cache
+      maven_central: true

@@ -1,0 +1,14 @@
+# Builds pull requests before merge
+name: Build PR
+
+on:
+  pull_request:
+
+jobs:
+  build:
+    uses: xemantic/.github/.github/workflows/build-gradle.yml@main
+    secrets:
+      env_secrets: |
+        ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
+    with:
+      gradle_args: build -PjvmOnlyBuild=true
