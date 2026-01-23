@@ -5,23 +5,23 @@ javaTarget = "17"
 # jetbrains
 kotlin = "2.2.21"
 kotlinxCoroutines = "1.10.2"
-kotlinxSerialization = "1.9.0"
-ktor = "3.3.3"
+kotlinxSerialization = "1.10.0"
+ktor = "3.4.0"
 
 # xemantic
 xemanticKotlinCore = "0.6.4"
-xemanticKotlinTest = "1.16.0"
+xemanticKotlinTest = "1.17.1"
 xemanticAiToolSchema = "1.2.0"
 xemanticAiMoney = "0.2"
 xemanticAiFileMagic = "0.4.0"
 
 # logging
 slf4j = "2.0.17"
-logback = "1.5.23"
+logback = "1.5.25"
 
 versionsPlugin = "0.53.0"
 dokkaPlugin = "2.1.0"
-mavenPublishPlugin = "0.35.0"
+mavenPublishPlugin = "0.36.0"
 jreleaserPlugin = "1.22.0"
 xemanticConventionsPlugin = "0.6.8"
 
