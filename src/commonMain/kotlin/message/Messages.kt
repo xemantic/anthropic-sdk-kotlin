@@ -312,11 +312,13 @@ data class MessageResponse(
 
 }
 
-fun List<Message>.addCacheBreakpoint(): List<Message> = mapLast { message ->
+fun List<Message>.addCacheBreakpoint(
+    cacheControl: CacheControl? = null
+): List<Message> = mapLast { message ->
     message.copy {
         content = content.mapLast { contentElement ->
             contentElement.alterCacheControl(
-                CacheControl.Ephemeral()
+                cacheControl ?: CacheControl.Ephemeral()
             )
         }
     }
