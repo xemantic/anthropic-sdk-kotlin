@@ -7,8 +7,9 @@ on:
 jobs:
   build:
     uses: xemantic/.github/.github/workflows/build-gradle.yml@main
-    secrets: inherit
+    secrets:
+      env_secrets: |
+        ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
     with:
       gradle_args: build -PjvmOnlyBuild=false
-      env: |
-        ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
+
