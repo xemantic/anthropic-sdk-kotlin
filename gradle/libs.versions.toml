@@ -11,7 +11,7 @@ ktor = "3.3.3"
 
 # xemantic
 xemanticKotlinCore = "0.6.4"
-xemanticKotlinTest = "1.17.1"
+xemanticKotlinTest = "1.17.2"
 xemanticAiToolSchema = "1.2.0"
 xemanticAiMoney = "0.2"
 xemanticAiFileMagic = "0.4.0"
