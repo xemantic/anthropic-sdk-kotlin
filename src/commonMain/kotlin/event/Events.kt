@@ -92,6 +92,12 @@ sealed interface Event {
                 val input: JsonObject // this is not being used, because the whole JSON comes in delta
             ) : ContentBlock()
 
+            @Serializable
+            @SerialName("thinking")
+            data class Thinking(
+                val thinking: String
+            ) : ContentBlock()
+
         }
 
     }
@@ -117,6 +123,18 @@ sealed interface Event {
             data class InputJsonDelta(
                 @SerialName("partial_json")
                 val partialJson: String
+            ) : Delta()
+
+            @Serializable
+            @SerialName("thinking_delta")
+            data class ThinkingDelta(
+                val thinking: String
+            ) : Delta()
+
+            @Serializable
+            @SerialName("signature_delta")
+            data class SignatureDelta(
+                val signature: String
             ) : Delta()
 
         }
