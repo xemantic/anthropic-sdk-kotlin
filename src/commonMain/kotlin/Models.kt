@@ -55,6 +55,18 @@ enum class Model(
     override val cacheMinTokens: Int
 ) : AnthropicModel {
 
+    CLAUDE_SONNET_4_6(
+        id = "claude-sonnet-4-6",
+        contextWindow = 200000,
+        maxOutput = 64000,
+        messageBatchesApi = true,
+        cost = Cost {
+            inputTokens = "3".dollarsPerMillion
+            outputTokens = "15".dollarsPerMillion
+        },
+        cacheMinTokens = 1024
+    ),
+
     CLAUDE_SONNET_4_5_20250929(
         id = "claude-sonnet-4-5-20250929",
         contextWindow = 200000,
@@ -136,6 +148,7 @@ enum class Model(
             inputTokens = "3".dollarsPerMillion
             outputTokens = "15".dollarsPerMillion
         },
+        deprecated = true,
         cacheMinTokens = 1024
     ),
 
@@ -212,12 +225,13 @@ enum class Model(
             inputTokens = "0.25".dollarsPerMillion
             outputTokens = "1.25".dollarsPerMillion
         },
+        deprecated = true,
         cacheMinTokens = 2048
     );
 
     companion object {
 
-        val DEFAULT: Model = CLAUDE_SONNET_4_5_20250929
+        val DEFAULT: Model = CLAUDE_SONNET_4_6
 
     }
 
