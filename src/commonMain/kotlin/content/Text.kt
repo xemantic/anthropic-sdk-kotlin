@@ -63,28 +63,32 @@ class Text private constructor(
         }.build()
     }
 
-}
+    companion object {
 
-@OptIn(ExperimentalContracts::class)
-fun Text(
-    block: Text.Builder.() -> Unit
-): Text {
-    contract {
-        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
-    }
-    return Text.Builder().apply(block).build()
-}
+        @OptIn(ExperimentalContracts::class)
+        operator fun invoke(
+            block: Text.Builder.() -> Unit
+        ): Text {
+            contract {
+                callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+            }
+            return Text.Builder().apply(block).build()
+        }
 
-@OptIn(ExperimentalContracts::class)
-fun Text(
-    text: String,
-    block: Text.Builder.() -> Unit = {}
-): Text {
-    contract {
-        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+        @OptIn(ExperimentalContracts::class)
+        operator fun invoke(
+            text: String,
+            block: Text.Builder.() -> Unit = {}
+        ): Text {
+            contract {
+                callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+            }
+            return Text {
+                this.text = text
+                block(this)
+            }
+        }
+
     }
-    return Text {
-        this.text = text
-        block(this)
-    }
+
 }

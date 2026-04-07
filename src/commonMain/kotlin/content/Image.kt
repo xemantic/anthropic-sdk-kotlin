@@ -59,6 +59,55 @@ class Image private constructor(
             MediaType.WEBP
         )
 
+        @OptIn(ExperimentalContracts::class)
+        operator fun invoke(
+            block: Image.Builder.() -> Unit
+        ): Image {
+            contract {
+                callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+            }
+            return Image.Builder().apply(block).build()
+        }
+
+        @OptIn(ExperimentalContracts::class)
+        operator fun invoke(
+            path: String,
+            block: Image.Builder.() -> Unit = {}
+        ): Image {
+            contract {
+                callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+            }
+            return Image(Path(path), block)
+        }
+
+        @OptIn(ExperimentalContracts::class)
+        operator fun invoke(
+            path: Path,
+            block: Image.Builder.() -> Unit = {}
+        ): Image {
+            contract {
+                callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+            }
+            return Image {
+                this.path = path
+                block(this)
+            }
+        }
+
+        @OptIn(ExperimentalContracts::class)
+        operator fun invoke(
+            bytes: ByteArray,
+            block: Image.Builder.() -> Unit = {}
+        ): Image {
+            contract {
+                callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+            }
+            return Image {
+                this.bytes = bytes
+                block(this)
+            }
+        }
+
     }
 
     @OptIn(ExperimentalContracts::class)
@@ -77,53 +126,4 @@ class Image private constructor(
 
     override fun toString(): String = toPrettyJson()
 
-}
-
-@OptIn(ExperimentalContracts::class)
-fun Image(
-    block: Image.Builder.() -> Unit
-): Image {
-    contract {
-        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
-    }
-    return Image.Builder().apply(block).build()
-}
-
-@OptIn(ExperimentalContracts::class)
-fun Image(
-    path: String,
-    block: Image.Builder.() -> Unit = {}
-): Image {
-    contract {
-        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
-    }
-    return Image(Path(path), block)
-}
-
-@OptIn(ExperimentalContracts::class)
-fun Image(
-    path: Path,
-    block: Image.Builder.() -> Unit = {}
-): Image {
-    contract {
-        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
-    }
-    return Image {
-        this.path = path
-        block(this)
-    }
-}
-
-@OptIn(ExperimentalContracts::class)
-fun Image(
-    bytes: ByteArray,
-    block: Image.Builder.() -> Unit = {}
-): Image {
-    contract {
-        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
-    }
-    return Image {
-        this.bytes = bytes
-        block(this)
-    }
 }

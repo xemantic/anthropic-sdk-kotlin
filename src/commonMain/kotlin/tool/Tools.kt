@@ -211,12 +211,6 @@ internal val String.normalizedToolName: String
         .replace('$', '_')
         .take(64)
 
-fun Toolbox(block: Toolbox.Builder.() -> Unit): Toolbox {
-    val builder = Toolbox.Builder()
-    block(builder)
-    return builder.build()
-}
-
 class Toolbox private constructor(
     val tools: List<Tool>,
     private val handlerMap: Map<String, Handler>,
@@ -365,5 +359,15 @@ class Toolbox private constructor(
             result.toString()
         }
     )
+
+    companion object {
+
+        operator fun invoke(block: Toolbox.Builder.() -> Unit): Toolbox {
+            val builder = Toolbox.Builder()
+            block(builder)
+            return builder.build()
+        }
+
+    }
 
 }

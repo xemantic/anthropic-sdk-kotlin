@@ -77,16 +77,20 @@ class ToolUse private constructor(
         }.build()
     }
 
-}
+    companion object {
 
-@OptIn(ExperimentalContracts::class)
-fun ToolUse(
-    block: ToolUse.Builder.() -> Unit
-): ToolUse {
-    contract {
-        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+        @OptIn(ExperimentalContracts::class)
+        operator fun invoke(
+            block: ToolUse.Builder.() -> Unit
+        ): ToolUse {
+            contract {
+                callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+            }
+            return ToolUse.Builder().apply(block).build()
+        }
+
     }
-    return ToolUse.Builder().apply(block).build()
+
 }
 
 @OptIn(ExperimentalSerializationApi::class)
@@ -159,14 +163,18 @@ class ToolResult private constructor(
         }.build()
     }
 
-}
+    companion object {
 
-@OptIn(ExperimentalContracts::class)
-inline fun ToolResult(
-    block: ToolResult.Builder.() -> Unit = {}
-): ToolResult {
-    contract {
-        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+        @OptIn(ExperimentalContracts::class)
+        inline operator fun invoke(
+            block: ToolResult.Builder.() -> Unit = {}
+        ): ToolResult {
+            contract {
+                callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+            }
+            return ToolResult.Builder().apply(block).build()
+        }
+
     }
-    return ToolResult.Builder().apply(block).build()
+
 }

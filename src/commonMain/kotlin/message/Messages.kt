@@ -142,24 +142,28 @@ data class MessageRequest(
 
     override fun toString(): String = toPrettyJson()
 
-}
+    companion object {
 
-/**
- * Used only in tests
- */
-@OptIn(ExperimentalContracts::class)
-internal fun MessageRequest(
-    model: Model = Model.DEFAULT,
-    block: MessageRequest.Builder.() -> Unit
-): MessageRequest {
-    contract {
-        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+        /**
+         * Used only in tests
+         */
+        @OptIn(ExperimentalContracts::class)
+        internal operator fun invoke(
+            model: Model = Model.DEFAULT,
+            block: MessageRequest.Builder.() -> Unit
+        ): MessageRequest {
+            contract {
+                callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+            }
+            return MessageRequest.Builder().also {
+                it.model = model.id
+                it.maxTokens = model.maxOutput
+                block(it)
+            }.build()
+        }
+
     }
-    return MessageRequest.Builder().also {
-        it.model = model.id
-        it.maxTokens = model.maxOutput
-        block(it)
-    }.build()
+
 }
 
 @Serializable
@@ -194,16 +198,20 @@ class Message private constructor(
 
     override fun toString(): String = toPrettyJson()
 
-}
+    companion object {
 
-@OptIn(ExperimentalContracts::class)
-fun Message(
-    block: Message.Builder.() -> Unit = {}
-): Message {
-    contract {
-        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+        @OptIn(ExperimentalContracts::class)
+        operator fun invoke(
+            block: Message.Builder.() -> Unit = {}
+        ): Message {
+            contract {
+                callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+            }
+            return Message.Builder().apply(block).build()
+        }
+
     }
-    return Message.Builder().apply(block).build()
+
 }
 
 @Serializable
