@@ -20,29 +20,31 @@ import com.xemantic.ai.anthropic.cache.CacheControl
 import com.xemantic.ai.anthropic.message.Message
 import com.xemantic.ai.anthropic.message.StopReason
 import com.xemantic.ai.anthropic.message.plusAssign
+import com.xemantic.ai.anthropic.test.fetchSkillText
 import com.xemantic.ai.anthropic.test.testAnthropic
-import com.xemantic.ai.anthropic.test.testDataDir
+import com.xemantic.ai.anthropic.test.uniqueSuffix
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
-import com.xemantic.kotlin.test.isBrowserPlatform
 import com.xemantic.kotlin.test.should
 import kotlinx.coroutines.test.runTest
-import kotlinx.io.files.Path
 import kotlin.test.Test
 
 class DocumentCacheControlTest {
 
     @Test
-    fun `should cache PDF document across conversation`() = runTest {
-        if (isBrowserPlatform) return@runTest // we cannot access files in the browser
+    fun `should cache document across conversation`() = runTest {
         // given
+        // Use a large text document (>4096 tokens for Haiku 4.5) to meet caching minimum.
+        // The small test.pdf (~500 tokens) is insufficient for CLAUDE_HAIKU_4_5 caching.
+        val documentText = fetchSkillText() + uniqueSuffix()
         val anthropic = testAnthropic()
         val conversation = mutableListOf<Message>()
         conversation += Message {
-            +Document(Path(testDataDir, "test.pdf")) {
+            +Document {
+                source = Source.Text { data = documentText }
                 cacheControl = CacheControl.Ephemeral()
             }
-            +"What's on the first page of the document?"
+            +"How many times is YAML mentioned in this document? Answer in format: 'YAML: <count>'"
         }
 
         // when
@@ -57,18 +59,18 @@ class DocumentCacheControlTest {
             have(content.size == 1)
             content[0] should {
                 be<Text>()
-                have("FOO" in text.uppercase())
+                have("YAML" in text.uppercase())
             }
             usage should {
                 // it might have been already cached by the previous test run
                 have(
-                    (cacheCreationInputTokens!! > 4096
+                    (cacheCreationInputTokens!! > 0
                             && cacheReadInputTokens!! == 0
                             && cacheCreation!!.ephemeral5mInputTokens == cacheCreationInputTokens)
                             // if we run the test again before 5m passed
                             || (
                             cacheCreationInputTokens == 0
-                                    && cacheReadInputTokens!! > 4096
+                                    && cacheReadInputTokens!! > 0
                                     && cacheCreation!!.ephemeral5mInputTokens == 0)
                 )
             }
@@ -76,7 +78,7 @@ class DocumentCacheControlTest {
 
         // given
         conversation += Message {
-            +"What's on the second page of the document?"
+            +"How many times is the word 'skill' mentioned in this document? Answer in format: 'skill: <count>'"
         }
 
         // when
@@ -90,7 +92,7 @@ class DocumentCacheControlTest {
             have(content.size == 1)
             content[0] should {
                 be<Text>()
-                have("BAR" in text.uppercase())
+                have("skill" in text.lowercase())
             }
             usage should {
                 have(cacheReadInputTokens!! > 0)

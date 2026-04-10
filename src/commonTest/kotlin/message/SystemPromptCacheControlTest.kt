@@ -158,8 +158,14 @@ class SystemPromptCacheControlTest {
                 be<Text>()
             }
             usage should {
-                have(cacheReadInputTokens == response1.usage.cacheCreationInputTokens)
-                have(cacheCreationInputTokens == 0)
+                // With 1h TTL, the API refreshes (re-creates) the cache on each request
+                // rather than returning a simple cache read as with 5m TTL.
+                // The token count should be consistent with the first request.
+                have(cacheCreationInputTokens == response1.usage.cacheCreationInputTokens)
+                have(cacheReadInputTokens == 0)
+                cacheCreation should {
+                    have(ephemeral1hInputTokens == cacheCreationInputTokens)
+                }
             }
         }
     }

@@ -64,9 +64,10 @@ class ResponseStreamingTest {
         val conversation = mutableListOf<Message>()
         conversation += "How many times YAML is mentioned? (Answer format: `YAML: count`): ${skillText + uniqueSuffix()}"
 
-        // when
+        // when - first request: mark the only message with a cache breakpoint
+        val request1Messages = conversation.addCacheBreakpoint()
         val response1 = anthropic.messages.stream {
-            messages = conversation.addCacheBreakpoint()
+            messages = request1Messages
         }.toMessageResponse()
         conversation += response1
 
@@ -83,8 +84,11 @@ class ResponseStreamingTest {
         }
 
         conversation += "How many times YAML is mentioned there?"
+        // For request 2, the first message must retain its cache_control marker (to read from
+        // the cache created in request 1), and the last message gets a new cache breakpoint
+        // (to cache the full conversation for future requests).
         val response2 = anthropic.messages.stream {
-            messages = conversation.addCacheBreakpoint()
+            messages = listOf(request1Messages[0]) + conversation.drop(1).addCacheBreakpoint()
         }.onEach {
             if (it is Event.ContentBlockDelta && it.delta is Event.ContentBlockDelta.Delta.TextDelta) {
                 print(it.delta.text)
