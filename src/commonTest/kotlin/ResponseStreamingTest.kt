@@ -96,9 +96,13 @@ class ResponseStreamingTest {
             // prefix was recognized - assert the combined cached prefix size
             // covers the original creation regardless of which path was taken.
             have((cacheReadInputTokens ?: 0) + (cacheCreationInputTokens ?: 0) > 4096)
-            cacheCreation should {
-                have(ephemeral5mInputTokens!! == cacheCreationInputTokens)
-                have(ephemeral1hInputTokens!! == 0)
+            // cacheCreation is only present when the API actually re-created
+            // the cache; on a pure cache_read it is null.
+            if ((cacheCreationInputTokens ?: 0) > 0) {
+                cacheCreation should {
+                    have(ephemeral5mInputTokens!! == cacheCreationInputTokens)
+                    have(ephemeral1hInputTokens!! == 0)
+                }
             }
         }
     }
