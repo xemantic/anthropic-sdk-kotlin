@@ -29,6 +29,9 @@ import com.xemantic.ai.tool.schema.ObjectSchema
 import com.xemantic.ai.tool.schema.generator.jsonSchemaOf
 import kotlinx.serialization.*
 import kotlinx.serialization.json.Json
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.InvocationKind
+import kotlin.contracts.contract
 
 @Serializable(with = ToolSerializer::class)
 abstract class Tool {
@@ -211,12 +214,6 @@ internal val String.normalizedToolName: String
         .replace('$', '_')
         .take(64)
 
-fun Toolbox(block: Toolbox.Builder.() -> Unit): Toolbox {
-    val builder = Toolbox.Builder()
-    block(builder)
-    return builder.build()
-}
-
 class Toolbox private constructor(
     val tools: List<Tool>,
     private val handlerMap: Map<String, Handler>,
@@ -365,5 +362,19 @@ class Toolbox private constructor(
             result.toString()
         }
     )
+
+    companion object {
+
+        @OptIn(ExperimentalContracts::class)
+        operator fun invoke(block: Toolbox.Builder.() -> Unit): Toolbox {
+            contract {
+                callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+            }
+            val builder = Toolbox.Builder()
+            block(builder)
+            return builder.build()
+        }
+
+    }
 
 }

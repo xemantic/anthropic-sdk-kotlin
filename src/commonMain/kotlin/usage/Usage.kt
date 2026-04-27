@@ -71,6 +71,14 @@ class Usage private constructor(
             cacheReadInputTokens = 0
         )
 
+        @OptIn(ExperimentalContracts::class)
+        operator fun invoke(block: Usage.Builder.() -> Unit): Usage {
+            contract {
+                callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+            }
+            return Usage.Builder().apply(block).build()
+        }
+
     }
 
     operator fun plus(usage: Usage): Usage = Usage(
@@ -108,14 +116,6 @@ class Usage private constructor(
 
     override fun toString(): String = toPrettyJson()
 
-}
-
-@OptIn(ExperimentalContracts::class)
-fun Usage(block: Usage.Builder.() -> Unit): Usage {
-    contract {
-        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
-    }
-    return Usage.Builder().also(block).build()
 }
 
 /**
@@ -171,16 +171,16 @@ class CacheCreation private constructor(
             ephemeral1hInputTokens = 0
         )
 
+        @OptIn(ExperimentalContracts::class)
+        operator fun invoke(block: CacheCreation.Builder.() -> Unit): CacheCreation {
+            contract {
+                callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+            }
+            return CacheCreation.Builder().apply(block).build()
+        }
+
     }
 
-}
-
-@OptIn(ExperimentalContracts::class)
-fun CacheCreation(block: CacheCreation.Builder.() -> Unit): CacheCreation {
-    contract {
-        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
-    }
-    return CacheCreation.Builder().also(block).build()
 }
 
 /**
@@ -234,14 +234,14 @@ class ServerToolUse private constructor(
             webFetchRequests = 0
         )
 
+        @OptIn(ExperimentalContracts::class)
+        operator fun invoke(block: ServerToolUse.Builder.() -> Unit = {}): ServerToolUse {
+            contract {
+                callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+            }
+            return ServerToolUse.Builder().apply(block).build()
+        }
+
     }
 
-}
-
-@OptIn(ExperimentalContracts::class)
-fun ServerToolUse(block: ServerToolUse.Builder.() -> Unit = {}): ServerToolUse {
-    contract {
-        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
-    }
-    return ServerToolUse.Builder().also(block).build()
 }

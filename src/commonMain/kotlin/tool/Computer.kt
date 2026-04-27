@@ -113,10 +113,10 @@ class Computer private constructor(
             block: Input.Builder.() -> Unit
         ): Input = Input.Builder().apply(block).build()
 
+        operator fun invoke(
+            block: Computer.Builder.() -> Unit,
+        ): Computer = Computer.Builder().apply(block).build()
+
     }
 
 }
-
-fun Computer(
-    builder: Computer.Builder.() -> Unit,
-): Computer = Computer.Builder().apply(builder).build()

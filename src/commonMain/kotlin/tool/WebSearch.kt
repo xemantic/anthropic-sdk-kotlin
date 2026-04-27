@@ -64,8 +64,12 @@ class WebSearch private constructor(
 
     }
 
-}
+    companion object {
 
-fun WebSearch(
-    builder: WebSearch.Builder.() -> Unit = {}
-): WebSearch = WebSearch.Builder().apply(builder).build()
+        operator fun invoke(
+            block: WebSearch.Builder.() -> Unit = {}
+        ): WebSearch = WebSearch.Builder().apply(block).build()
+
+    }
+
+}
