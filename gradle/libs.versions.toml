@@ -3,27 +3,27 @@ kotlinTarget = "2.3"
 javaTarget = "17"
 
 # jetbrains
-kotlin = "2.3.0"
+kotlin = "2.3.21"
 kotlinxCoroutines = "1.10.2"
 # don't upgrade these 2 until kotlin-2.3.10 is released with native linux compilaiton hang fix
-kotlinxSerialization = "1.10.0"
-ktor = "3.4.0"
+kotlinxSerialization = "1.11.0"
+ktor = "3.4.3"
 
 # xemantic
 xemanticKotlinCore = "0.6.4"
-xemanticKotlinTest = "1.17.2"
+xemanticKotlinTest = "1.17.5"
 xemanticAiToolSchema = "1.2.0"
 xemanticAiMoney = "0.2"
 xemanticAiFileMagic = "0.4.0"
 
 # logging
 slf4j = "2.0.17"
-logback = "1.5.25"
+logback = "1.5.32"
 
-versionsPlugin = "0.53.0"
-dokkaPlugin = "2.1.0"
+versionsPlugin = "0.54.0"
+dokkaPlugin = "2.2.0"
 mavenPublishPlugin = "0.36.0"
-jreleaserPlugin = "1.22.0"
+jreleaserPlugin = "1.23.0"
 xemanticConventionsPlugin = "0.6.8"
 
 [libraries]
