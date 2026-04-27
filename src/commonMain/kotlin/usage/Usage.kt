@@ -76,7 +76,7 @@ class Usage private constructor(
             contract {
                 callsInPlace(block, InvocationKind.EXACTLY_ONCE)
             }
-            return Usage.Builder().also(block).build()
+            return Usage.Builder().apply(block).build()
         }
 
     }
@@ -176,7 +176,7 @@ class CacheCreation private constructor(
             contract {
                 callsInPlace(block, InvocationKind.EXACTLY_ONCE)
             }
-            return CacheCreation.Builder().also(block).build()
+            return CacheCreation.Builder().apply(block).build()
         }
 
     }
@@ -239,7 +239,7 @@ class ServerToolUse private constructor(
             contract {
                 callsInPlace(block, InvocationKind.EXACTLY_ONCE)
             }
-            return ServerToolUse.Builder().also(block).build()
+            return ServerToolUse.Builder().apply(block).build()
         }
 
     }

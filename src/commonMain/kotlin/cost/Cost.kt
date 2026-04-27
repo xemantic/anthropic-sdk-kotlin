@@ -117,7 +117,7 @@ class Cost private constructor(
             contract {
                 callsInPlace(block, InvocationKind.EXACTLY_ONCE)
             }
-            return Cost.Builder().also(block).build()
+            return Cost.Builder().apply(block).build()
         }
 
     }
