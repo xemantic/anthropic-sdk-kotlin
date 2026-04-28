@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2026 Xemantic contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -79,7 +79,8 @@ fun Anthropic(
         defaultTools = config.defaultTools,
         directBrowserAccess = config.directBrowserAccess,
         logLevel = if (config.logHttp) LogLevel.ALL else LogLevel.NONE,
-        modelMap = config.modelMap
+        modelMap = config.modelMap,
+        httpClientConfig = config.httpClientConfig
     )
 } // TODO this can be a second constructor, then toolMap can be private
 
@@ -93,7 +94,8 @@ class Anthropic internal constructor(
     val defaultTools: List<Tool>?,
     val directBrowserAccess: Boolean,
     val logLevel: LogLevel,
-    private val modelMap: Map<String, AnthropicModel>
+    private val modelMap: Map<String, AnthropicModel>,
+    httpClientConfig: HttpClientConfig<*>.() -> Unit
 ) {
 
     private val costCollector = CostCollector()
@@ -119,6 +121,8 @@ class Anthropic internal constructor(
 
         var modelMap: MutableMap<String, AnthropicModel> =
             Model.entries.associateBy { it.id }.toMutableMap()
+
+        var httpClientConfig: HttpClientConfig<*>.() -> Unit = {}
 
         operator fun Beta.unaryPlus() {
             anthropicBeta += this.id
@@ -191,6 +195,7 @@ class Anthropic internal constructor(
             }
         }
 
+        httpClientConfig()
     }
 
     inner class Messages {

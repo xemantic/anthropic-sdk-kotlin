@@ -29,10 +29,15 @@ import com.xemantic.kotlin.test.assert
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.api.*
+import io.ktor.client.request.*
 import io.ktor.http.*
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
+
+private object HttpClientConfigTestAbort : RuntimeException()
 
 class AnthropicTest {
 
@@ -229,6 +234,59 @@ class AnthropicTest {
                 have(inputTokens == 15)
                 have(outputTokens > 0)
             }
+        }
+    }
+
+    @Test
+    fun `should invoke httpClientConfig when constructing Anthropic`() {
+        // given
+        var configInvoked = false
+
+        // when
+        Anthropic {
+            apiKey = "test-key"
+            httpClientConfig = {
+                configInvoked = true
+            }
+        }
+
+        // then
+        assert(configInvoked)
+    }
+
+    @Test
+    fun `should allow customizing HTTP request headers via httpClientConfig`() = runTest {
+        // given
+        val capturedHeaders = mutableMapOf<String, List<String>>()
+        val captureAndAbort = createClientPlugin("CaptureAndAbort") {
+            onRequest { request, _ ->
+                request.headers.entries().forEach { (key, values) ->
+                    capturedHeaders[key] = values
+                }
+                throw HttpClientConfigTestAbort
+            }
+        }
+        val anthropic = Anthropic {
+            apiKey = "test-api-key"
+            httpClientConfig = {
+                install(captureAndAbort)
+                defaultRequest {
+                    header("Authorization", "Bearer custom-token")
+                    header("X-Custom-Header", "custom-value")
+                }
+            }
+        }
+
+        // when
+        assertFailsWith<HttpClientConfigTestAbort> {
+            anthropic.messages.create { +"Hi" }
+        }
+
+        // then
+        capturedHeaders should {
+            have(get("x-api-key") == listOf("test-api-key"))
+            have(get("Authorization") == listOf("Bearer custom-token"))
+            have(get("X-Custom-Header") == listOf("custom-value"))
         }
     }
 
