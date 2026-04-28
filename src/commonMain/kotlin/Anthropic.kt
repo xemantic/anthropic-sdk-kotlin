@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2026 Xemantic contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -79,7 +79,8 @@ fun Anthropic(
         defaultTools = config.defaultTools,
         directBrowserAccess = config.directBrowserAccess,
         logLevel = if (config.logHttp) LogLevel.ALL else LogLevel.NONE,
-        modelMap = config.modelMap
+        modelMap = config.modelMap,
+        httpClientConfig = config.httpClientConfig
     )
 } // TODO this can be a second constructor, then toolMap can be private
 
@@ -93,7 +94,8 @@ class Anthropic internal constructor(
     val defaultTools: List<Tool>?,
     val directBrowserAccess: Boolean,
     val logLevel: LogLevel,
-    private val modelMap: Map<String, AnthropicModel>
+    private val modelMap: Map<String, AnthropicModel>,
+    httpClientConfig: HttpClientConfig<*>.() -> Unit
 ) {
 
     private val costCollector = CostCollector()
@@ -119,6 +121,20 @@ class Anthropic internal constructor(
 
         var modelMap: MutableMap<String, AnthropicModel> =
             Model.entries.associateBy { it.id }.toMutableMap()
+
+        /**
+         * Additional configuration applied to the underlying ktor [HttpClient]
+         * after all SDK defaults. Use it to install custom plugins (e.g. `HttpTimeout`)
+         * or to add a [defaultRequest] block with extra headers, such as
+         * `Authorization: Bearer ...` when routing through a gateway.
+         *
+         * Multiple [defaultRequest] blocks accumulate in ktor 3.x, so SDK-set
+         * headers (`x-api-key`, `anthropic-version`, ...) are preserved rather
+         * than replaced. Avoid re-installing plugins the SDK already configures
+         * (`SSE`, `ContentNegotiation`, `Logging`, `HttpRequestRetry`) — doing
+         * so will fail at install time or silently override SDK behavior.
+         */
+        var httpClientConfig: HttpClientConfig<*>.() -> Unit = {}
 
         operator fun Beta.unaryPlus() {
             anthropicBeta += this.id
@@ -191,6 +207,7 @@ class Anthropic internal constructor(
             }
         }
 
+        httpClientConfig()
     }
 
     inner class Messages {

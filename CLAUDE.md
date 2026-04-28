@@ -17,6 +17,10 @@ Both developers and AI agents are expected to add entries as they encounter surp
 - Most tests are live integration tests against Anthropic APIs and require `ANTHROPIC_API_KEY` in the environment; without it they fail rather than skip.
 - Tests default to Claude Haiku to keep API costs down — preserve that default when adding new tests unless a specific model is under test.
 - Tests can be flaky due to AI model variability; release builds intentionally skip tests for this reason, so don't gate releases on green test runs.
+- Tests must retain `// given`, `// when`, `// then` comment structure — AI agents tend to omit these.
+
+### Auto mode
+- Do not commit when auto mode is active — wait for an explicit commit instruction from the user.
 
 ### Building
 - `./gradlew build -PjvmOnlyBuild=true` skips non-JVM targets for faster local iteration — useful when you don't need to verify multiplatform output.
