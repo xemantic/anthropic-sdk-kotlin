@@ -37,9 +37,9 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 
-private object HttpClientConfigTestAbort : RuntimeException()
-
 class AnthropicTest {
+
+    private object HttpClientConfigTestAbort : RuntimeException()
 
     @Test
     fun `should create Anthropic instance with 0 Usage and Cost`() {

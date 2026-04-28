@@ -147,6 +147,7 @@ Notes:
 - Multiple `defaultRequest { }` blocks accumulate in ktor 3.x, so headers added here are appended to the SDK's defaults (`x-api-key`, `anthropic-version`, etc.) rather than replacing them.
 - `apiKey` is still required at construction time and the SDK will always send `x-api-key`. If your gateway only accepts a Bearer token, supply a placeholder `apiKey` and have the gateway strip the unwanted header.
 - For proxies and self-hosted gateways, override the base URL via `apiBase` instead of trying to rewrite it from `httpClientConfig`.
+- Avoid re-installing plugins already set up by the SDK (`SSE`, `ContentNegotiation`, `Logging`, `HttpRequestRetry`) — ktor will fail at install time or silently override SDK behavior.
 
 ### Using tools
 

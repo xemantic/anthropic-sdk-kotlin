@@ -122,6 +122,18 @@ class Anthropic internal constructor(
         var modelMap: MutableMap<String, AnthropicModel> =
             Model.entries.associateBy { it.id }.toMutableMap()
 
+        /**
+         * Additional configuration applied to the underlying ktor [HttpClient]
+         * after all SDK defaults. Use it to install custom plugins (e.g. `HttpTimeout`)
+         * or to add a [defaultRequest] block with extra headers, such as
+         * `Authorization: Bearer ...` when routing through a gateway.
+         *
+         * Multiple [defaultRequest] blocks accumulate in ktor 3.x, so SDK-set
+         * headers (`x-api-key`, `anthropic-version`, ...) are preserved rather
+         * than replaced. Avoid re-installing plugins the SDK already configures
+         * (`SSE`, `ContentNegotiation`, `Logging`, `HttpRequestRetry`) — doing
+         * so will fail at install time or silently override SDK behavior.
+         */
         var httpClientConfig: HttpClientConfig<*>.() -> Unit = {}
 
         operator fun Beta.unaryPlus() {
