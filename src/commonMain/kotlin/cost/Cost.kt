@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Kazimierz Pogoda / Xemantic
+ * Copyright 2025-2026 Xemantic contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -149,3 +149,5 @@ class Cost private constructor(
     override fun toString(): String = toPrettyJson()
 
 }
+
+operator fun Usage.times(cost: Cost): Cost = cost * this

@@ -18,7 +18,7 @@ package com.xemantic.ai.anthropic
 
 import com.xemantic.ai.anthropic.content.Text
 import com.xemantic.ai.anthropic.cost.Cost
-import com.xemantic.ai.anthropic.cost.CostWithUsage
+import com.xemantic.ai.anthropic.cost.times
 import com.xemantic.ai.anthropic.error.AnthropicApiException
 import com.xemantic.ai.anthropic.message.Role
 import com.xemantic.ai.anthropic.message.StopReason
@@ -40,13 +40,6 @@ import kotlin.test.assertFailsWith
 class AnthropicTest {
 
     private object HttpClientConfigTestAbort : RuntimeException()
-
-    @Test
-    fun `should create Anthropic instance with 0 Usage and Cost`() {
-        Anthropic() should {
-            have(costWithUsage == CostWithUsage.ZERO)
-        }
-    }
 
     @Test
     fun `should receive an introduction from Claude`() = runTest {
@@ -109,19 +102,22 @@ class AnthropicTest {
     }
 
     @Test
-    fun `should receive Usage and update Cost calculation`() = runTest {
+    fun `should receive Usage and allow Cost calculation from chosen model`() = runTest {
         // given
         val anthropic = testAnthropic()
+        val haiku = Model.CLAUDE_HAIKU_4_5_20251001
 
         // when
         val response = anthropic.messages.create {
             +"Hello Claude! I am testing the amount of input and output tokens."
+            model(haiku)
         }
+        val cost = response.usage * haiku.cost
 
         // then
         response should {
             have(role == Role.ASSISTANT)
-            have("claude" in model)
+            have(model == haiku.id)
             have(stopReason == StopReason.END_TURN)
             have(content.size == 1)
             have(stopSequence == null)
@@ -132,23 +128,13 @@ class AnthropicTest {
                 have(cacheReadInputTokens == 0)
             }
         }
-
-        anthropic.costWithUsage should {
-            usage should {
-                have(inputTokens == 21)
-                have(inputTokens > 0)
-                have(cacheCreationInputTokens == 0)
-                have(cacheReadInputTokens == 0)
-            }
-            cost should {
-                have(inputTokens >= Money.ZERO && inputTokens == Money("0.000021"))
-                have(outputTokens >= Money.ZERO && inputTokens <= Money("0.0005"))
-                have(cache5mCreationInputTokens == Money.ZERO)
-                have(cache1hCreationInputTokens == Money.ZERO)
-                have(cacheReadInputTokens == Money.ZERO)
-            }
+        cost should {
+            have(inputTokens == Money("0.000021"))
+            have(outputTokens >= Money.ZERO && outputTokens <= Money("0.001"))
+            have(cache5mCreationInputTokens == Money.ZERO)
+            have(cache1hCreationInputTokens == Money.ZERO)
+            have(cacheReadInputTokens == Money.ZERO)
         }
-
     }
 
     @Test
@@ -197,32 +183,31 @@ class AnthropicTest {
     }
 
     @Test
-    fun `should receive an introduction from Claude for UnknownModel`() = runTest {
+    fun `should use external model definition`() = runTest {
         // given
-        val existingClaudeModel = UnknownModel(
-            id = "claude-sonnet-4-5-20250929",
+        val anthropic = testAnthropic()
+        val otherModel = Model(
+            id = "claude-haiku-4-5-20251001",
             contextWindow = 200000,
             maxOutput = 64000,
             messageBatchesApi = true,
             cost = Cost {
-                inputTokens = "15".dollarsPerMillion
-                outputTokens = "75".dollarsPerMillion
-            }
+                inputTokens = "1".dollarsPerMillion
+                outputTokens = "5".dollarsPerMillion
+            },
+            cacheMinTokens = 4096
         )
-        val anthropic = testAnthropic {
-            modelMap["claude-sonnet-4-5-20250929"] = existingClaudeModel
-            defaultModel = existingClaudeModel
-        }
 
         // when
         val response = anthropic.messages.create {
+            model(otherModel)
             +"Hello World! What's your name?"
         }
 
         // then
         response should {
             have(role == Role.ASSISTANT)
-            have(model == "claude-sonnet-4-5-20250929")
+            have(model == "claude-haiku-4-5-20251001")
             have(stopReason == StopReason.END_TURN)
             have(content.size == 1)
             content[0] should {
@@ -288,24 +273,6 @@ class AnthropicTest {
             have(get("Authorization") == listOf("Bearer custom-token"))
             have(get("X-Custom-Header") == listOf("custom-value"))
         }
-    }
-
-    @Test
-    fun `should fail with a message when creating a message request for unknown model`() = runTest {
-        // given
-        val anthropic = testAnthropic {
-            modelMap.remove(Model.CLAUDE_HAIKU_4_5_20251001.id)
-        }
-
-        // when
-        val exception = assertFailsWith<IllegalArgumentException> {
-            anthropic.messages.create {
-                +"Hello World! What's your name?"
-            }
-        }
-
-        // then
-        assert(exception.message == "Unknown model '${Model.CLAUDE_HAIKU_4_5_20251001.id}', consider adding modelMap[\"${Model.CLAUDE_HAIKU_4_5_20251001.id}\"] = UnknownModel(...) when creating Anthropic client instance.")
     }
 
 }

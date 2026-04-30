@@ -74,10 +74,21 @@ suspend fun Flow<Event>.toMessageResponse(): MessageResponse {
                 toolUse = null
             }
             is MessageDelta -> {
+                val startUsage = response!!.usage
                 response = response!!.copy(
-                    usage = response!!.usage + Usage {
-                        inputTokens = 0
+                    // Each field in message_delta.usage is the cumulative total
+                    // for the response, so we replace (not add). Optional fields
+                    // are only sent when they differ from message_start, hence
+                    // the fallback to startUsage.
+                    usage = Usage {
+                        inputTokens = event.usage.inputTokens ?: startUsage.inputTokens
                         outputTokens = event.usage.outputTokens
+                        cacheCreationInputTokens = event.usage.cacheCreationInputTokens
+                            ?: startUsage.cacheCreationInputTokens
+                        cacheReadInputTokens = event.usage.cacheReadInputTokens
+                            ?: startUsage.cacheReadInputTokens
+                        cacheCreation = startUsage.cacheCreation
+                        serverToolUse = event.usage.serverToolUse ?: startUsage.serverToolUse
                     },
                     stopReason = event.delta.stopReason,
                     stopSequence = event.delta.stopSequence

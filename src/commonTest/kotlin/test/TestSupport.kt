@@ -34,7 +34,7 @@ fun testAnthropic(
 ): Anthropic = Anthropic {
     directBrowserAccess = isBrowserPlatform
     // defaulting to HAIKU in tests to reduce costs of integration testing
-    defaultModel = Model.CLAUDE_HAIKU_4_5_20251001
+    defaultModel(Model.CLAUDE_HAIKU_4_5_20251001)
     // block invoked at the end, so that we can still alter these defaults
     block()
 }
