@@ -16,8 +16,6 @@
 
 package com.xemantic.ai.anthropic
 
-import com.xemantic.ai.anthropic.cost.CostCollector
-import com.xemantic.ai.anthropic.cost.CostWithUsage
 import com.xemantic.ai.anthropic.error.AnthropicApiException
 import com.xemantic.ai.anthropic.error.ErrorResponse
 import com.xemantic.ai.anthropic.event.Event
@@ -25,7 +23,6 @@ import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.ai.anthropic.message.MessageRequest
 import com.xemantic.ai.anthropic.message.MessageResponse
 import com.xemantic.ai.anthropic.tool.Tool
-import com.xemantic.ai.anthropic.usage.Usage
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.*
@@ -37,9 +34,9 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 
 /**
  * The default Anthropic API base.
@@ -74,12 +71,11 @@ fun Anthropic(
         anthropicVersion = config.anthropicVersion,
         anthropicBeta = if (config.anthropicBeta.isEmpty()) null else config.anthropicBeta.joinToString(","),
         apiBase = config.apiBase,
-        defaultModel = config.defaultModel.id,
+        defaultModel = config.defaultModel,
         defaultMaxTokens = config.defaultMaxTokens,
         defaultTools = config.defaultTools,
         directBrowserAccess = config.directBrowserAccess,
         logLevel = if (config.logHttp) LogLevel.ALL else LogLevel.NONE,
-        modelMap = config.modelMap,
         httpClientConfig = config.httpClientConfig
     )
 } // TODO this can be a second constructor, then toolMap can be private
@@ -94,21 +90,21 @@ class Anthropic internal constructor(
     val defaultTools: List<Tool>?,
     val directBrowserAccess: Boolean,
     val logLevel: LogLevel,
-    private val modelMap: Map<String, AnthropicModel>,
     httpClientConfig: HttpClientConfig<*>.() -> Unit
 ) {
-
-    private val costCollector = CostCollector()
-
-    val costWithUsage: CostWithUsage get() = costCollector.costWithUsage
 
     class Config {
         var apiKey: String? = null
         var anthropicVersion: String = DEFAULT_ANTHROPIC_VERSION
         var anthropicBeta: List<String> = emptyList()
         var apiBase: String = ANTHROPIC_API_BASE
-        var defaultModel: AnthropicModel = Model.DEFAULT
-        var defaultMaxTokens: Int = defaultModel.maxOutput
+        var defaultModel: String = Model.DEFAULT.id
+        var defaultMaxTokens: Int = Model.DEFAULT.maxOutput
+
+        fun defaultModel(model: Model) {
+            defaultModel = model.id
+            defaultMaxTokens = model.maxOutput
+        }
 
         /**
          * The list of tools used by default for every message request.
@@ -118,9 +114,6 @@ class Anthropic internal constructor(
 
         var directBrowserAccess: Boolean = false
         var logHttp: Boolean = false
-
-        var modelMap: MutableMap<String, AnthropicModel> =
-            Model.entries.associateBy { it.id }.toMutableMap()
 
         /**
          * Additional configuration applied to the underlying ktor [HttpClient]
@@ -228,12 +221,8 @@ class Anthropic internal constructor(
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }
-            val response = apiResponse.body<Response>()
-            when (response) {
-                is MessageResponse -> {
-                    response.resolvedModel = response.anthropicModel
-                    costCollector += response.costWithUsage
-                }
+            return when (val response = apiResponse.body<Response>()) {
+                is MessageResponse -> response
                 is ErrorResponse -> throw AnthropicApiException( // technically, this should be handled by the validator
                     error = response.error,
                     httpStatusCode = apiResponse.status
@@ -242,7 +231,6 @@ class Anthropic internal constructor(
                     "Unsupported response: $response"
                 ) // should never happen
             }
-            return response
         }
 
         fun stream(
@@ -264,35 +252,10 @@ class Anthropic internal constructor(
                         setBody(request)
                     }
                 ) {
-                    var usage = Usage.ZERO
-                    lateinit var resolvedModel: AnthropicModel
                     incoming
-                        .map { it.data }
-                        .filterNotNull()
+                        .mapNotNull { it.data }
                         .map { anthropicJson.decodeFromString<Event>(it) }
-                        .collect { event ->
-                            when (event) {
-                                is Event.MessageDelta -> {
-                                    usage += Usage {
-                                        inputTokens = 0
-                                        outputTokens = event.usage.outputTokens
-                                    }
-                                }
-                                is Event.MessageStart -> {
-                                    resolvedModel = event.message.anthropicModel
-                                    usage += event.message.usage
-                                }
-                                is Event.MessageStop -> {
-                                    val costWithUsage = CostWithUsage(
-                                        cost = resolvedModel.cost * usage,
-                                        usage = usage
-                                    )
-                                    costCollector += costWithUsage
-                                }
-                                else -> { /* do nothing */ }
-                            }
-                            emit(event)
-                        }
+                        .collect { event -> emit(event) }
                 }
             } catch (e: SSEClientException) {
                 if (e.cause is AnthropicApiException) throw e.cause!!
@@ -312,14 +275,6 @@ class Anthropic internal constructor(
 
     val messages = Messages()
 
-    private val MessageResponse.anthropicModel: AnthropicModel
-        get() = requireNotNull(
-            modelMap[model]
-        ) {
-            "Unknown model '$model', consider adding modelMap[\"$model\"] = UnknownModel(...) when creating Anthropic client instance."
-        }
-
-    override fun toString(): String = "Anthropic($costWithUsage)"
 }
 
 open class AnthropicException(

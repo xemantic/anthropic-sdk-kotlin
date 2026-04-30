@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2026 Xemantic contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 package com.xemantic.ai.anthropic.message
 
-import com.xemantic.ai.anthropic.AnthropicModel
 import com.xemantic.ai.anthropic.Model
 import com.xemantic.ai.anthropic.Response
 import com.xemantic.ai.anthropic.cache.CacheControl
@@ -24,7 +23,6 @@ import com.xemantic.ai.anthropic.content.Content
 import com.xemantic.ai.anthropic.content.ContentListBuilder
 import com.xemantic.ai.anthropic.content.Text
 import com.xemantic.ai.anthropic.content.ToolUse
-import com.xemantic.ai.anthropic.cost.CostWithUsage
 import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.ai.anthropic.json.toPrettyJson
 import com.xemantic.ai.anthropic.tool.Tool
@@ -34,7 +32,6 @@ import com.xemantic.ai.anthropic.usage.Usage
 import com.xemantic.kotlin.core.collections.mapLast
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 import kotlinx.serialization.json.Json
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
@@ -80,7 +77,7 @@ data class MessageRequest(
     val topP: Double?
 ) {
 
-    class Builder() {
+    class Builder {
         var model: String? = null
         var maxTokens: Int? = null
         var messages: List<Message> = emptyList()
@@ -123,6 +120,11 @@ data class MessageRequest(
             system = listOf(System(text = text))
         }
 
+        fun model(model: Model) {
+            this.model = model.id
+            maxTokens = model.maxOutput
+        }
+
         fun build(): MessageRequest = MessageRequest(
             model = requireNotNull(model) { "model must be specified" },
             maxTokens = requireNotNull(maxTokens) { "maxTokens must be specified" },
@@ -150,12 +152,12 @@ data class MessageRequest(
         @OptIn(ExperimentalContracts::class)
         internal operator fun invoke(
             model: Model = Model.DEFAULT,
-            block: MessageRequest.Builder.() -> Unit
+            block: Builder.() -> Unit
         ): MessageRequest {
             contract {
                 callsInPlace(block, InvocationKind.EXACTLY_ONCE)
             }
-            return MessageRequest.Builder().also {
+            return Builder().also {
                 it.model = model.id
                 it.maxTokens = model.maxOutput
                 block(it)
@@ -202,12 +204,12 @@ class Message private constructor(
 
         @OptIn(ExperimentalContracts::class)
         operator fun invoke(
-            block: Message.Builder.() -> Unit = {}
+            block: Builder.() -> Unit = {}
         ): Message {
             contract {
                 callsInPlace(block, InvocationKind.EXACTLY_ONCE)
             }
-            return Message.Builder().apply(block).build()
+            return Builder().apply(block).build()
         }
 
     }
@@ -269,9 +271,6 @@ data class MessageResponse(
     val usage: Usage
 ) : Response(type = "message") {
 
-    @Transient
-    internal lateinit var resolvedModel: AnthropicModel
-
     fun asMessage(): Message = Message {
         role = Role.ASSISTANT
         content += this@MessageResponse.content
@@ -310,11 +309,6 @@ data class MessageResponse(
     ) = toolUse!!.decodeInput<T>(json)
 
     val toolUses: List<ToolUse> get() = content.filterIsInstance<ToolUse>()
-
-    val costWithUsage: CostWithUsage get() = CostWithUsage(
-        cost = resolvedModel.cost * usage,
-        usage = usage
-    )
 
     override fun toString() = toPrettyJson()
 

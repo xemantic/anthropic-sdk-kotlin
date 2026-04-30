@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Kazimierz Pogoda / Xemantic
+ * Copyright 2025-2026 Xemantic contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package com.xemantic.ai.anthropic.cost
 
+import com.xemantic.ai.anthropic.usage.Usage
 import com.xemantic.ai.money.Money
 import com.xemantic.ai.money.ZERO
 import com.xemantic.kotlin.test.have
@@ -141,6 +142,29 @@ class CostTest {
             have(cache5mCreationInputTokens == Money.ZERO)
             have(cache1hCreationInputTokens == Money.ZERO)
             have(cacheReadInputTokens == Money.ZERO)
+        }
+    }
+
+    @Test
+    fun `Usage times Cost should equal Cost times Usage`() {
+        // given
+        val cost = Cost {
+            inputTokens = Money("0.001")
+            outputTokens = Money("0.002")
+        }
+        val usage = Usage {
+            inputTokens = 1000
+            outputTokens = 500
+        }
+
+        // when
+        val result = usage * cost
+
+        // then
+        assert(result == cost * usage)
+        result should {
+            have(inputTokens == Money("1"))
+            have(outputTokens == Money("1"))
         }
     }
 

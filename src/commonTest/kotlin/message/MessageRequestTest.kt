@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2026 Xemantic contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,13 @@
 
 package com.xemantic.ai.anthropic.message
 
+import com.xemantic.ai.anthropic.Model
 import com.xemantic.ai.anthropic.content.Text
 import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.ai.anthropic.tool.*
 import com.xemantic.ai.tool.schema.meta.Description
 import com.xemantic.kotlin.test.sameAsJson
 import kotlinx.serialization.SerialName
-import kotlin.test.Ignore
 import kotlin.test.Test
 
 /**
@@ -372,9 +372,65 @@ class MessageRequestTest {
     }
 
     @Test
-    @Ignore // TODO this test can be fixed only when the model is refactored to be configurable
-    fun `should fail to create a MessageRequest instance for unknown model`() {
-        //val messageRequest = MessageRequest {  }
+    fun `should set model and maxTokens via model DSL function`() {
+        // given
+        val request = MessageRequest {
+            model(Model.CLAUDE_OPUS_4_6)
+            +"Hey Claude!?"
+        }
+
+        // when
+        val json = anthropicJson.encodeToString(request)
+
+        // then
+        json sameAsJson """
+            {
+              "model": "claude-opus-4-6",
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Hey Claude!?"
+                    }
+                  ]
+                }
+              ],
+              "max_tokens": 128000
+            }
+        """.trimIndent()
+    }
+
+    @Test
+    fun `should override default model and maxTokens via model DSL function`() {
+        // given
+        val request = MessageRequest(model = Model.CLAUDE_HAIKU_4_5_20251001) {
+            model(Model.CLAUDE_OPUS_4_6)
+            +"Hey Claude!?"
+        }
+
+        // when
+        val json = anthropicJson.encodeToString(request)
+
+        // then
+        json sameAsJson """
+            {
+              "model": "claude-opus-4-6",
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Hey Claude!?"
+                    }
+                  ]
+                }
+              ],
+              "max_tokens": 128000
+            }
+        """.trimIndent()
     }
 
 }

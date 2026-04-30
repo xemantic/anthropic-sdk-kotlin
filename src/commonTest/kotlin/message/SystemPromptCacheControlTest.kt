@@ -35,10 +35,7 @@ class SystemPromptCacheControlTest {
         // given
         val prompt = fetchSkillText() + uniqueSuffix()
         val ttl = CacheControl.Ephemeral.TTL.FIVE_MINUTES
-        val anthropic = testAnthropic {
-            // system prompt caching is unavailable on Haiku 4.5
-            defaultModel = Model.CLAUDE_SONNET_4_20250514
-        }
+        val anthropic = testAnthropic()
         val conversation = mutableListOf<Message>()
 
         val systemPrompt = System(
@@ -54,6 +51,8 @@ class SystemPromptCacheControlTest {
         val response1 = anthropic.messages.create {
             system = listOf(systemPrompt)
             messages = conversation
+            // system prompt caching is unavailable on Haiku 4.5
+            model(Model.CLAUDE_SONNET_4_6)
         }
         conversation += response1
 
@@ -108,10 +107,7 @@ class SystemPromptCacheControlTest {
         // given
         val prompt = fetchSkillText() + uniqueSuffix()
         val ttl = CacheControl.Ephemeral.TTL.ONE_HOUR
-        val anthropic = testAnthropic {
-            // system prompt caching is unavailable on Haiku 4.5
-            defaultModel = Model.CLAUDE_SONNET_4_20250514
-        }
+        val anthropic = testAnthropic()
         val conversation = mutableListOf<Message>()
 
         val systemPrompt = System(
@@ -127,6 +123,8 @@ class SystemPromptCacheControlTest {
         val response1 = anthropic.messages.create {
             system = listOf(systemPrompt)
             messages = conversation
+            // system prompt caching is unavailable on Haiku 4.5
+            model(Model.CLAUDE_SONNET_4_6)
         }
         conversation += response1
 

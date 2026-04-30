@@ -198,22 +198,7 @@ For the reference check equivalent examples in the official Anthropic SDKs:
 
 ### Calculating usage costs
 
-An instance of `Anthropic` client has a property `costWithUsage` of the [CostWithUsage](src/commonMain/kotlin/cost/CostCollection.kt) class which holds the cumulative usage statistics together with the overall cost calculation.
-
-Each returned `MessageResponse` also provides the `costWithUsage`. The [CostCollector](src/commonMain/kotlin/cost/CostCollection.kt) class can be used to cumulate this data by just adding `CostWithUsage` instance to the `CostCollector` instance:
-
-```kotlin
-val anthropic = Anthropic()
-val costCollector = CostCollector()
-// ...
-val response = anthropic.messages.create {
-    +"Hi Claude"
-}
-costCollector += response.costWithUsage
-```
-
-> [!NOTE]
-> The `CostCollector` is using atomic operations to ensure thread-safety in concurrent environment.
+Each `MessageResponse` carries the `Usage` reported by the API. Cost is computed on the caller side — `response.usage * model.cost` for a single response, or accumulate across calls with `costWithUsage += response.usage.pricedBy(model)`. See the [Cost aggregation guide](docs/cost_aggregation.md) for details, including how to share an accumulator across coroutines.
 
 ## Projects using anthropic-sdk-kotlin
 
