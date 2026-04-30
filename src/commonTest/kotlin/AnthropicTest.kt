@@ -18,6 +18,7 @@ package com.xemantic.ai.anthropic
 
 import com.xemantic.ai.anthropic.content.Text
 import com.xemantic.ai.anthropic.cost.Cost
+import com.xemantic.ai.anthropic.cost.times
 import com.xemantic.ai.anthropic.error.AnthropicApiException
 import com.xemantic.ai.anthropic.message.Role
 import com.xemantic.ai.anthropic.message.StopReason
