@@ -19,6 +19,7 @@ package com.xemantic.ai.anthropic.cost
 import com.xemantic.ai.anthropic.usage.Usage
 import com.xemantic.ai.money.Money
 import com.xemantic.ai.money.ZERO
+import com.xemantic.kotlin.test.assert
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
 import kotlin.test.Test
