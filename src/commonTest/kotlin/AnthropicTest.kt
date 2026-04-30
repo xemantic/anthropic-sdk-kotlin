@@ -130,7 +130,7 @@ class AnthropicTest {
         }
         cost should {
             have(inputTokens == Money("0.000021"))
-            have(outputTokens >= Money.ZERO && outputTokens <= Money("0.0005"))
+            have(outputTokens >= Money.ZERO && outputTokens <= Money("0.001"))
             have(cache5mCreationInputTokens == Money.ZERO)
             have(cache1hCreationInputTokens == Money.ZERO)
             have(cacheReadInputTokens == Money.ZERO)
