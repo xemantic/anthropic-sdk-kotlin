@@ -25,6 +25,7 @@ import com.xemantic.ai.anthropic.content.Text
 import com.xemantic.ai.anthropic.content.ToolUse
 import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.ai.anthropic.json.toPrettyJson
+import com.xemantic.ai.anthropic.thinking.ThinkingConfig
 import com.xemantic.ai.anthropic.tool.Tool
 import com.xemantic.ai.anthropic.tool.ToolChoice
 import com.xemantic.ai.anthropic.tool.Toolbox
@@ -74,14 +75,15 @@ data class MessageRequest(
     @SerialName("top_k")
     val topK: Int?,
     @SerialName("top_p")
-    val topP: Double?
+    val topP: Double?,
+    val thinking: ThinkingConfig?
 ) {
 
     class Builder {
         var model: String? = null
         var maxTokens: Int? = null
         var messages: List<Message> = emptyList()
-        var metadata = null
+        var metadata: Metadata? = null
         var stopSequences: List<String> = emptyList()
         var stream: Boolean? = null
             internal set
@@ -91,6 +93,7 @@ data class MessageRequest(
         var tools: List<Tool> = emptyList()
         var topK: Int? = null
         var topP: Double? = null
+        var thinking: ThinkingConfig? = null
 
         fun messages(vararg messages: Message) {
             this.messages += messages.toList()
@@ -137,7 +140,8 @@ data class MessageRequest(
             toolChoice = toolChoice,
             tools = tools.ifEmpty { null },
             topK = topK,
-            topP = topP
+            topP = topP,
+            thinking = thinking
         )
 
     }
