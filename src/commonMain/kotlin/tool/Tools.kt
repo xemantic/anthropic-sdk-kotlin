@@ -181,6 +181,12 @@ sealed class ToolChoice {
 
     }
 
+    @Serializable
+    @SerialName("none")
+    data object None : ToolChoice() {
+        override val disableParallelToolUse: Boolean? = null
+    }
+
     companion object {
 
         fun Auto(
