@@ -116,17 +116,19 @@ inline fun <reified T> Tool(
 
 }
 
+interface ParallelToolUseControl {
+    val disableParallelToolUse: Boolean?
+}
+
 @Serializable
 sealed class ToolChoice {
-
-    abstract val disableParallelToolUse: Boolean?
 
     @Serializable
     @SerialName("auto")
     class Auto private constructor(
         @SerialName("disable_parallel_tool_use")
         override val disableParallelToolUse: Boolean? = null
-    ) : ToolChoice() {
+    ) : ToolChoice(), ParallelToolUseControl {
 
         class Builder {
 
@@ -145,7 +147,7 @@ sealed class ToolChoice {
     class Any private constructor(
         @SerialName("disable_parallel_tool_use")
         override val disableParallelToolUse: Boolean? = null
-    ) : ToolChoice() {
+    ) : ToolChoice(), ParallelToolUseControl {
 
         class Builder {
 
@@ -165,7 +167,7 @@ sealed class ToolChoice {
         val name: String,
         @SerialName("disable_parallel_tool_use")
         override val disableParallelToolUse: Boolean? = null
-    ) : ToolChoice() {
+    ) : ToolChoice(), ParallelToolUseControl {
 
         class Builder {
 
@@ -183,9 +185,7 @@ sealed class ToolChoice {
 
     @Serializable
     @SerialName("none")
-    data object None : ToolChoice() {
-        override val disableParallelToolUse: Boolean? = null
-    }
+    data object None : ToolChoice()
 
     companion object {
 
