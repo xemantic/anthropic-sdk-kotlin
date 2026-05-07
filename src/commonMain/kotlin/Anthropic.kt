@@ -93,7 +93,7 @@ class Anthropic internal constructor(
     val directBrowserAccess: Boolean,
     val logLevel: LogLevel,
     val useXApiKeyHeader: Boolean,
-    var useAuthorizationBearerHeader: Boolean,
+    val useAuthorizationBearerHeader: Boolean,
     httpClientConfig: HttpClientConfig<*>.() -> Unit
 ) {
 
