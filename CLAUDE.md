@@ -24,6 +24,7 @@ Both developers and AI agents are expected to add entries as they encounter surp
 - Tests default to Claude Haiku to keep API costs down — preserve that default when adding new tests unless a specific model is under test.
 - Tests can be flaky due to AI model variability; release builds intentionally skip tests for this reason, so don't gate releases on green test runs.
 - Tests must retain `// given`, `// when`, `// then` comment structure — AI agents tend to omit these.
+- Test-name filter patterns are not portable across targets. JVM's `filter.excludeTestsMatching("ClassName")` matches by simple class name, but Kotlin/Native's `--ktest_negative_gradle_filter=...` and Kotlin/JS's `filter.excludeTestsMatching(...)` match against the fully-qualified test descriptor — bare class names silently fail to match. Use `*ClassName*` (or fully-qualified `pkg.ClassName`) for native and JS.
 
 ### Auto mode
 
