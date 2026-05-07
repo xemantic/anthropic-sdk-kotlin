@@ -75,10 +75,24 @@ val skipMoonshotTests = !(runMoonshotTests?.toBoolean() ?: false)
 
 val anthropicApiKey: String? = System.getenv("ANTHROPIC_API_KEY")
 
+val moonshotEnvVars = listOf(
+    "MOONSHOT_API_BASE_URL",
+    "MOONSHOT_DEFAULT_MODEL",
+    "MOONSHOT_API_KEY"
+).associateWith { System.getenv(it) }
+
 val moonshotTests = listOf("MoonshotTest")
 
 tasks.withType<KotlinJvmTest>().configureEach {
     environment("GRADLE_ROOT_DIR", gradleRootDir)
+    if (anthropicApiKey != null) {
+        environment("ANTHROPIC_API_KEY", anthropicApiKey)
+    }
+    moonshotEnvVars.forEach { (name, value) ->
+        if (value != null) {
+            environment(name, value)
+        }
+    }
     if (skipMoonshotTests) {
         filter {
             moonshotTests.forEach {
@@ -93,6 +107,11 @@ tasks.withType<KotlinJsTest>().configureEach {
     if (anthropicApiKey != null) {
         environment("ANTHROPIC_API_KEY", anthropicApiKey)
     }
+    moonshotEnvVars.forEach { (name, value) ->
+        if (value != null) {
+            environment(name, value)
+        }
+    }
     if (skipMoonshotTests) {
         moonshotTests.forEach {
             filter.excludeTestsMatching("*$it*")
@@ -106,6 +125,12 @@ tasks.withType<KotlinNativeTest>().configureEach {
     if (anthropicApiKey != null) {
         environment("ANTHROPIC_API_KEY", anthropicApiKey)
         environment("SIMCTL_CHILD_ANTHROPIC_API_KEY", anthropicApiKey)
+    }
+    moonshotEnvVars.forEach { (name, value) ->
+        if (value != null) {
+            environment(name, value)
+            environment("SIMCTL_CHILD_$name", value)
+        }
     }
     if (skipMoonshotTests) {
         moonshotTests.forEach {
