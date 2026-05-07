@@ -12,6 +12,7 @@ jobs:
     secrets:
       inherit
     with:
-      gradle_args: -PjvmOnlyBuild=false build publishToMavenCentral --no-configuration-cache
+      gradle_args: -PjvmOnlyBuild=false -PrunMoonshotTests=true build publishToMavenCentral --no-configuration-cache
       maven_central: true
       anthropic: true
+      moonshot: true

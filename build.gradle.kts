@@ -70,16 +70,52 @@ val skipTests = isReleaseBuild
 
 val gradleRootDir: String = rootDir.absolutePath
 
+val runMoonshotTests: String? by project
+val skipMoonshotTests = !(runMoonshotTests?.toBoolean() ?: false)
+
 val anthropicApiKey: String? = System.getenv("ANTHROPIC_API_KEY")
+
+val moonshotEnvVars = listOf(
+    "MOONSHOT_API_BASE_URL",
+    "MOONSHOT_DEFAULT_MODEL",
+    "MOONSHOT_API_KEY"
+).associateWith { System.getenv(it) }
+
+val moonshotTests = listOf("MoonshotTest")
 
 tasks.withType<KotlinJvmTest>().configureEach {
     environment("GRADLE_ROOT_DIR", gradleRootDir)
+    if (anthropicApiKey != null) {
+        environment("ANTHROPIC_API_KEY", anthropicApiKey)
+    }
+    moonshotEnvVars.forEach { (name, value) ->
+        if (value != null) {
+            environment(name, value)
+        }
+    }
+    if (skipMoonshotTests) {
+        filter {
+            moonshotTests.forEach {
+                excludeTestsMatching(it)
+            }
+        }
+    }
 }
 
 tasks.withType<KotlinJsTest>().configureEach {
     environment("GRADLE_ROOT_DIR", gradleRootDir)
     if (anthropicApiKey != null) {
         environment("ANTHROPIC_API_KEY", anthropicApiKey)
+    }
+    moonshotEnvVars.forEach { (name, value) ->
+        if (value != null) {
+            environment(name, value)
+        }
+    }
+    if (skipMoonshotTests) {
+        moonshotTests.forEach {
+            filter.excludeTestsMatching("*$it*")
+        }
     }
 }
 
@@ -89,6 +125,17 @@ tasks.withType<KotlinNativeTest>().configureEach {
     if (anthropicApiKey != null) {
         environment("ANTHROPIC_API_KEY", anthropicApiKey)
         environment("SIMCTL_CHILD_ANTHROPIC_API_KEY", anthropicApiKey)
+    }
+    moonshotEnvVars.forEach { (name, value) ->
+        if (value != null) {
+            environment(name, value)
+            environment("SIMCTL_CHILD_$name", value)
+        }
+    }
+    if (skipMoonshotTests) {
+        moonshotTests.forEach {
+            args += "--ktest_negative_gradle_filter=*$it*"
+        }
     }
 }
 
@@ -158,7 +205,6 @@ kotlin {
 
         // native, see https://kotlinlang.org/docs/native-target-support.html
         // tier 1
-        macosX64()
         macosArm64()
         iosSimulatorArm64()
         iosX64()
@@ -168,11 +214,9 @@ kotlin {
         linuxX64()
         linuxArm64()
         watchosSimulatorArm64()
-        watchosX64()
         watchosArm32()
         watchosArm64()
         tvosSimulatorArm64()
-        tvosX64()
         tvosArm64()
 
 //  // tier 3

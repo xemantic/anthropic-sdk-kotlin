@@ -41,7 +41,7 @@ import kotlinx.coroutines.flow.mapNotNull
 /**
  * The default Anthropic API base.
  */
-const val ANTHROPIC_API_BASE: String = "https://api.anthropic.com/"
+const val ANTHROPIC_API_BASE_URL: String = "https://api.anthropic.com/"
 
 /**
  * The default version to be passed to the `anthropic-version` HTTP header of each API request.
@@ -70,12 +70,14 @@ fun Anthropic(
         apiKey = apiKey,
         anthropicVersion = config.anthropicVersion,
         anthropicBeta = if (config.anthropicBeta.isEmpty()) null else config.anthropicBeta.joinToString(","),
-        apiBase = config.apiBase,
+        baseUrl = config.baseUrl,
         defaultModel = config.defaultModel,
         defaultMaxTokens = config.defaultMaxTokens,
         defaultTools = config.defaultTools,
         directBrowserAccess = config.directBrowserAccess,
         logLevel = if (config.logHttp) LogLevel.ALL else LogLevel.NONE,
+        useXApiKeyHeader = config.useXApiKeyHeader,
+        useAuthorizationBearerHeader = config.useAuthorizationBearerHeader,
         httpClientConfig = config.httpClientConfig
     )
 } // TODO this can be a second constructor, then toolMap can be private
@@ -84,12 +86,14 @@ class Anthropic internal constructor(
     val apiKey: String,
     val anthropicVersion: String,
     val anthropicBeta: String?,
-    val apiBase: String,
+    val baseUrl: String,
     val defaultModel: String,
     val defaultMaxTokens: Int,
     val defaultTools: List<Tool>?,
     val directBrowserAccess: Boolean,
     val logLevel: LogLevel,
+    val useXApiKeyHeader: Boolean,
+    val useAuthorizationBearerHeader: Boolean,
     httpClientConfig: HttpClientConfig<*>.() -> Unit
 ) {
 
@@ -97,7 +101,7 @@ class Anthropic internal constructor(
         var apiKey: String? = null
         var anthropicVersion: String = DEFAULT_ANTHROPIC_VERSION
         var anthropicBeta: List<String> = emptyList()
-        var apiBase: String = ANTHROPIC_API_BASE
+        var baseUrl: String = ANTHROPIC_API_BASE_URL
         var defaultModel: String = Model.DEFAULT.id
         var defaultMaxTokens: Int = Model.DEFAULT.maxOutput
 
@@ -114,6 +118,10 @@ class Anthropic internal constructor(
 
         var directBrowserAccess: Boolean = false
         var logHttp: Boolean = false
+
+        var useXApiKeyHeader: Boolean = true
+
+        var useAuthorizationBearerHeader: Boolean = false
 
         /**
          * Additional configuration applied to the underlying ktor [HttpClient]
@@ -189,8 +197,13 @@ class Anthropic internal constructor(
         }
 
         defaultRequest {
-            url(apiBase)
-            header("x-api-key", apiKey)
+            url(baseUrl)
+            if (useXApiKeyHeader) {
+                header("x-api-key", apiKey)
+            }
+            if (useAuthorizationBearerHeader) {
+                header(HttpHeaders.Authorization, "Bearer $apiKey")
+            }
             header("anthropic-version", anthropicVersion)
             if (anthropicBeta != null) {
                 header("anthropic-beta", anthropicBeta)

@@ -39,7 +39,7 @@ import kotlin.test.assertFailsWith
 
 class AnthropicTest {
 
-    private object HttpClientConfigTestAbort : RuntimeException()
+    private class HttpClientConfigTestAbort : RuntimeException()
 
     @Test
     fun `should receive an introduction from Claude`() = runTest {
@@ -248,7 +248,7 @@ class AnthropicTest {
                 request.headers.entries().forEach { (key, values) ->
                     capturedHeaders[key] = values
                 }
-                throw HttpClientConfigTestAbort
+                throw HttpClientConfigTestAbort()
             }
         }
         val anthropic = Anthropic {

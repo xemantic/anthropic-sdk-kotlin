@@ -18,6 +18,7 @@ package com.xemantic.ai.anthropic.test
 
 import com.xemantic.ai.anthropic.Anthropic
 import com.xemantic.ai.anthropic.Model
+import com.xemantic.kotlin.test.getEnv
 import com.xemantic.kotlin.test.gradleRootDir
 import com.xemantic.kotlin.test.isBrowserPlatform
 import io.ktor.client.*
@@ -51,3 +52,15 @@ suspend fun fetchText(
 suspend fun fetchSkillText() = fetchText(
     "https://raw.githubusercontent.com/anthropics/skills/main/skills/skill-creator/SKILL.md"
 )
+
+val env = Env()
+
+class Env {
+
+    operator fun get(
+        key: String
+    ): String = requireNotNull(getEnv(key)) {
+        "No such environment variable: $key"
+    }
+
+}

@@ -10,5 +10,6 @@ jobs:
     secrets:
       inherit
     with:
-      gradle_args: build -PjvmOnlyBuild=true
+      gradle_args: build -PjvmOnlyBuild=true -PrunMoonshotTests=true
       anthropic: true
+      moonshot: true
