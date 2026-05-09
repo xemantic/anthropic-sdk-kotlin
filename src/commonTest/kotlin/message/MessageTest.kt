@@ -72,4 +72,135 @@ class MessageTest {
         }
     }
 
+    @Test
+    fun `should add default cache breakpoint to single message`() {
+        val messages = listOf(
+            Message {
+                +Text("foo")
+            }
+        )
+
+        messages.addCacheBreakpoint() should {
+            have(size == 1)
+            first() should {
+                have(role == Role.USER)
+                have(content.size == 1)
+                content[0] should {
+                    be<Text>()
+                    have(text == "foo")
+                    cacheControl should {
+                        be<CacheControl.Ephemeral>()
+                        have(ttl == null)
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `should add cache breakpoint with TTL to single message`() {
+        val messages = listOf(
+            Message {
+                +Text("foo")
+            }
+        )
+
+        messages.addCacheBreakpoint(
+            cacheControl = CacheControl.Ephemeral {
+                ttl = CacheControl.Ephemeral.TTL.ONE_HOUR
+            }
+        ) should {
+            have(size == 1)
+            first() should {
+                have(role == Role.USER)
+                have(content.size == 1)
+                content[0] should {
+                    be<Text>()
+                    have(text == "foo")
+                    cacheControl should {
+                        be<CacheControl.Ephemeral>()
+                        have(ttl == CacheControl.Ephemeral.TTL.ONE_HOUR)
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `should add cache breakpoint only to last message in list`() {
+        val messages = listOf(
+            Message {
+                +Text("first")
+            },
+            Message {
+                +Text("second")
+            },
+            Message {
+                +Text("third")
+            }
+        )
+
+        messages.addCacheBreakpoint() should {
+            have(size == 3)
+            // First message should not have cache control
+            get(0).content[0] should {
+                be<Text>()
+                have(text == "first")
+                have(cacheControl == null)
+            }
+            // Second message should not have cache control
+            get(1).content[0] should {
+                be<Text>()
+                have(text == "second")
+                have(cacheControl == null)
+            }
+            // Third (last) message should have cache control
+            get(2).content[0] should {
+                be<Text>()
+                have(text == "third")
+                cacheControl should {
+                    be<CacheControl.Ephemeral>()
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `should add cache breakpoint only to last content element in last message`() {
+        val messages = listOf(
+            Message {
+                +Text("first")
+                +Text("second")
+                +Text("third")
+            }
+        )
+
+        messages.addCacheBreakpoint() should {
+            have(size == 1)
+            first() should {
+                have(content.size == 3)
+                // First content element should not have cache control
+                content[0] should {
+                    be<Text>()
+                    have(text == "first")
+                    have(cacheControl == null)
+                }
+                // Second content element should not have cache control
+                content[1] should {
+                    be<Text>()
+                    have(text == "second")
+                    have(cacheControl == null)
+                }
+                // Third (last) content element should have cache control
+                content[2] should {
+                    be<Text>()
+                    have(text == "third")
+                    cacheControl should {
+                        be<CacheControl.Ephemeral>()
+                    }
+                }
+            }
+        }
+    }
+
 }

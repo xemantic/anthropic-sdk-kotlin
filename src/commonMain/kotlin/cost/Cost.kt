@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Kazimierz Pogoda / Xemantic
+ * Copyright 2025-2026 Xemantic contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -103,6 +103,7 @@ class Cost private constructor(
                     cacheReadInputTokens
 
     companion object {
+
         val ZERO = Cost(
             inputTokens = Money.ZERO,
             outputTokens = Money.ZERO,
@@ -110,6 +111,15 @@ class Cost private constructor(
             cache1hCreationInputTokens = Money.ZERO,
             cacheReadInputTokens = Money.ZERO
         )
+
+        @OptIn(ExperimentalContracts::class)
+        operator fun invoke(block: Cost.Builder.() -> Unit): Cost {
+            contract {
+                callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+            }
+            return Cost.Builder().apply(block).build()
+        }
+
     }
 
     override fun equals(other: Any?): Boolean {
@@ -140,10 +150,4 @@ class Cost private constructor(
 
 }
 
-@OptIn(ExperimentalContracts::class)
-fun Cost(block: Cost.Builder.() -> Unit): Cost {
-    contract {
-        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
-    }
-    return Cost.Builder().also(block).build()
-}
+operator fun Usage.times(cost: Cost): Cost = cost * this

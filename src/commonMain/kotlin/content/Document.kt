@@ -60,6 +60,55 @@ class Document private constructor(
             MediaType.PDF, MediaType.TEXT
         )
 
+        @OptIn(ExperimentalContracts::class)
+        operator fun invoke(
+            block: Document.Builder.() -> Unit
+        ): Document {
+            contract {
+                callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+            }
+            return Document.Builder().apply(block).build()
+        }
+
+        @OptIn(ExperimentalContracts::class)
+        operator fun invoke(
+            path: String,
+            block: Document.Builder.() -> Unit = {}
+        ): Document {
+            contract {
+                callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+            }
+            return Document(Path(path), block)
+        }
+
+        @OptIn(ExperimentalContracts::class)
+        operator fun invoke(
+            path: Path,
+            block: Document.Builder.() -> Unit = {}
+        ): Document {
+            contract {
+                callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+            }
+            return Document {
+                this.path = path
+                block(this)
+            }
+        }
+
+        @OptIn(ExperimentalContracts::class)
+        operator fun invoke(
+            bytes: ByteArray,
+            block: Document.Builder.() -> Unit = {}
+        ): Document {
+            contract {
+                callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+            }
+            return Document {
+                this.bytes = bytes
+                block(this)
+            }
+        }
+
     }
 
     @OptIn(ExperimentalContracts::class)
@@ -76,53 +125,4 @@ class Document private constructor(
         }.build()
     }
 
-}
-
-@OptIn(ExperimentalContracts::class)
-fun Document(
-    block: Document.Builder.() -> Unit
-): Document {
-    contract {
-        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
-    }
-    return Document.Builder().apply(block).build()
-}
-
-@OptIn(ExperimentalContracts::class)
-fun Document(
-    path: String,
-    block: Document.Builder.() -> Unit = {}
-): Document {
-    contract {
-        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
-    }
-    return Document(Path(path), block)
-}
-
-@OptIn(ExperimentalContracts::class)
-fun Document(
-    path: Path,
-    block: Document.Builder.() -> Unit = {}
-): Document {
-    contract {
-        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
-    }
-    return Document {
-        this.path = path
-        block(this)
-    }
-}
-
-@OptIn(ExperimentalContracts::class)
-fun Document(
-    bytes: ByteArray,
-    block: Document.Builder.() -> Unit = {}
-): Document {
-    contract {
-        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
-    }
-    return Document {
-        this.bytes = bytes
-        block(this)
-    }
 }

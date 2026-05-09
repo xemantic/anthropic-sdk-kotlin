@@ -29,6 +29,9 @@ import com.xemantic.ai.tool.schema.ObjectSchema
 import com.xemantic.ai.tool.schema.generator.jsonSchemaOf
 import kotlinx.serialization.*
 import kotlinx.serialization.json.Json
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.InvocationKind
+import kotlin.contracts.contract
 
 @Serializable(with = ToolSerializer::class)
 abstract class Tool {
@@ -116,14 +119,16 @@ inline fun <reified T> Tool(
 @Serializable
 sealed class ToolChoice {
 
-    abstract val disableParallelToolUse: Boolean?
+    interface ParallelControl {
+        val disableParallelToolUse: Boolean?
+    }
 
     @Serializable
     @SerialName("auto")
     class Auto private constructor(
         @SerialName("disable_parallel_tool_use")
         override val disableParallelToolUse: Boolean? = null
-    ) : ToolChoice() {
+    ) : ToolChoice(), ParallelControl {
 
         class Builder {
 
@@ -142,7 +147,7 @@ sealed class ToolChoice {
     class Any private constructor(
         @SerialName("disable_parallel_tool_use")
         override val disableParallelToolUse: Boolean? = null
-    ) : ToolChoice() {
+    ) : ToolChoice(), ParallelControl {
 
         class Builder {
 
@@ -162,7 +167,7 @@ sealed class ToolChoice {
         val name: String,
         @SerialName("disable_parallel_tool_use")
         override val disableParallelToolUse: Boolean? = null
-    ) : ToolChoice() {
+    ) : ToolChoice(), ParallelControl {
 
         class Builder {
 
@@ -177,6 +182,10 @@ sealed class ToolChoice {
         }
 
     }
+
+    @Serializable
+    @SerialName("none")
+    data object None : ToolChoice()
 
     companion object {
 
@@ -210,12 +219,6 @@ internal val String.normalizedToolName: String
         .replace('.', '_')
         .replace('$', '_')
         .take(64)
-
-fun Toolbox(block: Toolbox.Builder.() -> Unit): Toolbox {
-    val builder = Toolbox.Builder()
-    block(builder)
-    return builder.build()
-}
 
 class Toolbox private constructor(
     val tools: List<Tool>,
@@ -365,5 +368,19 @@ class Toolbox private constructor(
             result.toString()
         }
     )
+
+    companion object {
+
+        @OptIn(ExperimentalContracts::class)
+        operator fun invoke(block: Toolbox.Builder.() -> Unit): Toolbox {
+            contract {
+                callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+            }
+            val builder = Toolbox.Builder()
+            block(builder)
+            return builder.build()
+        }
+
+    }
 
 }

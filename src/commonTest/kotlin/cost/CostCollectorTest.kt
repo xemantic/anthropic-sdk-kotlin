@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Kazimierz Pogoda / Xemantic
+ * Copyright 2025-2026 Xemantic contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -96,6 +96,44 @@ class CostCollectorTest {
                     cacheReadInputTokens = Money.ZERO
                 }
             )
+        }
+    }
+
+    @Test
+    fun `Usage pricedBy model should produce CostWithUsage`() {
+        // given
+        val usage = Usage {
+            inputTokens = 1000
+            outputTokens = 1000
+        }
+
+        // when
+        val priced = usage.pricedBy(Model.DEFAULT)
+
+        // then
+        priced should {
+            have(this@should.usage == usage)
+            have(cost == Model.DEFAULT.cost * usage)
+        }
+    }
+
+    @Test
+    fun `var CostWithUsage += Usage pricedBy model should accumulate`() {
+        // given
+        var costWithUsage = CostWithUsage.ZERO
+        val usage = Usage {
+            inputTokens = 100
+            outputTokens = 50
+        }
+
+        // when
+        costWithUsage += usage.pricedBy(Model.DEFAULT)
+        costWithUsage += usage.pricedBy(Model.DEFAULT)
+
+        // then
+        costWithUsage should {
+            have(this@should.usage == (usage + usage))
+            have(cost == Model.DEFAULT.cost * (usage + usage))
         }
     }
 

@@ -98,4 +98,20 @@ class ToolChoiceSerializationTest {
 
     }
 
+    @Test
+    fun `should serialize ToolChoice None`() {
+
+        // given
+        // when
+        val result = ToolChoice.None.encodeToString()
+
+        // then
+        result sameAsJson """
+            {
+              "type": "none"
+            }
+        """.trimIndent()
+
+    }
+
 }
