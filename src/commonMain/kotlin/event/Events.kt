@@ -16,12 +16,11 @@
 
 package com.xemantic.ai.anthropic.event
 
-import com.xemantic.ai.anthropic.AnthropicModel
 import com.xemantic.ai.anthropic.message.MessageResponse
 import com.xemantic.ai.anthropic.message.StopReason
+import com.xemantic.ai.anthropic.usage.ServerToolUsage
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 import kotlinx.serialization.json.JsonObject
 
 // reference https://docs.spring.io/spring-ai/reference/_images/anthropic-claude3-events-model.jpg
@@ -33,10 +32,7 @@ sealed interface Event {
     @SerialName("message_start")
     data class MessageStart(
         val message: MessageResponse
-    ) : Event {
-        @Transient
-        lateinit var resolvedModel: AnthropicModel
-    }
+    ) : Event
 
     @Serializable
     @SerialName("message_delta")
@@ -53,10 +49,24 @@ sealed interface Event {
             val stopSequence: String?
         )
 
+        /**
+         * Final usage update sent by the API on the last `message_delta` event.
+         * All fields are **cumulative** for the response (replace, not add);
+         * everything but `output_tokens` is optional and only included by the
+         * API when relevant.
+         */
         @Serializable
         data class Usage(
+            @SerialName("input_tokens")
+            val inputTokens: Int? = null,
             @SerialName("output_tokens")
-            val outputTokens: Int
+            val outputTokens: Int,
+            @SerialName("cache_creation_input_tokens")
+            val cacheCreationInputTokens: Int? = null,
+            @SerialName("cache_read_input_tokens")
+            val cacheReadInputTokens: Int? = null,
+            @SerialName("server_tool_use")
+            val serverToolUse: ServerToolUsage? = null
         )
 
     }

@@ -16,6 +16,7 @@
 
 package com.xemantic.ai.anthropic.cost
 
+import com.xemantic.ai.anthropic.Model
 import com.xemantic.ai.anthropic.json.toPrettyJson
 import com.xemantic.ai.anthropic.usage.Usage
 import com.xemantic.ai.anthropic.util.update
@@ -45,6 +46,11 @@ data class CostWithUsage(
     override fun toString(): String = toPrettyJson()
 
 }
+
+fun Usage.pricedBy(model: Model): CostWithUsage = CostWithUsage(
+    cost = model.cost * this,
+    usage = this
+)
 
 /**
  * Collects overall [Usage] and calculates [Cost] information

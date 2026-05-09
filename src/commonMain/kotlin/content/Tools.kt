@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2026 Xemantic contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -77,16 +77,20 @@ class ToolUse private constructor(
         }.build()
     }
 
-}
+    companion object {
 
-@OptIn(ExperimentalContracts::class)
-fun ToolUse(
-    block: ToolUse.Builder.() -> Unit
-): ToolUse {
-    contract {
-        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+        @OptIn(ExperimentalContracts::class)
+        operator fun invoke(
+            block: ToolUse.Builder.() -> Unit
+        ): ToolUse {
+            contract {
+                callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+            }
+            return ToolUse.Builder().apply(block).build()
+        }
+
     }
-    return ToolUse.Builder().apply(block).build()
+
 }
 
 @OptIn(ExperimentalSerializationApi::class)
@@ -136,7 +140,7 @@ class ToolResult private constructor(
             toolUseId = requireNotNull(toolUseId) {
                 "toolUseId cannot be null"
             },
-            content = if (content.isEmpty()) null else content,
+            content = content.ifEmpty { null },
             isError = isError,
             cacheControl = cacheControl
         )
@@ -159,14 +163,18 @@ class ToolResult private constructor(
         }.build()
     }
 
-}
+    companion object {
 
-@OptIn(ExperimentalContracts::class)
-inline fun ToolResult(
-    block: ToolResult.Builder.() -> Unit = {}
-): ToolResult {
-    contract {
-        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+        @OptIn(ExperimentalContracts::class)
+        inline operator fun invoke(
+            block: ToolResult.Builder.() -> Unit = {}
+        ): ToolResult {
+            contract {
+                callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+            }
+            return ToolResult.Builder().apply(block).build()
+        }
+
     }
-    return ToolResult.Builder().apply(block).build()
+
 }

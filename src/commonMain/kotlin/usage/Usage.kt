@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2026 Xemantic contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ class Usage private constructor(
     @SerialName("cache_creation")
     val cacheCreation: CacheCreation? = null,
     @SerialName("server_tool_use")
-    val serverToolUse: ServerToolUse? = null
+    val serverToolUse: ServerToolUsage? = null
 ) {
 
     class Builder {
@@ -49,7 +49,7 @@ class Usage private constructor(
         var cacheCreationInputTokens: Int? = null
         var cacheReadInputTokens: Int? = null
         var cacheCreation: CacheCreation? = null
-        var serverToolUse: ServerToolUse? = null
+        var serverToolUse: ServerToolUsage? = null
 
         fun build(): Usage = Usage(
             requireNotNull(inputTokens) { "inputTokens cannot be null" },
@@ -71,6 +71,14 @@ class Usage private constructor(
             cacheReadInputTokens = 0
         )
 
+        @OptIn(ExperimentalContracts::class)
+        operator fun invoke(block: Builder.() -> Unit): Usage {
+            contract {
+                callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+            }
+            return Builder().apply(block).build()
+        }
+
     }
 
     operator fun plus(usage: Usage): Usage = Usage(
@@ -79,7 +87,7 @@ class Usage private constructor(
         cacheCreationInputTokens = (cacheCreationInputTokens ?: 0) + (usage.cacheCreationInputTokens ?: 0),
         cacheReadInputTokens = (cacheReadInputTokens ?: 0) + (usage.cacheReadInputTokens ?: 0),
         cacheCreation = (cacheCreation ?: CacheCreation.ZERO) + (usage.cacheCreation ?: CacheCreation.ZERO),
-        serverToolUse = (serverToolUse ?: ServerToolUse.ZERO) + (usage.serverToolUse ?: ServerToolUse.ZERO)
+        serverToolUse = (serverToolUse ?: ServerToolUsage.ZERO) + (usage.serverToolUse ?: ServerToolUsage.ZERO)
     )
 
     override fun equals(other: Any?): Boolean {
@@ -108,14 +116,6 @@ class Usage private constructor(
 
     override fun toString(): String = toPrettyJson()
 
-}
-
-@OptIn(ExperimentalContracts::class)
-fun Usage(block: Usage.Builder.() -> Unit): Usage {
-    contract {
-        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
-    }
-    return Usage.Builder().also(block).build()
 }
 
 /**
@@ -171,23 +171,23 @@ class CacheCreation private constructor(
             ephemeral1hInputTokens = 0
         )
 
+        @OptIn(ExperimentalContracts::class)
+        operator fun invoke(block: CacheCreation.Builder.() -> Unit): CacheCreation {
+            contract {
+                callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+            }
+            return CacheCreation.Builder().apply(block).build()
+        }
+
     }
 
-}
-
-@OptIn(ExperimentalContracts::class)
-fun CacheCreation(block: CacheCreation.Builder.() -> Unit): CacheCreation {
-    contract {
-        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
-    }
-    return CacheCreation.Builder().also(block).build()
 }
 
 /**
  * Server-side tool usage tracking.
  */
 @Serializable
-class ServerToolUse private constructor(
+class ServerToolUsage private constructor(
     @SerialName("web_search_requests")
     val webSearchRequests: Int? = null,
     @SerialName("web_fetch_requests")
@@ -199,23 +199,23 @@ class ServerToolUse private constructor(
         var webSearchRequests: Int? = null
         var webFetchRequests: Int? = null
 
-        fun build(): ServerToolUse = ServerToolUse(
+        fun build(): ServerToolUsage = ServerToolUsage(
             webSearchRequests = webSearchRequests,
             webFetchRequests = webFetchRequests
         )
 
     }
 
-    operator fun plus(other: ServerToolUse): ServerToolUse {
-        return ServerToolUse(
-            webSearchRequests = (webSearchRequests ?: 0) + (other.webSearchRequests ?: 0),
-            webFetchRequests = (webFetchRequests ?: 0) + (other.webFetchRequests ?: 0)
-        )
-    }
+    operator fun plus(
+        other: ServerToolUsage
+    ): ServerToolUsage = ServerToolUsage(
+        webSearchRequests = (webSearchRequests ?: 0) + (other.webSearchRequests ?: 0),
+        webFetchRequests = (webFetchRequests ?: 0) + (other.webFetchRequests ?: 0)
+    )
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other !is ServerToolUse) return false
+        if (other !is ServerToolUsage) return false
         if (webSearchRequests != other.webSearchRequests) return false
         if (webFetchRequests != other.webFetchRequests) return false
         return true
@@ -229,19 +229,19 @@ class ServerToolUse private constructor(
 
     companion object {
 
-        val ZERO = ServerToolUse(
+        val ZERO = ServerToolUsage(
             webSearchRequests = 0,
             webFetchRequests = 0
         )
 
+        @OptIn(ExperimentalContracts::class)
+        operator fun invoke(block: Builder.() -> Unit = {}): ServerToolUsage {
+            contract {
+                callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+            }
+            return Builder().apply(block).build()
+        }
+
     }
 
-}
-
-@OptIn(ExperimentalContracts::class)
-fun ServerToolUse(block: ServerToolUse.Builder.() -> Unit = {}): ServerToolUse {
-    contract {
-        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
-    }
-    return ServerToolUse.Builder().also(block).build()
 }

@@ -76,8 +76,12 @@ class WebFetch private constructor(
 
     }
 
-}
+    companion object {
 
-fun WebFetch(
-    builder: WebFetch.Builder.() -> Unit = {}
-): WebFetch = WebFetch.Builder().apply(builder).build()
+        operator fun invoke(
+            block: WebFetch.Builder.() -> Unit = {}
+        ): WebFetch = WebFetch.Builder().apply(block).build()
+
+    }
+
+}

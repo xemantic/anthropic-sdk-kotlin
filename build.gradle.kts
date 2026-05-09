@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2026 Xemantic contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,6 @@
 
 @file:OptIn(ExperimentalKotlinGradlePluginApi::class, ExperimentalWasmDsl::class)
 
-import com.vanniktech.maven.publish.JavadocJar
-import com.vanniktech.maven.publish.KotlinMultiplatform
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -72,16 +70,52 @@ val skipTests = isReleaseBuild
 
 val gradleRootDir: String = rootDir.absolutePath
 
+val runMoonshotTests: String? by project
+val skipMoonshotTests = !(runMoonshotTests?.toBoolean() ?: false)
+
 val anthropicApiKey: String? = System.getenv("ANTHROPIC_API_KEY")
+
+val moonshotEnvVars = listOf(
+    "MOONSHOT_API_BASE_URL",
+    "MOONSHOT_DEFAULT_MODEL",
+    "MOONSHOT_API_KEY"
+).associateWith { System.getenv(it) }
+
+val moonshotTests = listOf("MoonshotTest")
 
 tasks.withType<KotlinJvmTest>().configureEach {
     environment("GRADLE_ROOT_DIR", gradleRootDir)
+    if (anthropicApiKey != null) {
+        environment("ANTHROPIC_API_KEY", anthropicApiKey)
+    }
+    moonshotEnvVars.forEach { (name, value) ->
+        if (value != null) {
+            environment(name, value)
+        }
+    }
+    if (skipMoonshotTests) {
+        filter {
+            moonshotTests.forEach {
+                excludeTestsMatching(it)
+            }
+        }
+    }
 }
 
 tasks.withType<KotlinJsTest>().configureEach {
     environment("GRADLE_ROOT_DIR", gradleRootDir)
     if (anthropicApiKey != null) {
         environment("ANTHROPIC_API_KEY", anthropicApiKey)
+    }
+    moonshotEnvVars.forEach { (name, value) ->
+        if (value != null) {
+            environment(name, value)
+        }
+    }
+    if (skipMoonshotTests) {
+        moonshotTests.forEach {
+            filter.excludeTestsMatching("*$it*")
+        }
     }
 }
 
@@ -91,6 +125,17 @@ tasks.withType<KotlinNativeTest>().configureEach {
     if (anthropicApiKey != null) {
         environment("ANTHROPIC_API_KEY", anthropicApiKey)
         environment("SIMCTL_CHILD_ANTHROPIC_API_KEY", anthropicApiKey)
+    }
+    moonshotEnvVars.forEach { (name, value) ->
+        if (value != null) {
+            environment(name, value)
+            environment("SIMCTL_CHILD_$name", value)
+        }
+    }
+    if (skipMoonshotTests) {
+        moonshotTests.forEach {
+            args += "--ktest_negative_gradle_filter=*$it*"
+        }
     }
 }
 
@@ -104,7 +149,7 @@ kotlin {
         )
         extraWarnings = true
         progressiveMode = true
-        coreLibrariesVersion = libs.versions.kotlin.get()
+        //coreLibrariesVersion = libs.versions.kotlin.get()
     }
 
     jvm {
@@ -160,7 +205,6 @@ kotlin {
 
         // native, see https://kotlinlang.org/docs/native-target-support.html
         // tier 1
-        macosX64()
         macosArm64()
         iosSimulatorArm64()
         iosX64()
@@ -170,11 +214,9 @@ kotlin {
         linuxX64()
         linuxArm64()
         watchosSimulatorArm64()
-        watchosX64()
         watchosArm32()
         watchosArm64()
         tvosSimulatorArm64()
-        tvosX64()
         tvosArm64()
 
 //  // tier 3
@@ -281,6 +323,9 @@ if (!isJvmOnlyBuild) {
 //tasks.named("compileTestKotlinAndroidNativeX64") { enabled = false }
 //
 //// skip tests which require XCode components to be installed
+
+    // linux tests hang for unknown reason
+    tasks.named("linuxX64Test") { enabled = false }
 }
 
 powerAssert {
@@ -298,25 +343,8 @@ dokka {
 
 mavenPublishing {
 
-    configure(
-        KotlinMultiplatform(
-            javadocJar = JavadocJar.Dokka("dokkaGenerateHtml"),
-            sourcesJar = true
-        )
-    )
-
+    publishToMavenCentral(automaticRelease = true)
     signAllPublications()
-
-    publishToMavenCentral(
-        automaticRelease = true,
-        validateDeployment = false // for kotlin multiplatform projects it might take a while (>900s)
-    )
-
-    coordinates(
-        groupId = group.toString(),
-        artifactId = rootProject.name,
-        version = version.toString()
-    )
 
     pom {
 

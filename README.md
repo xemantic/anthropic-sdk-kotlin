@@ -124,6 +124,31 @@ fun main() = runBlocking {
 }
 ```
 
+### Customizing the HTTP client
+
+Under the hood the SDK uses [ktor](https://ktor.io/)'s `HttpClient`. The `httpClientConfig` block on `Anthropic.Config` is applied last, so it can install additional plugins or layer extra defaults on top of the SDK's own configuration. This is the place to add custom headers (for example `Authorization: Bearer …` when routing through a gateway), tweak timeouts, or attach a custom logger.
+
+```kotlin
+val anthropic = Anthropic {
+    httpClientConfig = {
+        install(HttpTimeout) {
+            requestTimeoutMillis = 60_000
+        }
+        defaultRequest {
+            header("Authorization", "Bearer $gatewayToken")
+            header("X-Tenant-Id", tenantId)
+        }
+    }
+}
+```
+
+Notes:
+
+- Multiple `defaultRequest { }` blocks accumulate in ktor 3.x, so headers added here are appended to the SDK's defaults (`x-api-key`, `anthropic-version`, etc.) rather than replacing them.
+- `apiKey` is still required at construction time and the SDK will always send `x-api-key`. If your gateway only accepts a Bearer token, supply a placeholder `apiKey` and have the gateway strip the unwanted header.
+- For proxies and self-hosted gateways, override the base URL via `apiBase` instead of trying to rewrite it from `httpClientConfig`.
+- Avoid re-installing plugins already set up by the SDK (`SSE`, `ContentNegotiation`, `Logging`, `HttpRequestRetry`) — ktor will fail at install time or silently override SDK behavior.
+
 ### Using tools
 
 > [!NOTE]
@@ -173,22 +198,7 @@ For the reference check equivalent examples in the official Anthropic SDKs:
 
 ### Calculating usage costs
 
-An instance of `Anthropic` client has a property `costWithUsage` of the [CostWithUsage](src/commonMain/kotlin/cost/CostCollection.kt) class which holds the cumulative usage statistics together with the overall cost calculation.
-
-Each returned `MessageResponse` also provides the `costWithUsage`. The [CostCollector](src/commonMain/kotlin/cost/CostCollection.kt) class can be used to cumulate this data by just adding `CostWithUsage` instance to the `CostCollector` instance:
-
-```kotlin
-val anthropic = Anthropic()
-val costCollector = CostCollector()
-// ...
-val response = anthropic.messages.create {
-    +"Hi Claude"
-}
-costCollector += response.costWithUsage
-```
-
-> [!NOTE]
-> The `CostCollector` is using atomic operations to ensure thread-safety in concurrent environment.
+Each `MessageResponse` carries the `Usage` reported by the API. Cost is computed on the caller side — `response.usage * model.cost` for a single response, or accumulate across calls with `costWithUsage += response.usage.pricedBy(model)`. See the [Cost aggregation guide](docs/cost_aggregation.md) for details, including how to share an accumulator across coroutines.
 
 ## Projects using anthropic-sdk-kotlin
 
@@ -205,8 +215,9 @@ export ANTHROPIC_API_KEY=your-key-goes-here
 ```
 
 Many [unit tests](src/commonTest/kotlin) are actually integration tests calling Anthropic APIs
-and asserting against results. This is the reason why they might be flaky from time to time. For
-example, if the test image is misinterpreted, or Claude is randomly fantasizing too much.
+and asserting against results. Tests default to Claude Haiku model to reduce API costs.
+These integration test might be flaky from time to time. For example, if the test image
+is misinterpreted, or Claude is randomly fantasizing too much.
 
 ## Project dependencies
 

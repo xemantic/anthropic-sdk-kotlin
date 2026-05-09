@@ -1,3 +1,4 @@
+# Runs Claude Code review on pull requests
 name: Claude Code Review
 
 on:

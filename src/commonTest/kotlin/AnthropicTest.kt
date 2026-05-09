@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 Kazimierz Pogoda / Xemantic
+ * Copyright 2024-2026 Xemantic contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package com.xemantic.ai.anthropic
 
 import com.xemantic.ai.anthropic.content.Text
 import com.xemantic.ai.anthropic.cost.Cost
-import com.xemantic.ai.anthropic.cost.CostWithUsage
+import com.xemantic.ai.anthropic.cost.times
 import com.xemantic.ai.anthropic.error.AnthropicApiException
 import com.xemantic.ai.anthropic.message.Role
 import com.xemantic.ai.anthropic.message.StopReason
@@ -29,6 +29,9 @@ import com.xemantic.kotlin.test.assert
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.api.*
+import io.ktor.client.request.*
 import io.ktor.http.*
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -36,12 +39,7 @@ import kotlin.test.assertFailsWith
 
 class AnthropicTest {
 
-    @Test
-    fun `should create Anthropic instance with 0 Usage and Cost`() {
-        Anthropic() should {
-            have(costWithUsage == CostWithUsage.ZERO)
-        }
-    }
+    private class HttpClientConfigTestAbort : RuntimeException()
 
     @Test
     fun `should receive an introduction from Claude`() = runTest {
@@ -104,19 +102,22 @@ class AnthropicTest {
     }
 
     @Test
-    fun `should receive Usage and update Cost calculation`() = runTest {
+    fun `should receive Usage and allow Cost calculation from chosen model`() = runTest {
         // given
         val anthropic = testAnthropic()
+        val haiku = Model.CLAUDE_HAIKU_4_5_20251001
 
         // when
         val response = anthropic.messages.create {
             +"Hello Claude! I am testing the amount of input and output tokens."
+            model(haiku)
         }
+        val cost = response.usage * haiku.cost
 
         // then
         response should {
             have(role == Role.ASSISTANT)
-            have("claude" in model)
+            have(model == haiku.id)
             have(stopReason == StopReason.END_TURN)
             have(content.size == 1)
             have(stopSequence == null)
@@ -127,23 +128,13 @@ class AnthropicTest {
                 have(cacheReadInputTokens == 0)
             }
         }
-
-        anthropic.costWithUsage should {
-            usage should {
-                have(inputTokens == 21)
-                have(inputTokens > 0)
-                have(cacheCreationInputTokens == 0)
-                have(cacheReadInputTokens == 0)
-            }
-            cost should {
-                have(inputTokens >= Money.ZERO && inputTokens == Money("0.000063"))
-                have(outputTokens >= Money.ZERO && inputTokens <= Money("0.0005"))
-                have(cache5mCreationInputTokens == Money.ZERO)
-                have(cache1hCreationInputTokens == Money.ZERO)
-                have(cacheReadInputTokens == Money.ZERO)
-            }
+        cost should {
+            have(inputTokens == Money("0.000021"))
+            have(outputTokens >= Money.ZERO && outputTokens <= Money("0.001"))
+            have(cache5mCreationInputTokens == Money.ZERO)
+            have(cache1hCreationInputTokens == Money.ZERO)
+            have(cacheReadInputTokens == Money.ZERO)
         }
-
     }
 
     @Test
@@ -186,38 +177,37 @@ class AnthropicTest {
             have(httpStatusCode == HttpStatusCode.BadRequest)
             error should {
                 have(type == "invalid_request_error")
-                have(message == "max_tokens: 1000000000 > 64000, which is the maximum allowed number of output tokens for claude-sonnet-4-5-20250929")
+                have(message == "max_tokens: 1000000000 > 64000, which is the maximum allowed number of output tokens for claude-haiku-4-5-20251001")
             }
         }
     }
 
     @Test
-    fun `should receive an introduction from Claude for UnknownModel`() = runTest {
+    fun `should use external model definition`() = runTest {
         // given
-        val theLatestClaudeModel = UnknownModel(
-            id = "claude-sonnet-4-5-20250929",
+        val anthropic = testAnthropic()
+        val otherModel = Model(
+            id = "claude-haiku-4-5-20251001",
             contextWindow = 200000,
             maxOutput = 64000,
             messageBatchesApi = true,
             cost = Cost {
-                inputTokens = "15".dollarsPerMillion
-                outputTokens = "75".dollarsPerMillion
-            }
+                inputTokens = "1".dollarsPerMillion
+                outputTokens = "5".dollarsPerMillion
+            },
+            cacheMinTokens = 4096
         )
-        val anthropic = testAnthropic {
-            modelMap["claude-sonnet-4-5-20250929"] = theLatestClaudeModel
-            defaultModel = theLatestClaudeModel
-        }
 
         // when
         val response = anthropic.messages.create {
+            model(otherModel)
             +"Hello World! What's your name?"
         }
 
         // then
         response should {
             have(role == Role.ASSISTANT)
-            have(model == "claude-sonnet-4-5-20250929")
+            have(model == "claude-haiku-4-5-20251001")
             have(stopReason == StopReason.END_TURN)
             have(content.size == 1)
             content[0] should {
@@ -233,21 +223,56 @@ class AnthropicTest {
     }
 
     @Test
-    fun `should fail with a message when creating a message request for unknown model`() = runTest {
+    fun `should invoke httpClientConfig when constructing Anthropic`() {
         // given
-        val anthropic = testAnthropic {
-            modelMap.remove(Model.DEFAULT.id)
-        }
+        var configInvoked = false
 
         // when
-        val exception = assertFailsWith<IllegalArgumentException> {
-            anthropic.messages.create {
-                +"Hello World! What's your name?"
+        Anthropic {
+            apiKey = "test-key"
+            httpClientConfig = {
+                configInvoked = true
             }
         }
 
         // then
-        assert(exception.message == "Unknown model '${Model.DEFAULT.id}', consider adding modelMap[\"${Model.DEFAULT.id}\"] = UnknownModel(...) when creating Anthropic client instance.")
+        assert(configInvoked)
+    }
+
+    @Test
+    fun `should allow customizing HTTP request headers via httpClientConfig`() = runTest {
+        // given
+        val capturedHeaders = mutableMapOf<String, List<String>>()
+        val captureAndAbort = createClientPlugin("CaptureAndAbort") {
+            onRequest { request, _ ->
+                request.headers.entries().forEach { (key, values) ->
+                    capturedHeaders[key] = values
+                }
+                throw HttpClientConfigTestAbort()
+            }
+        }
+        val anthropic = Anthropic {
+            apiKey = "test-api-key"
+            httpClientConfig = {
+                install(captureAndAbort)
+                defaultRequest {
+                    header("Authorization", "Bearer custom-token")
+                    header("X-Custom-Header", "custom-value")
+                }
+            }
+        }
+
+        // when
+        assertFailsWith<HttpClientConfigTestAbort> {
+            anthropic.messages.create { +"Hi" }
+        }
+
+        // then
+        capturedHeaders should {
+            have(get("x-api-key") == listOf("test-api-key"))
+            have(get("Authorization") == listOf("Bearer custom-token"))
+            have(get("X-Custom-Header") == listOf("custom-value"))
+        }
     }
 
 }

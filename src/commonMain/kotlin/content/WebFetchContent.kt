@@ -63,16 +63,20 @@ class WebFetchServerToolUse private constructor(
         }.build()
     }
 
-}
+    companion object {
 
-@OptIn(ExperimentalContracts::class)
-fun WebFetchServerToolUse(
-    block: WebFetchServerToolUse.Builder.() -> Unit
-): WebFetchServerToolUse {
-    contract {
-        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+        @OptIn(ExperimentalContracts::class)
+        operator fun invoke(
+            block: WebFetchServerToolUse.Builder.() -> Unit
+        ): WebFetchServerToolUse {
+            contract {
+                callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+            }
+            return WebFetchServerToolUse.Builder().apply(block).build()
+        }
+
     }
-    return WebFetchServerToolUse.Builder().apply(block).build()
+
 }
 
 @Serializable
@@ -164,14 +168,18 @@ class WebFetchToolResult private constructor(
         }.build()
     }
 
-}
+    companion object {
 
-@OptIn(ExperimentalContracts::class)
-fun WebFetchToolResult(
-    block: WebFetchToolResult.Builder.() -> Unit
-): WebFetchToolResult {
-    contract {
-        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+        @OptIn(ExperimentalContracts::class)
+        operator fun invoke(
+            block: WebFetchToolResult.Builder.() -> Unit
+        ): WebFetchToolResult {
+            contract {
+                callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+            }
+            return WebFetchToolResult.Builder().apply(block).build()
+        }
+
     }
-    return WebFetchToolResult.Builder().apply(block).build()
+
 }

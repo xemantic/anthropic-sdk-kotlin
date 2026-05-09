@@ -102,10 +102,10 @@ class TextEditor private constructor(
             block: Input.Builder.() -> Unit
         ): Input = Input.Builder().apply(block).build()
 
+        operator fun invoke(
+            block: TextEditor.Builder.() -> Unit = {},
+        ): TextEditor = TextEditor.Builder().apply(block).build()
+
     }
 
 }
-
-fun TextEditor(
-    builder: TextEditor.Builder.() -> Unit = {},
-): TextEditor = TextEditor.Builder().apply(builder).build()

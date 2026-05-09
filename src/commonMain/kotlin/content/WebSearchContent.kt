@@ -62,16 +62,20 @@ class WebSearchServerToolUse private constructor(
         }.build()
     }
 
-}
+    companion object {
 
-@OptIn(ExperimentalContracts::class)
-fun WebSearchServerToolUse(
-    block: WebSearchServerToolUse.Builder.() -> Unit
-): WebSearchServerToolUse {
-    contract {
-        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+        @OptIn(ExperimentalContracts::class)
+        operator fun invoke(
+            block: WebSearchServerToolUse.Builder.() -> Unit
+        ): WebSearchServerToolUse {
+            contract {
+                callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+            }
+            return WebSearchServerToolUse.Builder().apply(block).build()
+        }
+
     }
-    return WebSearchServerToolUse.Builder().apply(block).build()
+
 }
 
 @Serializable
@@ -149,16 +153,20 @@ class WebSearchToolResult private constructor(
         }.build()
     }
 
-}
+    companion object {
 
-@OptIn(ExperimentalContracts::class)
-fun WebSearchToolResult(
-    block: WebSearchToolResult.Builder.() -> Unit
-): WebSearchToolResult {
-    contract {
-        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+        @OptIn(ExperimentalContracts::class)
+        operator fun invoke(
+            block: WebSearchToolResult.Builder.() -> Unit
+        ): WebSearchToolResult {
+            contract {
+                callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+            }
+            return WebSearchToolResult.Builder().apply(block).build()
+        }
+
     }
-    return WebSearchToolResult.Builder().apply(block).build()
+
 }
 
 @Serializable

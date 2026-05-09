@@ -14,58 +14,50 @@
  * limitations under the License.
  */
 
-package com.xemantic.ai.anthropic.content
+package com.xemantic.ai.anthropic
 
-import com.xemantic.ai.anthropic.message.Message
+import com.xemantic.ai.anthropic.content.Text
+import com.xemantic.ai.anthropic.message.Role
 import com.xemantic.ai.anthropic.message.StopReason
-import com.xemantic.ai.anthropic.test.testAnthropic
-import com.xemantic.ai.file.magic.MediaType
-import com.xemantic.kotlin.test.assert
+import com.xemantic.ai.anthropic.test.env
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
 import kotlinx.coroutines.test.runTest
-import java.io.File
 import kotlin.test.Test
 
-class JvmDocumentTest {
+class MoonshotTest {
 
-    /**
-     * Note: This test would work with all the platforms supporting [kotlinx.io.files.SystemFileSystem],
-     * however the path of the working directory used by the test container is predictable only
-     * for JVM platform, therefore common tests cases are using relative path.
-     */
     @Test
-    fun `should read test PDF with path specified as String`() = runTest {
+    fun `should receive an introduction from Kimi`() = runTest {
         // given
-        val anthropic = testAnthropic()
+        val anthropic = Anthropic {
+            baseUrl = env["MOONSHOT_API_BASE_URL"]
+            defaultModel = env["MOONSHOT_DEFAULT_MODEL"]
+            apiKey = env["MOONSHOT_API_KEY"]
+            useXApiKeyHeader = false
+            useAuthorizationBearerHeader = true
+        }
 
         // when
         val response = anthropic.messages.create {
-            +Message {
-                +Document("test-data/test.pdf")
-                +"What's in the document?"
-            }
+            +"Hello World! What's your name?"
         }
 
         // then
         response should {
+            have(role == Role.ASSISTANT)
+            have("Kimi" in model)
             have(stopReason == StopReason.END_TURN)
             have(content.size == 1)
             content[0] should {
                 be<Text>()
-                assert("FOO" in text.uppercase())
-                assert("BAR" in text.uppercase())
+                have("Kimi" in text)
             }
-        }
-    }
-
-    @Test
-    fun `should read document file specified as java File`() {
-        Document(File("test-data/test.pdf")) should {
-            source should {
-                be<Source.Base64>()
-                have(mediaType == MediaType.PDF.mime)
+            have(stopSequence == "<|im_end|>")
+            usage should {
+                have(inputTokens == 33)
+                have(outputTokens > 0)
             }
         }
     }

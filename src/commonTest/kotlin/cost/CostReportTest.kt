@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Kazimierz Pogoda / Xemantic
+ * Copyright 2025-2026 Xemantic contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,13 +32,14 @@ class CostReportTest {
     fun `should render cost report table`() {
         // given
         val collector = CostCollector()
+        val model = Model.CLAUDE_SONNET_4_5_20250929
         val response = MessageResponse(
             id = "foo",
             role = Role.ASSISTANT,
             content = listOf(
                 Text("bar")
             ),
-            model = Model.CLAUDE_SONNET_4_5_20250929.id,
+            model = model.id,
             stopReason = StopReason.END_TURN,
             stopSequence = null,
             usage = Usage {
@@ -51,15 +52,13 @@ class CostReportTest {
                     ephemeral1hInputTokens = 300
                 }
             }
-        ).apply {
-            resolvedModel = Model.DEFAULT
-        }
-        val costWithUsage = response.costWithUsage
+        )
+        val costWithUsage = response.usage.pricedBy(model)
         collector += costWithUsage
 
         // when
         val report = costReport(
-            stats = response.costWithUsage,
+            stats = costWithUsage,
             totalStats = collector.costWithUsage
         )
 

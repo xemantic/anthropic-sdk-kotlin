@@ -64,10 +64,10 @@ class Bash private constructor() : BuiltInTool<Bash.Input>(
             block: Input.Builder.() -> Unit
         ): Input = Input.Builder().apply(block).build()
 
+        operator fun invoke(
+            block: Bash.Builder.() -> Unit = {}
+        ): Bash = Bash.Builder().apply(block).build()
+
     }
 
 }
-
-fun Bash(
-    builder: Bash.Builder.() -> Unit = {}
-): Bash = Bash.Builder().apply(builder).build()
