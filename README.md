@@ -219,6 +219,18 @@ and asserting against results. Tests default to Claude Haiku model to reduce API
 These integration test might be flaky from time to time. For example, if the test image
 is misinterpreted, or Claude is randomly fantasizing too much.
 
+### Environment variables in browser tests
+
+Browser-based tests for the `js` and `wasmJs` targets run inside a headless Chrome via Karma and have no access to the operating system environment. Any env var that a browser test needs to read (via `process.env.X` or the `getEnv(name)` helper from `xemantic-kotlin-test`) must be explicitly injected into the Webpack bundle through [`webpack.config.d/env-config.js`](webpack.config.d/env-config.js), which uses Webpack's `DefinePlugin` to substitute `process.env.X` references at bundle time from the OS environment of the Gradle process.
+
+When adding a new integration test that depends on a new env var, update three places:
+
+1. `build.gradle.kts` — forward the var to the test task via `environment(name, value)` for `KotlinJvmTest`, `KotlinJsTest`, and `KotlinNativeTest` (and `SIMCTL_CHILD_*` for iOS simulator).
+2. `webpack.config.d/env-config.js` — add `'<NAME>': JSON.stringify(process.env.<NAME>)` so browser bundles can see it.
+3. The CI workflow secrets — ensure the var is exported into the Gradle process by the reusable workflow at `xemantic/.github`.
+
+Without step 2, the JVM, Native and Node-based JS/wasmJs tests pass while the browser test fails with "No such environment variable: \<NAME\>".
+
 ## Project dependencies
 
 API dependencies (will be provided as transitive dependencies of `anthropic-sdk-kotlin`):

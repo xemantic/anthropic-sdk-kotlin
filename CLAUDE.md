@@ -25,6 +25,7 @@ Both developers and AI agents are expected to add entries as they encounter surp
 - Tests can be flaky due to AI model variability; release builds intentionally skip tests for this reason, so don't gate releases on green test runs.
 - Tests must retain `// given`, `// when`, `// then` comment structure — AI agents tend to omit these.
 - Test-name filter patterns are not portable across targets. JVM's `filter.excludeTestsMatching("ClassName")` matches by simple class name, but Kotlin/Native's `--ktest_negative_gradle_filter=...` and Kotlin/JS's `filter.excludeTestsMatching(...)` match against the fully-qualified test descriptor — bare class names silently fail to match. Use `*ClassName*` (or fully-qualified `pkg.ClassName`) for native and JS.
+- Browser tests (Karma for `js`/`wasmJs`) have no OS environment — env vars reach the bundle only through Webpack's `DefinePlugin` in `webpack.config.d/env-config.js`. Any env var consumed by a browser test (e.g. `MOONSHOT_API_BASE_URL`) must be listed there *in addition to* the `environment(...)` wiring in `build.gradle.kts`; otherwise `getEnv(name)` returns `null` at runtime and `env[name]` throws "No such environment variable". Node-based JS/wasmJs tests inherit `process.env` directly and don't need the DefinePlugin entry.
 
 ### Auto mode
 
