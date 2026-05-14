@@ -22,6 +22,7 @@ import com.xemantic.ai.anthropic.message.StopReason
 import com.xemantic.ai.anthropic.test.env
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
+import com.xemantic.kotlin.test.isBrowserPlatform
 import com.xemantic.kotlin.test.should
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -30,6 +31,7 @@ class MoonshotTest {
 
     @Test
     fun `should receive an introduction from Kimi`() = runTest {
+        if (isBrowserPlatform) return@runTest // our test Moonshot API server depends on CORS
         // given
         val anthropic = Anthropic {
             baseUrl = env["MOONSHOT_API_BASE_URL"]
