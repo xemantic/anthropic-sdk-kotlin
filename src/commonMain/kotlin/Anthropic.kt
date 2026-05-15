@@ -197,7 +197,6 @@ class Anthropic internal constructor(
         }
 
         defaultRequest {
-            url(baseUrl)
             if (useXApiKeyHeader) {
                 header("x-api-key", apiKey)
             }
@@ -216,6 +215,8 @@ class Anthropic internal constructor(
         httpClientConfig()
     }
 
+    private val messagesUrl: String = "${baseUrl.trimEnd('/')}/v1/messages"
+
     inner class Messages {
 
         suspend fun create(
@@ -230,7 +231,7 @@ class Anthropic internal constructor(
         private suspend fun create(
             request: MessageRequest
         ): MessageResponse {
-            val apiResponse = client.post("/v1/messages") {
+            val apiResponse = client.post(messagesUrl) {
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }
@@ -258,7 +259,7 @@ class Anthropic internal constructor(
 
             try {
                 client.sse(
-                    urlString = "/v1/messages",
+                    urlString = messagesUrl,
                     request = {
                         method = HttpMethod.Post
                         contentType(ContentType.Application.Json)
