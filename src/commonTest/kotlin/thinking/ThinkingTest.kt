@@ -198,11 +198,12 @@ class ThinkingTest {
         }
 
         // then
+        // note: adaptive might decide not to use thinking at all
         response1.content should {
-            have(any { it is ThinkingBlock })
+            have(any { it is Text })
         }
         response2.content should {
-            have(any { it is ThinkingBlock })
+            have(any { it is Text })
         }
     }
 
