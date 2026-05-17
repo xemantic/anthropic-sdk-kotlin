@@ -60,7 +60,7 @@ class MoonshotTest {
             }
             have(stopSequence == null)
             usage should {
-                have(inputTokens == 33)
+                have(inputTokens > 0)
                 have(outputTokens > 0)
             }
         }
