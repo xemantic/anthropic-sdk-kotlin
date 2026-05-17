@@ -58,7 +58,7 @@ class MoonshotTest {
                 be<Text>()
                 have("Kimi" in text)
             }
-            have(stopSequence == "<|im_end|>")
+            have(stopSequence == null)
             usage should {
                 have(inputTokens == 33)
                 have(outputTokens > 0)
