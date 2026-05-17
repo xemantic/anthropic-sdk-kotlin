@@ -105,7 +105,14 @@ sealed interface Event {
             @Serializable
             @SerialName("thinking")
             data class Thinking(
-                val thinking: String
+                val thinking: String,
+                val signature: String? = null
+            ) : ContentBlock()
+
+            @Serializable
+            @SerialName("redacted_thinking")
+            data class RedactedThinking(
+                val data: String
             ) : ContentBlock()
 
         }

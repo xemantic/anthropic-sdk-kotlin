@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Kazimierz Pogoda / Xemantic
+ * Copyright 2025-2026 Xemantic contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ import kotlin.contracts.contract
 @SerialName("thinking")
 class ThinkingBlock private constructor(
     val thinking: String,
-    val signature: String,
+    val signature: String?, // technically it cannot be null in the official schema, but Kimi models are returning null here
     @SerialName("cache_control")
     override val cacheControl: CacheControl? = null
 ) : Content() {
@@ -65,63 +65,18 @@ class ThinkingBlock private constructor(
         cacheControl = this@ThinkingBlock.cacheControl
     }.apply(block).build()
 
-}
+    companion object {
 
-@OptIn(ExperimentalContracts::class)
-fun ThinkingBlock(block: ThinkingBlock.Builder.() -> Unit): ThinkingBlock {
-    contract {
-        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
-    }
-    return ThinkingBlock.Builder().also(block).build()
-}
+        @OptIn(ExperimentalContracts::class)
+        operator fun invoke(block: Builder.() -> Unit): ThinkingBlock {
+            contract {
+                callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+            }
+            return Builder().apply(block).build()
+        }
 
-/**
- * A thinking content block parameter for passing previous thinking in requests.
- *
- * Used when continuing multi-turn conversations that include thinking blocks
- * from previous assistant responses.
- *
- * @property thinking The thinking content from a previous response
- * @property signature The cryptographic signature from the previous response
- * @property cacheControl Cache control for this content block
- */
-@Serializable
-@SerialName("thinking")
-class ThinkingBlockParam private constructor(
-    val thinking: String,
-    val signature: String,
-    @SerialName("cache_control")
-    override val cacheControl: CacheControl? = null
-) : Content() {
-
-    class Builder {
-        var thinking: String? = null
-        var signature: String? = null
-        var cacheControl: CacheControl? = null
-
-        fun build(): ThinkingBlockParam = ThinkingBlockParam(
-            thinking = requireNotNull(thinking) { "thinking cannot be null" },
-            signature = requireNotNull(signature) { "signature cannot be null" },
-            cacheControl = cacheControl
-        )
     }
 
-    fun copy(
-        block: Builder.() -> Unit
-    ): ThinkingBlockParam = Builder().apply {
-        thinking = this@ThinkingBlockParam.thinking
-        signature = this@ThinkingBlockParam.signature
-        cacheControl = this@ThinkingBlockParam.cacheControl
-    }.apply(block).build()
-
-}
-
-@OptIn(ExperimentalContracts::class)
-fun ThinkingBlockParam(block: ThinkingBlockParam.Builder.() -> Unit): ThinkingBlockParam {
-    contract {
-        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
-    }
-    return ThinkingBlockParam.Builder().also(block).build()
 }
 
 /**
@@ -158,12 +113,17 @@ class RedactedThinkingBlock private constructor(
         cacheControl = this@RedactedThinkingBlock.cacheControl
     }.apply(block).build()
 
+    companion object {
+
+        @OptIn(ExperimentalContracts::class)
+        operator fun invoke(block: Builder.() -> Unit): RedactedThinkingBlock {
+            contract {
+                callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+            }
+            return Builder().apply(block).build()
+        }
+
+    }
+
 }
 
-@OptIn(ExperimentalContracts::class)
-fun RedactedThinkingBlock(block: RedactedThinkingBlock.Builder.() -> Unit): RedactedThinkingBlock {
-    contract {
-        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
-    }
-    return RedactedThinkingBlock.Builder().also(block).build()
-}

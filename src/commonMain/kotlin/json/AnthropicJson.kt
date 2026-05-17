@@ -219,7 +219,6 @@ object ContentSerializer : KSerializer<Content> {
             is ToolResult -> serializeWithType(jsonEncoder, ToolResult.serializer(), value, "tool_result")
             is Document -> serializeWithType(jsonEncoder, Document.serializer(), value, "document")
             is ThinkingBlock -> serializeWithType(jsonEncoder, ThinkingBlock.serializer(), value, "thinking")
-            is ThinkingBlockParam -> serializeWithType(jsonEncoder, ThinkingBlockParam.serializer(), value, "thinking")
             is RedactedThinkingBlock -> serializeWithType(jsonEncoder, RedactedThinkingBlock.serializer(), value, "redacted_thinking")
             else -> throw SerializationException("Unsupported Content type: ${value::class}")
         }

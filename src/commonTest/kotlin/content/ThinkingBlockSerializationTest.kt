@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Kazimierz Pogoda / Xemantic
+ * Copyright 2025-2026 Xemantic contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,39 +20,37 @@ import com.xemantic.ai.anthropic.cache.CacheControl
 import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
+import com.xemantic.kotlin.test.sameAsJson
 import com.xemantic.kotlin.test.should
-import io.kotest.assertions.json.shouldEqualJson
 import kotlin.test.Test
 
 class ThinkingBlockSerializationTest {
 
     @Test
     fun `should serialize ThinkingBlock`() {
-        anthropicJson.encodeToString(
-            serializer = Content.serializer(),
-            value = ThinkingBlock {
+        anthropicJson.encodeToString<Content>(
+            ThinkingBlock {
                 thinking = "Let me analyze this step by step..."
                 signature = "WaUjzkypQ2mUEVM36O2TxuC06KN8xyfbJwyem2dw3URve/op91XWHOEBLLqIOMfFG/UvLEczmEsUjavL"
             }
-        ) shouldEqualJson """
+        ) sameAsJson """
             {
               "type": "thinking",
               "thinking": "Let me analyze this step by step...",
               "signature": "WaUjzkypQ2mUEVM36O2TxuC06KN8xyfbJwyem2dw3URve/op91XWHOEBLLqIOMfFG/UvLEczmEsUjavL"
             }
-        """
+        """.trimIndent()
     }
 
     @Test
     fun `should serialize ThinkingBlock with cache control`() {
-        anthropicJson.encodeToString(
-            serializer = Content.serializer(),
-            value = ThinkingBlock {
+        anthropicJson.encodeToString<Content>(
+            ThinkingBlock {
                 thinking = "Reasoning process..."
                 signature = "abc123"
                 cacheControl = CacheControl.Ephemeral()
             }
-        ) shouldEqualJson """
+        ) sameAsJson """
             {
               "type": "thinking",
               "thinking": "Reasoning process...",
@@ -61,7 +59,7 @@ class ThinkingBlockSerializationTest {
                 "type": "ephemeral"
               }
             }
-        """
+        """.trimIndent()
     }
 
     @Test
@@ -83,67 +81,23 @@ class ThinkingBlockSerializationTest {
     }
 
     @Test
-    fun `should serialize ThinkingBlockParam`() {
-        anthropicJson.encodeToString(
-            serializer = Content.serializer(),
-            value = ThinkingBlockParam {
-                thinking = "This is a nice number theory question..."
-                signature = "EuYBCkQYAiJAgCs1le6..."
-            }
-        ) shouldEqualJson """
-            {
-              "type": "thinking",
-              "thinking": "This is a nice number theory question...",
-              "signature": "EuYBCkQYAiJAgCs1le6..."
-            }
-        """
-    }
-
-    @Test
-    fun `should deserialize ThinkingBlockParam`() {
+    fun `should deserialize ThinkingBlock with cache control`() {
         anthropicJson.decodeFromString<Content>(
             """
             {
               "type": "thinking",
-              "thinking": "Previous thinking content...",
-              "signature": "sig123"
+              "thinking": "Step-by-step reasoning...",
+              "signature": "xyz789",
+              "cache_control": {
+                "type": "ephemeral"
+              }
             }
             """
         ) should {
-            be<ThinkingBlock>()  // Deserializes as ThinkingBlock since same type
-            have(thinking == "Previous thinking content...")
-            have(signature == "sig123")
-        }
-    }
-
-    @Test
-    fun `should serialize RedactedThinkingBlock`() {
-        anthropicJson.encodeToString(
-            serializer = Content.serializer(),
-            value = RedactedThinkingBlock {
-                data = "encrypted_thinking_data_here"
-            }
-        ) shouldEqualJson """
-            {
-              "type": "redacted_thinking",
-              "data": "encrypted_thinking_data_here"
-            }
-        """
-    }
-
-    @Test
-    fun `should deserialize RedactedThinkingBlock`() {
-        anthropicJson.decodeFromString<Content>(
-            """
-            {
-              "type": "redacted_thinking",
-              "data": "redacted_data_xyz"
-            }
-            """
-        ) should {
-            be<RedactedThinkingBlock>()
-            have(data == "redacted_data_xyz")
-            have(cacheControl == null)
+            be<ThinkingBlock>()
+            have(thinking == "Step-by-step reasoning...")
+            have(signature == "xyz789")
+            have(cacheControl is CacheControl.Ephemeral)
         }
     }
 

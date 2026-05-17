@@ -50,7 +50,6 @@ sealed class Content {
         is WebFetchToolResult -> copy { this.cacheControl = cacheControl }
         is ToolResult -> copy { this.cacheControl = cacheControl }
         is ThinkingBlock -> copy { this.cacheControl = cacheControl }
-        is ThinkingBlockParam -> copy { this.cacheControl = cacheControl }
         is RedactedThinkingBlock -> copy { this.cacheControl = cacheControl }
         is ServerToolUse<*> -> {
             throw IllegalStateException(
