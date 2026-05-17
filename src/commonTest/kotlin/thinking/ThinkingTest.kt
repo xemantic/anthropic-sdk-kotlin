@@ -83,10 +83,7 @@ class ThinkingTest {
         // given
         val client = testAnthropic()
 
-        // then
-        assertFailsWith<AnthropicApiException>(
-            "thinking.enabled.budget_tokens: Input should be greater than or equal to 1024"
-        ) {
+        val exception = assertFailsWith<AnthropicApiException> {
             // when
             client.messages.create {
                 thinking = ThinkingConfig.Enabled {
@@ -95,6 +92,9 @@ class ThinkingTest {
                 +"What is the capital of France?"
             }
         }
+
+        // then
+        assert(exception.message == "Error(type=invalid_request_error, message=thinking.enabled.budget_tokens: Input should be greater than or equal to 1024)")
     }
 
     @Test
@@ -198,10 +198,10 @@ class ThinkingTest {
 
         // then
         response1.content should {
-            have(any { it is Text })
+            have(any { it is ThinkingBlock })
         }
         response2.content should {
-            have(any { it is Text })
+            have(any { it is ThinkingBlock })
         }
     }
 
