@@ -75,7 +75,7 @@ suspend fun Flow<Event>.toMessageResponse(): MessageResponse {
                     }
                     is ContentBlockStart.ContentBlock.Thinking -> ThinkingBlock {
                         thinking = builder.toString()
-                        signature = signatureBuilder.toString()
+                        signature = signatureBuilder.toString().ifEmpty { null }
                     }
                     is ContentBlockStart.ContentBlock.RedactedThinking -> RedactedThinkingBlock {
                         data = block.data

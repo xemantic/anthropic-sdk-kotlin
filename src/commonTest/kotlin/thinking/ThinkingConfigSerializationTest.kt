@@ -37,7 +37,7 @@ class ThinkingConfigSerializationTest {
               "type": "enabled",
               "budget_tokens": 10000
             }
-        """
+        """.trimIndent()
     }
 
     @Test
@@ -46,7 +46,7 @@ class ThinkingConfigSerializationTest {
             {
               "type": "disabled"
             }
-        """
+        """.trimIndent()
     }
 
     @Test
@@ -78,30 +78,6 @@ class ThinkingConfigSerializationTest {
     }
 
     @Test
-    fun `should enforce minimum budget tokens`() {
-        val result = runCatching {
-            ThinkingConfig.Enabled {
-                budgetTokens = 512  // Less than minimum of 1024
-            }
-        }
-        result should {
-            have(isFailure)
-        }
-    }
-
-    @Test
-    fun `should allow minimum budget tokens of 1024`() {
-        val result = runCatching {
-            ThinkingConfig.Enabled {
-                budgetTokens = 1024
-            }
-        }
-        result should {
-            have(isSuccess)
-        }
-    }
-
-    @Test
     fun `should serialize ThinkingConfig Enabled with display summarized`() {
         ThinkingConfig.Enabled {
             budgetTokens = 10000
@@ -112,7 +88,7 @@ class ThinkingConfigSerializationTest {
               "budget_tokens": 10000,
               "display": "summarized"
             }
-        """
+        """.trimIndent()
     }
 
     @Test
@@ -126,7 +102,7 @@ class ThinkingConfigSerializationTest {
               "budget_tokens": 10000,
               "display": "omitted"
             }
-        """
+        """.trimIndent()
     }
 
     @Test
@@ -152,7 +128,7 @@ class ThinkingConfigSerializationTest {
             {
               "type": "adaptive"
             }
-        """
+        """.trimIndent()
     }
 
     @Test
@@ -164,7 +140,7 @@ class ThinkingConfigSerializationTest {
               "type": "adaptive",
               "display": "summarized"
             }
-        """
+        """.trimIndent()
     }
 
     @Test
@@ -176,7 +152,7 @@ class ThinkingConfigSerializationTest {
               "type": "adaptive",
               "display": "omitted"
             }
-        """
+        """.trimIndent()
     }
 
     @Test

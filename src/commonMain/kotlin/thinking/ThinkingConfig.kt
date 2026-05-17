@@ -66,8 +66,8 @@ sealed class ThinkingConfig {
      * @property budgetTokens Determines how many tokens Claude can use for its
      *   internal reasoning process. Must be ≥1024 and less than max_tokens.
      * @property display Whether to return summarized thinking text or only the
-     *   signature. Defaults to [ThinkingDisplay.SUMMARIZED] on Claude 4 models
-     *   and [ThinkingDisplay.OMITTED] on Claude Opus 4.7 / Mythos Preview.
+     *   signature. Defaults to [ThinkingConfig.Display.SUMMARIZED] on Claude 4 models
+     *   and [ThinkingConfig.Display.OMITTED] on Claude Opus 4.7 / Mythos Preview.
      */
     @Serializable
     @SerialName("enabled")

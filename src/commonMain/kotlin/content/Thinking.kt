@@ -52,7 +52,7 @@ class ThinkingBlock private constructor(
 
         fun build(): ThinkingBlock = ThinkingBlock(
             thinking = requireNotNull(thinking) { "thinking cannot be null" },
-            signature = requireNotNull(signature) { "signature cannot be null" },
+            signature = signature,
             cacheControl = cacheControl
         )
     }
