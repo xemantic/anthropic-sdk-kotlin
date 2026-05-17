@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Kazimierz Pogoda / Xemantic
+ * Copyright 2025-2026 Xemantic contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,9 @@
 package com.xemantic.ai.anthropic.message
 
 import com.xemantic.ai.anthropic.content.Content
+import com.xemantic.ai.anthropic.content.RedactedThinkingBlock
 import com.xemantic.ai.anthropic.content.Text
+import com.xemantic.ai.anthropic.content.ThinkingBlock
 import com.xemantic.ai.anthropic.content.ToolUse
 import com.xemantic.ai.anthropic.error.AnthropicApiException
 import com.xemantic.ai.anthropic.event.Event
@@ -27,13 +29,13 @@ import io.ktor.http.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.buildJsonObject
 
 suspend fun Flow<Event>.toMessageResponse(): MessageResponse {
     var response: MessageResponse? = null
-    val contentBuilder = StringBuilder()
+    val builder = StringBuilder()
+    val signatureBuilder = StringBuilder()
     val content = mutableListOf<Content>()
-    var toolUse: ToolUse? = null
+    var currentBlock: ContentBlockStart.ContentBlock? = null
     var messageStopped = false
     collect { event ->
         when (event) {
@@ -41,37 +43,48 @@ suspend fun Flow<Event>.toMessageResponse(): MessageResponse {
                 response = event.message
             }
             is ContentBlockStart -> {
-                when (event.contentBlock) {
+                currentBlock = event.contentBlock
+                when (val block = event.contentBlock) {
                     is ContentBlockStart.ContentBlock.Text -> {
                         // actually, the first event seems to always have an empty text
-                        contentBuilder.append(event.contentBlock.text)
+                        builder.append(block.text)
                     }
-                    is ContentBlockStart.ContentBlock.ToolUse -> {
-                        toolUse = ToolUse {
-                            id = event.contentBlock.id
-                            name = event.contentBlock.name
-                            input = emtpyJson
-                        }
+                    is ContentBlockStart.ContentBlock.Thinking -> {
+                        builder.append(block.thinking)
+                        block.signature?.let(signatureBuilder::append)
                     }
+                    is ContentBlockStart.ContentBlock.ToolUse,
+                    is ContentBlockStart.ContentBlock.RedactedThinking -> Unit
                 }
             }
             is ContentBlockDelta -> {
                 when (event.delta) {
-                    is ContentBlockDelta.Delta.TextDelta -> {
-                        contentBuilder.append(event.delta.text)
-                    }
-                    is ContentBlockDelta.Delta.InputJsonDelta -> {
-                        contentBuilder.append(event.delta.partialJson)
-                    }
+                    is TextDelta -> builder.append(event.delta.text)
+                    is InputJsonDelta -> builder.append(event.delta.partialJson)
+                    is ThinkingDelta -> builder.append(event.delta.thinking)
+                    is SignatureDelta -> signatureBuilder.append(event.delta.signature)
                 }
             }
             is ContentBlockStop -> {
-                val data = contentBuilder.toString()
-                content += toolUse?.copy {
-                    input = Json.decodeFromString<JsonObject>(data)
-                } ?: Text(data)
-                contentBuilder.clear()
-                toolUse = null
+                content += when (val block = currentBlock) {
+                    is ContentBlockStart.ContentBlock.Text -> Text(builder.toString())
+                    is ContentBlockStart.ContentBlock.ToolUse -> ToolUse {
+                        id = block.id
+                        name = block.name
+                        input = Json.decodeFromString<JsonObject>(builder.toString())
+                    }
+                    is ContentBlockStart.ContentBlock.Thinking -> ThinkingBlock {
+                        thinking = builder.toString()
+                        signature = signatureBuilder.toString().ifEmpty { null }
+                    }
+                    is ContentBlockStart.ContentBlock.RedactedThinking -> RedactedThinkingBlock {
+                        data = block.data
+                    }
+                    null -> error("content_block_stop received without a preceding content_block_start")
+                }
+                builder.clear()
+                signatureBuilder.clear()
+                currentBlock = null
             }
             is MessageDelta -> {
                 val startUsage = response!!.usage
@@ -114,5 +127,3 @@ suspend fun Flow<Event>.toMessageResponse(): MessageResponse {
     }
     return response!!
 }
-
-private val emtpyJson = buildJsonObject {}

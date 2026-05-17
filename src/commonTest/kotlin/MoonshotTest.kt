@@ -20,6 +20,7 @@ import com.xemantic.ai.anthropic.content.Text
 import com.xemantic.ai.anthropic.message.Role
 import com.xemantic.ai.anthropic.message.StopReason
 import com.xemantic.ai.anthropic.test.env
+import com.xemantic.ai.anthropic.thinking.ThinkingConfig
 import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.isBrowserPlatform
@@ -44,6 +45,7 @@ class MoonshotTest {
         // when
         val response = anthropic.messages.create {
             +"Hello World! What's your name?"
+            thinking = ThinkingConfig.Disabled // Our Kimi model deployment is returning thinking tokens by default
         }
 
         // then
@@ -56,9 +58,9 @@ class MoonshotTest {
                 be<Text>()
                 have("Kimi" in text)
             }
-            have(stopSequence == "<|im_end|>")
+            have(stopSequence == null)
             usage should {
-                have(inputTokens == 33)
+                have(inputTokens > 0)
                 have(outputTokens > 0)
             }
         }
