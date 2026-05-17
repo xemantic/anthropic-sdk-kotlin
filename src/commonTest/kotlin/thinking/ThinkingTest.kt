@@ -23,6 +23,7 @@ import com.xemantic.ai.anthropic.error.AnthropicApiException
 import com.xemantic.ai.anthropic.message.Message
 import com.xemantic.ai.anthropic.message.plusAssign
 import com.xemantic.ai.anthropic.test.testAnthropic
+import com.xemantic.kotlin.test.assert
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.should
 import kotlinx.coroutines.test.runTest
