@@ -16,11 +16,7 @@
 
 package com.xemantic.ai.anthropic.message
 
-import com.xemantic.ai.anthropic.content.Content
-import com.xemantic.ai.anthropic.content.RedactedThinkingBlock
-import com.xemantic.ai.anthropic.content.Text
-import com.xemantic.ai.anthropic.content.ThinkingBlock
-import com.xemantic.ai.anthropic.content.ToolUse
+import com.xemantic.ai.anthropic.content.*
 import com.xemantic.ai.anthropic.error.AnthropicApiException
 import com.xemantic.ai.anthropic.event.Event
 import com.xemantic.ai.anthropic.event.Event.*
@@ -37,12 +33,41 @@ suspend fun Flow<Event>.toMessageResponse(): MessageResponse {
     val content = mutableListOf<Content>()
     var currentBlock: ContentBlockStart.ContentBlock? = null
     var messageStopped = false
+
+    // Finalizes the open block (if any) into the content list. Used by the
+    // explicit content_block_stop path, and also to synthesize an implicit
+    // stop when a new content_block_start arrives or the stream ends with a
+    // block still open — some Anthropic-compatible providers (e.g. Kimi via
+    // Moonshot's compat layer) omit content_block_stop between blocks.
+    fun flushCurrent() {
+        val block = currentBlock ?: return
+        content += when (block) {
+            is ContentBlockStart.ContentBlock.Text -> Text(builder.toString())
+            is ContentBlockStart.ContentBlock.ToolUse -> ToolUse {
+                id = block.id
+                name = block.name
+                input = Json.decodeFromString<JsonObject>(builder.toString())
+            }
+            is ContentBlockStart.ContentBlock.Thinking -> ThinkingBlock {
+                thinking = builder.toString()
+                signature = signatureBuilder.toString().ifEmpty { null }
+            }
+            is ContentBlockStart.ContentBlock.RedactedThinking -> RedactedThinkingBlock {
+                data = block.data
+            }
+        }
+        builder.clear()
+        signatureBuilder.clear()
+        currentBlock = null
+    }
+
     collect { event ->
         when (event) {
             is MessageStart -> {
                 response = event.message
             }
             is ContentBlockStart -> {
+                flushCurrent()
                 currentBlock = event.contentBlock
                 when (val block = event.contentBlock) {
                     is ContentBlockStart.ContentBlock.Text -> {
@@ -66,25 +91,10 @@ suspend fun Flow<Event>.toMessageResponse(): MessageResponse {
                 }
             }
             is ContentBlockStop -> {
-                content += when (val block = currentBlock) {
-                    is ContentBlockStart.ContentBlock.Text -> Text(builder.toString())
-                    is ContentBlockStart.ContentBlock.ToolUse -> ToolUse {
-                        id = block.id
-                        name = block.name
-                        input = Json.decodeFromString<JsonObject>(builder.toString())
-                    }
-                    is ContentBlockStart.ContentBlock.Thinking -> ThinkingBlock {
-                        thinking = builder.toString()
-                        signature = signatureBuilder.toString().ifEmpty { null }
-                    }
-                    is ContentBlockStart.ContentBlock.RedactedThinking -> RedactedThinkingBlock {
-                        data = block.data
-                    }
-                    null -> error("content_block_stop received without a preceding content_block_start")
+                check(currentBlock != null) {
+                    "content_block_stop received without a preceding content_block_start"
                 }
-                builder.clear()
-                signatureBuilder.clear()
-                currentBlock = null
+                flushCurrent()
             }
             is MessageDelta -> {
                 val startUsage = response!!.usage
