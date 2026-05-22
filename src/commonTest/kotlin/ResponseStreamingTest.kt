@@ -16,8 +16,11 @@
 
 package com.xemantic.ai.anthropic
 
+import com.xemantic.ai.anthropic.content.Text
+import com.xemantic.ai.anthropic.content.ToolUse
 import com.xemantic.ai.anthropic.error.AnthropicApiException
 import com.xemantic.ai.anthropic.event.Event
+import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.ai.anthropic.message.Message
 import com.xemantic.ai.anthropic.message.addCacheBreakpoint
 import com.xemantic.ai.anthropic.message.plusAssign
@@ -103,6 +106,144 @@ class ResponseStreamingTest {
                     have(ephemeral5mInputTokens!! == cacheCreationInputTokens)
                     have(ephemeral1hInputTokens!! == 0)
                 }
+            }
+        }
+    }
+
+    @Test
+    fun `should tolerate missing intermediate content_block_stop`() = runTest {
+        // given
+        // Synthetic event sequence simulating an Anthropic-compatible provider
+        // (e.g. Kimi via Moonshot) that omits content_block_stop between blocks.
+        val events = listOf(
+            """
+                {
+                  "type": "message_start",
+                  "message": {
+                    "type": "message",
+                    "id": "msg_test",
+                    "model": "claude-haiku-4-5",
+                    "role": "assistant",
+                    "content": [],
+                    "stop_reason": null,
+                    "stop_sequence": null,
+                    "usage": {"input_tokens": 10, "output_tokens": 1}
+                  }
+                }
+            """,
+            """
+                {
+                  "type": "content_block_start",
+                  "index": 0,
+                  "content_block": {"type": "text", "text": ""}
+                }
+            """,
+            """
+                {
+                  "type": "content_block_delta",
+                  "index": 0,
+                  "delta": {"type": "text_delta", "text": "Hello"}
+                }
+            """,
+            """
+                {
+                  "type": "content_block_start",
+                  "index": 1,
+                  "content_block": {
+                    "type": "tool_use",
+                    "id": "toolu_1",
+                    "name": "calc",
+                    "input": {}
+                  }
+                }
+            """,
+            """
+                {
+                  "type": "content_block_delta",
+                  "index": 1,
+                  "delta": {"type": "input_json_delta", "partial_json": "{\"x\":1}"}
+                }
+            """,
+            """{"type": "content_block_stop", "index": 1}""",
+            """
+                {
+                  "type": "message_delta",
+                  "delta": {"stop_reason": "tool_use", "stop_sequence": null},
+                  "usage": {"output_tokens": 5}
+                }
+            """,
+            """{"type": "message_stop"}"""
+        ).map { anthropicJson.decodeFromString<Event>(it) }
+
+        // when
+        val response = events.asFlow().toMessageResponse()
+
+        // then
+        response.content should {
+            have(size == 2)
+            filterIsInstance<Text>().first() should {
+                have(text == "Hello")
+            }
+            filterIsInstance<ToolUse>().first() should {
+                have(name == "calc")
+                have(id == "toolu_1")
+            }
+        }
+    }
+
+    @Test
+    fun `should tolerate missing final content_block_stop`() = runTest {
+        // given
+        // Synthetic event sequence simulating a provider that omits the final
+        // content_block_stop before message_stop.
+        val events = listOf(
+            """
+                {
+                  "type": "message_start",
+                  "message": {
+                    "type": "message",
+                    "id": "msg_test",
+                    "model": "claude-haiku-4-5",
+                    "role": "assistant",
+                    "content": [],
+                    "stop_reason": null,
+                    "stop_sequence": null,
+                    "usage": {"input_tokens": 10, "output_tokens": 1}
+                  }
+                }
+            """,
+            """
+                {
+                  "type": "content_block_start",
+                  "index": 0,
+                  "content_block": {"type": "text", "text": ""}
+                }
+            """,
+            """
+                {
+                  "type": "content_block_delta",
+                  "index": 0,
+                  "delta": {"type": "text_delta", "text": "Hello"}
+                }
+            """,
+            """
+                {
+                  "type": "message_delta",
+                  "delta": {"stop_reason": "end_turn", "stop_sequence": null},
+                  "usage": {"output_tokens": 5}
+                }
+            """,
+            """{"type": "message_stop"}"""
+        ).map { anthropicJson.decodeFromString<Event>(it) }
+
+        // when
+        val response = events.asFlow().toMessageResponse()
+
+        // then
+        response.content should {
+            have(size == 1)
+            filterIsInstance<Text>().first() should {
+                have(text == "Hello")
             }
         }
     }

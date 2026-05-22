@@ -34,11 +34,7 @@ suspend fun Flow<Event>.toMessageResponse(): MessageResponse {
     var currentBlock: ContentBlockStart.ContentBlock? = null
     var messageStopped = false
 
-    // Finalizes the open block (if any) into the content list. Used by the
-    // explicit content_block_stop path, and also to synthesize an implicit
-    // stop when a new content_block_start arrives or the stream ends with a
-    // block still open — some Anthropic-compatible providers (e.g. Kimi via
-    // Moonshot's compat layer) omit content_block_stop between blocks.
+    // Flush open block — some providers (e.g. Kimi via Moonshot) omit content_block_stop.
     fun flushCurrent() {
         val block = currentBlock ?: return
         content += when (block) {
@@ -118,6 +114,7 @@ suspend fun Flow<Event>.toMessageResponse(): MessageResponse {
                 )
             }
             is MessageStop -> {
+                flushCurrent()
                 response = response!!.copy(
                     content = content
                 )
