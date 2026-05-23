@@ -30,6 +30,8 @@ import com.xemantic.kotlin.test.be
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.isBrowserPlatform
 import com.xemantic.kotlin.test.should
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.SerialName
 import kotlin.test.Test
@@ -127,10 +129,24 @@ class MoonshotTest {
         conversation += "What is the weather like in San Francisco?"
 
         // when
-        val response = anthropic.messages.stream {
+        val events = anthropic.messages.stream {
             messages = conversation
             thinking = ThinkingConfig.Disabled
-        }.toMessageResponse()
+        }.toList()
+        val response = events.asFlow().toMessageResponse()
+
+        // DEBUG (remove once #148 is green): surface the full Kimi event sequence
+        // so we can verify the index/order assumptions made by toMessageResponse.
+        val eventDump = events.joinToString("\n  ", prefix = "  ")
+        println("[kimi-stream-events]\n$eventDump")
+        if (!response.content.any { it is ToolUse }) {
+            kotlin.test.fail(
+                "No ToolUse block in response.content.\n" +
+                    "stopReason=${response.stopReason}\n" +
+                    "content=${response.content}\n" +
+                    "events:\n$eventDump"
+            )
+        }
 
         // then
         response should {
