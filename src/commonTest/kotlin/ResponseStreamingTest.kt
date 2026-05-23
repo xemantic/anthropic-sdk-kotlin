@@ -276,7 +276,9 @@ class ResponseStreamingTest {
         // then
         response.content should {
             have(size == 2)
-            // Content is emitted in index order regardless of arrival order.
+            // Content is emitted in start-event arrival order; here that
+            // matches the indices, but the contract is arrival order — see
+            // toMessageResponse's `builders` list (not a sort by index).
             (this[0] as Text) should {
                 have(text == "Hello World")
             }
@@ -342,6 +344,45 @@ class ResponseStreamingTest {
             filterIsInstance<Text>().first() should {
                 have(text == "Hello")
             }
+        }
+    }
+
+    @Test
+    fun `should throw on content_block_delta for an unopened index`() = runTest {
+        // given
+        // A content_block_delta without a preceding content_block_start at
+        // the same index cannot be interpreted (the delta type alone does
+        // not tell us which block kind to create), so toMessageResponse must
+        // fail loudly rather than silently dropping the delta.
+        val events = listOf(
+            """
+                {
+                  "type": "message_start",
+                  "message": {
+                    "type": "message",
+                    "id": "msg_test",
+                    "model": "claude-haiku-4-5",
+                    "role": "assistant",
+                    "content": [],
+                    "stop_reason": null,
+                    "stop_sequence": null,
+                    "usage": {"input_tokens": 10, "output_tokens": 1}
+                  }
+                }
+            """,
+            """
+                {
+                  "type": "content_block_delta",
+                  "index": 0,
+                  "delta": {"type": "text_delta", "text": "Hello"}
+                }
+            """,
+            """{"type": "message_stop"}"""
+        ).map { anthropicJson.decodeFromString<Event>(it) }
+
+        // when / then
+        assertFailsWith<IllegalStateException> {
+            events.asFlow().toMessageResponse()
         }
     }
 

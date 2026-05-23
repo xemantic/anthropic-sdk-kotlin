@@ -99,6 +99,10 @@ suspend fun Flow<Event>.toMessageResponse(): MessageResponse {
                 }
             }
             is ContentBlockStop -> {
+                // Deliberately lenient: an unknown or duplicate index is a
+                // no-op. The block is already in `builders` from its start,
+                // and stop is only used here to free routing — a missing or
+                // out-of-order stop must not drop content (see #147).
                 openByIndex.remove(event.index)
             }
             is MessageDelta -> {
