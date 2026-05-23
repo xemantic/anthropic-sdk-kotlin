@@ -111,10 +111,90 @@ class ResponseStreamingTest {
     }
 
     @Test
-    fun `should tolerate missing intermediate content_block_stop`() = runTest {
+    fun `should accumulate sequential blocks that reuse the same index`() = runTest {
+        // given
+        // Real Kimi behavior observed via Moonshot's compat layer: the
+        // provider opens, fills, and closes a tool_use block at index 0,
+        // then immediately opens a separate text block at the same index.
+        // Both blocks must appear in the response in arrival order.
+        val events = listOf(
+            """
+                {
+                  "type": "message_start",
+                  "message": {
+                    "type": "message",
+                    "id": "msg_test",
+                    "model": "claude-haiku-4-5",
+                    "role": "assistant",
+                    "content": [],
+                    "stop_reason": null,
+                    "stop_sequence": null,
+                    "usage": {"input_tokens": 10, "output_tokens": 1}
+                  }
+                }
+            """,
+            """
+                {
+                  "type": "content_block_start",
+                  "index": 0,
+                  "content_block": {
+                    "type": "tool_use",
+                    "id": "toolu_1",
+                    "name": "calc",
+                    "input": {}
+                  }
+                }
+            """,
+            """
+                {
+                  "type": "content_block_delta",
+                  "index": 0,
+                  "delta": {"type": "input_json_delta", "partial_json": "{\"x\":1}"}
+                }
+            """,
+            """{"type": "content_block_stop", "index": 0}""",
+            """
+                {
+                  "type": "content_block_start",
+                  "index": 0,
+                  "content_block": {"type": "text", "text": ""}
+                }
+            """,
+            """{"type": "content_block_stop", "index": 0}""",
+            """
+                {
+                  "type": "message_delta",
+                  "delta": {"stop_reason": "tool_use", "stop_sequence": null},
+                  "usage": {"output_tokens": 5}
+                }
+            """,
+            """{"type": "message_stop"}"""
+        ).map { anthropicJson.decodeFromString<Event>(it) }
+
+        // when
+        val response = events.asFlow().toMessageResponse()
+
+        // then
+        response.content should {
+            have(size == 2)
+            (this[0] as ToolUse) should {
+                have(name == "calc")
+                have(id == "toolu_1")
+                have(input["x"]?.toString() == "1")
+            }
+            (this[1] as Text) should {
+                have(text == "")
+            }
+        }
+    }
+
+    @Test
+    fun `should tolerate cross-block event interleaving`() = runTest {
         // given
         // Synthetic event sequence simulating an Anthropic-compatible provider
-        // (e.g. Kimi via Moonshot) that omits content_block_stop between blocks.
+        // that interleaves events across distinct content-block indices: block 1
+        // starts before block 0 stops, and deltas alternate between indices.
+        // Deltas are routed by event.index to the open builder for that index.
         val events = listOf(
             """
                 {
@@ -142,7 +222,7 @@ class ResponseStreamingTest {
                 {
                   "type": "content_block_delta",
                   "index": 0,
-                  "delta": {"type": "text_delta", "text": "Hello"}
+                  "delta": {"type": "text_delta", "text": "Hello "}
                 }
             """,
             """
@@ -160,8 +240,23 @@ class ResponseStreamingTest {
             """
                 {
                   "type": "content_block_delta",
+                  "index": 0,
+                  "delta": {"type": "text_delta", "text": "World"}
+                }
+            """,
+            """
+                {
+                  "type": "content_block_delta",
                   "index": 1,
-                  "delta": {"type": "input_json_delta", "partial_json": "{\"x\":1}"}
+                  "delta": {"type": "input_json_delta", "partial_json": "{\"x\""}
+                }
+            """,
+            """{"type": "content_block_stop", "index": 0}""",
+            """
+                {
+                  "type": "content_block_delta",
+                  "index": 1,
+                  "delta": {"type": "input_json_delta", "partial_json": ":1}"}
                 }
             """,
             """{"type": "content_block_stop", "index": 1}""",
@@ -181,12 +276,16 @@ class ResponseStreamingTest {
         // then
         response.content should {
             have(size == 2)
-            filterIsInstance<Text>().first() should {
-                have(text == "Hello")
+            // Content is emitted in start-event arrival order; here that
+            // matches the indices, but the contract is arrival order — see
+            // toMessageResponse's `builders` list (not a sort by index).
+            (this[0] as Text) should {
+                have(text == "Hello World")
             }
-            filterIsInstance<ToolUse>().first() should {
+            (this[1] as ToolUse) should {
                 have(name == "calc")
                 have(id == "toolu_1")
+                have(input["x"]?.toString() == "1")
             }
         }
     }
@@ -245,6 +344,45 @@ class ResponseStreamingTest {
             filterIsInstance<Text>().first() should {
                 have(text == "Hello")
             }
+        }
+    }
+
+    @Test
+    fun `should throw on content_block_delta for an unopened index`() = runTest {
+        // given
+        // A content_block_delta without a preceding content_block_start at
+        // the same index cannot be interpreted (the delta type alone does
+        // not tell us which block kind to create), so toMessageResponse must
+        // fail loudly rather than silently dropping the delta.
+        val events = listOf(
+            """
+                {
+                  "type": "message_start",
+                  "message": {
+                    "type": "message",
+                    "id": "msg_test",
+                    "model": "claude-haiku-4-5",
+                    "role": "assistant",
+                    "content": [],
+                    "stop_reason": null,
+                    "stop_sequence": null,
+                    "usage": {"input_tokens": 10, "output_tokens": 1}
+                  }
+                }
+            """,
+            """
+                {
+                  "type": "content_block_delta",
+                  "index": 0,
+                  "delta": {"type": "text_delta", "text": "Hello"}
+                }
+            """,
+            """{"type": "message_stop"}"""
+        ).map { anthropicJson.decodeFromString<Event>(it) }
+
+        // when / then
+        assertFailsWith<IllegalStateException> {
+            events.asFlow().toMessageResponse()
         }
     }
 
