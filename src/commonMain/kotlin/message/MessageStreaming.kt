@@ -26,36 +26,38 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 
+private class BlockBuilder(
+    val block: ContentBlockStart.ContentBlock
+) {
+    val text = StringBuilder()
+    val signature = StringBuilder()
+
+    fun toContent(): Content = when (val block = block) {
+        is ContentBlockStart.ContentBlock.Text -> Text(text.toString())
+        is ContentBlockStart.ContentBlock.ToolUse -> ToolUse {
+            id = block.id
+            name = block.name
+            input = Json.decodeFromString<JsonObject>(text.toString())
+        }
+        is ContentBlockStart.ContentBlock.Thinking -> ThinkingBlock {
+            thinking = text.toString()
+            signature = this@BlockBuilder.signature.toString().ifEmpty { null }
+        }
+        is ContentBlockStart.ContentBlock.RedactedThinking -> RedactedThinkingBlock {
+            data = block.data
+        }
+    }
+}
+
 suspend fun Flow<Event>.toMessageResponse(): MessageResponse {
     var response: MessageResponse? = null
-    val builder = StringBuilder()
-    val signatureBuilder = StringBuilder()
-    val content = mutableListOf<Content>()
-    var currentBlock: ContentBlockStart.ContentBlock? = null
+    // Per-block accumulators keyed by event.index. Events for distinct
+    // blocks may be interleaved by Anthropic-compatible providers (e.g.
+    // Kimi via Moonshot), so we accumulate by index and emit in sorted
+    // order at message_stop rather than relying on content_block_stop
+    // arriving between blocks.
+    val builders = mutableMapOf<Int, BlockBuilder>()
     var messageStopped = false
-
-    // Flush open block — some providers (e.g. Kimi via Moonshot) omit content_block_stop.
-    fun flushCurrent() {
-        val block = currentBlock ?: return
-        content += when (block) {
-            is ContentBlockStart.ContentBlock.Text -> Text(builder.toString())
-            is ContentBlockStart.ContentBlock.ToolUse -> ToolUse {
-                id = block.id
-                name = block.name
-                input = Json.decodeFromString<JsonObject>(builder.toString())
-            }
-            is ContentBlockStart.ContentBlock.Thinking -> ThinkingBlock {
-                thinking = builder.toString()
-                signature = signatureBuilder.toString().ifEmpty { null }
-            }
-            is ContentBlockStart.ContentBlock.RedactedThinking -> RedactedThinkingBlock {
-                data = block.data
-            }
-        }
-        builder.clear()
-        signatureBuilder.clear()
-        currentBlock = null
-    }
 
     collect { event ->
         when (event) {
@@ -63,34 +65,36 @@ suspend fun Flow<Event>.toMessageResponse(): MessageResponse {
                 response = event.message
             }
             is ContentBlockStart -> {
-                flushCurrent()
-                currentBlock = event.contentBlock
+                val builder = BlockBuilder(event.contentBlock)
                 when (val block = event.contentBlock) {
                     is ContentBlockStart.ContentBlock.Text -> {
                         // actually, the first event seems to always have an empty text
-                        builder.append(block.text)
+                        builder.text.append(block.text)
                     }
                     is ContentBlockStart.ContentBlock.Thinking -> {
-                        builder.append(block.thinking)
-                        block.signature?.let(signatureBuilder::append)
+                        builder.text.append(block.thinking)
+                        block.signature?.let(builder.signature::append)
                     }
                     is ContentBlockStart.ContentBlock.ToolUse,
                     is ContentBlockStart.ContentBlock.RedactedThinking -> Unit
                 }
+                builders[event.index] = builder
             }
             is ContentBlockDelta -> {
-                when (event.delta) {
-                    is TextDelta -> builder.append(event.delta.text)
-                    is InputJsonDelta -> builder.append(event.delta.partialJson)
-                    is ThinkingDelta -> builder.append(event.delta.thinking)
-                    is SignatureDelta -> signatureBuilder.append(event.delta.signature)
+                val builder = checkNotNull(builders[event.index]) {
+                    "content_block_delta for unknown index ${event.index}"
+                }
+                when (val delta = event.delta) {
+                    is TextDelta -> builder.text.append(delta.text)
+                    is InputJsonDelta -> builder.text.append(delta.partialJson)
+                    is ThinkingDelta -> builder.text.append(delta.thinking)
+                    is SignatureDelta -> builder.signature.append(delta.signature)
                 }
             }
             is ContentBlockStop -> {
-                check(currentBlock != null) {
-                    "content_block_stop received without a preceding content_block_start"
+                check(event.index in builders) {
+                    "content_block_stop for unknown index ${event.index}"
                 }
-                flushCurrent()
             }
             is MessageDelta -> {
                 val startUsage = response!!.usage
@@ -114,9 +118,10 @@ suspend fun Flow<Event>.toMessageResponse(): MessageResponse {
                 )
             }
             is MessageStop -> {
-                flushCurrent()
                 response = response!!.copy(
-                    content = content
+                    content = builders.entries
+                        .sortedBy { it.key }
+                        .map { it.value.toContent() }
                 )
                 messageStopped = true
             }

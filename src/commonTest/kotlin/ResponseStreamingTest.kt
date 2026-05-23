@@ -111,10 +111,13 @@ class ResponseStreamingTest {
     }
 
     @Test
-    fun `should tolerate missing intermediate content_block_stop`() = runTest {
+    fun `should tolerate cross-block event interleaving`() = runTest {
         // given
         // Synthetic event sequence simulating an Anthropic-compatible provider
-        // (e.g. Kimi via Moonshot) that omits content_block_stop between blocks.
+        // (e.g. Kimi via Moonshot) that interleaves events across content
+        // blocks: block 1 starts before block 0 stops, and deltas alternate
+        // between indices. The index field is the source of truth for which
+        // builder each event applies to.
         val events = listOf(
             """
                 {
@@ -142,7 +145,7 @@ class ResponseStreamingTest {
                 {
                   "type": "content_block_delta",
                   "index": 0,
-                  "delta": {"type": "text_delta", "text": "Hello"}
+                  "delta": {"type": "text_delta", "text": "Hello "}
                 }
             """,
             """
@@ -160,8 +163,23 @@ class ResponseStreamingTest {
             """
                 {
                   "type": "content_block_delta",
+                  "index": 0,
+                  "delta": {"type": "text_delta", "text": "World"}
+                }
+            """,
+            """
+                {
+                  "type": "content_block_delta",
                   "index": 1,
-                  "delta": {"type": "input_json_delta", "partial_json": "{\"x\":1}"}
+                  "delta": {"type": "input_json_delta", "partial_json": "{\"x\""}
+                }
+            """,
+            """{"type": "content_block_stop", "index": 0}""",
+            """
+                {
+                  "type": "content_block_delta",
+                  "index": 1,
+                  "delta": {"type": "input_json_delta", "partial_json": ":1}"}
                 }
             """,
             """{"type": "content_block_stop", "index": 1}""",
@@ -181,12 +199,14 @@ class ResponseStreamingTest {
         // then
         response.content should {
             have(size == 2)
-            filterIsInstance<Text>().first() should {
-                have(text == "Hello")
+            // Content is emitted in index order regardless of arrival order.
+            (this[0] as Text) should {
+                have(text == "Hello World")
             }
-            filterIsInstance<ToolUse>().first() should {
+            (this[1] as ToolUse) should {
                 have(name == "calc")
                 have(id == "toolu_1")
+                have(input["x"]?.toString() == "1")
             }
         }
     }
