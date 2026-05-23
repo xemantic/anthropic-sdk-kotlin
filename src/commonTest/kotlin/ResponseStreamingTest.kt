@@ -111,13 +111,90 @@ class ResponseStreamingTest {
     }
 
     @Test
+    fun `should accumulate sequential blocks that reuse the same index`() = runTest {
+        // given
+        // Real Kimi behavior observed via Moonshot's compat layer: the
+        // provider opens, fills, and closes a tool_use block at index 0,
+        // then immediately opens a separate text block at the same index.
+        // Both blocks must appear in the response in arrival order.
+        val events = listOf(
+            """
+                {
+                  "type": "message_start",
+                  "message": {
+                    "type": "message",
+                    "id": "msg_test",
+                    "model": "claude-haiku-4-5",
+                    "role": "assistant",
+                    "content": [],
+                    "stop_reason": null,
+                    "stop_sequence": null,
+                    "usage": {"input_tokens": 10, "output_tokens": 1}
+                  }
+                }
+            """,
+            """
+                {
+                  "type": "content_block_start",
+                  "index": 0,
+                  "content_block": {
+                    "type": "tool_use",
+                    "id": "toolu_1",
+                    "name": "calc",
+                    "input": {}
+                  }
+                }
+            """,
+            """
+                {
+                  "type": "content_block_delta",
+                  "index": 0,
+                  "delta": {"type": "input_json_delta", "partial_json": "{\"x\":1}"}
+                }
+            """,
+            """{"type": "content_block_stop", "index": 0}""",
+            """
+                {
+                  "type": "content_block_start",
+                  "index": 0,
+                  "content_block": {"type": "text", "text": ""}
+                }
+            """,
+            """{"type": "content_block_stop", "index": 0}""",
+            """
+                {
+                  "type": "message_delta",
+                  "delta": {"stop_reason": "tool_use", "stop_sequence": null},
+                  "usage": {"output_tokens": 5}
+                }
+            """,
+            """{"type": "message_stop"}"""
+        ).map { anthropicJson.decodeFromString<Event>(it) }
+
+        // when
+        val response = events.asFlow().toMessageResponse()
+
+        // then
+        response.content should {
+            have(size == 2)
+            (this[0] as ToolUse) should {
+                have(name == "calc")
+                have(id == "toolu_1")
+                have(input["x"]?.toString() == "1")
+            }
+            (this[1] as Text) should {
+                have(text == "")
+            }
+        }
+    }
+
+    @Test
     fun `should tolerate cross-block event interleaving`() = runTest {
         // given
         // Synthetic event sequence simulating an Anthropic-compatible provider
-        // (e.g. Kimi via Moonshot) that interleaves events across content
-        // blocks: block 1 starts before block 0 stops, and deltas alternate
-        // between indices. The index field is the source of truth for which
-        // builder each event applies to.
+        // that interleaves events across distinct content-block indices: block 1
+        // starts before block 0 stops, and deltas alternate between indices.
+        // Deltas are routed by event.index to the open builder for that index.
         val events = listOf(
             """
                 {

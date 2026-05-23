@@ -51,12 +51,18 @@ private class BlockBuilder(
 
 suspend fun Flow<Event>.toMessageResponse(): MessageResponse {
     var response: MessageResponse? = null
-    // Per-block accumulators keyed by event.index. Events for distinct
-    // blocks may be interleaved by Anthropic-compatible providers (e.g.
-    // Kimi via Moonshot), so we accumulate by index and emit in sorted
-    // order at message_stop rather than relying on content_block_stop
-    // arriving between blocks.
-    val builders = mutableMapOf<Int, BlockBuilder>()
+    // Built blocks in arrival (start) order — emitted as-is on message_stop.
+    // We don't key emission by event.index because some Anthropic-compatible
+    // providers (e.g. Kimi via Moonshot) reuse the same index for sequential
+    // blocks (e.g. tool_use then text), so the index is not a stable
+    // identifier for a content block.
+    val builders = mutableListOf<BlockBuilder>()
+    // Currently-open builder per index — used only to route deltas/stops
+    // back to the correct builder while a block is in-flight. A new
+    // content_block_start at an already-open index implicitly closes the
+    // previous one (Kimi behavior); we don't remove it from `builders`,
+    // we only replace it in `openByIndex`.
+    val openByIndex = mutableMapOf<Int, BlockBuilder>()
     var messageStopped = false
 
     collect { event ->
@@ -78,11 +84,12 @@ suspend fun Flow<Event>.toMessageResponse(): MessageResponse {
                     is ContentBlockStart.ContentBlock.ToolUse,
                     is ContentBlockStart.ContentBlock.RedactedThinking -> Unit
                 }
-                builders[event.index] = builder
+                builders += builder
+                openByIndex[event.index] = builder
             }
             is ContentBlockDelta -> {
-                val builder = checkNotNull(builders[event.index]) {
-                    "content_block_delta for unknown index ${event.index}"
+                val builder = checkNotNull(openByIndex[event.index]) {
+                    "content_block_delta for unopened index ${event.index}"
                 }
                 when (val delta = event.delta) {
                     is TextDelta -> builder.text.append(delta.text)
@@ -92,9 +99,7 @@ suspend fun Flow<Event>.toMessageResponse(): MessageResponse {
                 }
             }
             is ContentBlockStop -> {
-                check(event.index in builders) {
-                    "content_block_stop for unknown index ${event.index}"
-                }
+                openByIndex.remove(event.index)
             }
             is MessageDelta -> {
                 val startUsage = response!!.usage
@@ -119,9 +124,7 @@ suspend fun Flow<Event>.toMessageResponse(): MessageResponse {
             }
             is MessageStop -> {
                 response = response!!.copy(
-                    content = builders.entries
-                        .sortedBy { it.key }
-                        .map { it.value.toContent() }
+                    content = builders.map { it.toContent() }
                 )
                 messageStopped = true
             }
