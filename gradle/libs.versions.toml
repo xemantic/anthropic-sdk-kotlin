@@ -1,49 +1,44 @@
 [versions]
-kotlinTarget = "2.3"
+kotlinTarget = "2.4"
 javaTarget = "17"
-
-# jetbrains
-kotlin = "2.3.21"
-kotlinxCoroutines = "1.10.2"
-# don't upgrade these 2 until kotlin-2.3.10 is released with native linux compilaiton hang fix
+# libraries
+## jetbrains
+kotlin = "2.4.0"
+kotlinxCoroutines = "1.11.0"
 kotlinxSerialization = "1.11.0"
-ktor = "3.4.3"
-
-# xemantic
-xemanticKotlinCore = "0.6.4"
+ktor = "3.5.0"
+asm = "9.9.1"
+## xemantic
+xemanticKotlinCore = "0.8.0"
 xemanticKotlinTest = "1.17.5"
 xemanticAiToolSchema = "1.2.0"
 xemanticAiMoney = "0.2"
 xemanticAiFileMagic = "0.4.0"
-
-# logging
-slf4j = "2.0.17"
-logback = "1.5.32"
-
+## logging
+slf4j = "2.0.18"
+logback = "1.5.34"
+## plugins
 versionsPlugin = "0.54.0"
+versionCatalogUpdatePlugin = "1.1.0"
 dokkaPlugin = "2.2.0"
 mavenPublishPlugin = "0.36.0"
-jreleaserPlugin = "1.23.0"
+jreleaserPlugin = "1.24.0"
 xemanticConventionsPlugin = "0.6.8"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
-
 kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinxSerialization" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
-
 # xemantic
 xemantic-kotlin-core = { module = "com.xemantic.kotlin:xemantic-kotlin-core", version.ref = "xemanticKotlinCore" }
 xemantic-kotlin-test = { module = "com.xemantic.kotlin:xemantic-kotlin-test", version.ref = "xemanticKotlinTest" }
 xemantic-ai-tool-schema = { module = "com.xemantic.ai:xemantic-ai-tool-schema", version.ref = "xemanticAiToolSchema" }
 xemantic-ai-money = { module = "com.xemantic.ai:xemantic-ai-money", version.ref = "xemanticAiMoney" }
 xemantic-ai-file-magic = { module = "com.xemantic.ai:xemantic-ai-file-magic", version.ref = "xemanticAiFileMagic" }
-
 # logging
 jul-to-slf4j = { module = "org.slf4j:jul-to-slf4j", version.ref = "slf4j" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
-
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
@@ -59,5 +54,6 @@ kotlin-plugin-power-assert = { id = "org.jetbrains.kotlin.plugin.power-assert", 
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokkaPlugin" }
 maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublishPlugin" }
 versions = { id = "com.github.ben-manes.versions", version.ref = "versionsPlugin" }
+version-catalog-update = { id = "nl.littlerobots.version-catalog-update", version.ref = "versionCatalogUpdatePlugin" }
 jreleaser = { id = "org.jreleaser", version.ref = "jreleaserPlugin" }
 xemantic-conventions = { id = "com.xemantic.gradle.xemantic-conventions", version.ref = "xemanticConventionsPlugin" }
