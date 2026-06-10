@@ -65,6 +65,10 @@ enum class Effort {
  * Configuration controlling how Claude produces output, serialized as the
  * `output_config` field of a message request.
  *
+ * Note: an `OutputConfig` with no properties set serializes as an empty
+ * `"output_config": {}` object, which the API treats the same as omitting
+ * the field — leave `outputConfig` unset on the request instead.
+ *
  * @property effort The [Effort] level Claude should apply, or `null` to use
  *   the API default (equivalent to [Effort.HIGH]).
  */

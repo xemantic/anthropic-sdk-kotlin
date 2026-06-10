@@ -438,6 +438,8 @@ class MessageRequestTest {
     @Test
     fun `should serialize effort as output_config`() {
         // given
+        // the DSL form of setting outputConfig, the next test verifies
+        // direct property assignment producing the same JSON
         val request = MessageRequest(model = Model.CLAUDE_OPUS_4_8) {
             outputConfig { effort = Effort.XHIGH }
             +"Hey Claude!?"
@@ -472,6 +474,8 @@ class MessageRequestTest {
     @Test
     fun `should serialize effort as output_config when assigned as property`() {
         // given
+        // the property assignment form of setting outputConfig, expected JSON
+        // is identical to the DSL form verified by the previous test
         val request = MessageRequest(model = Model.CLAUDE_OPUS_4_8) {
             outputConfig = OutputConfig {
                 effort = Effort.XHIGH
