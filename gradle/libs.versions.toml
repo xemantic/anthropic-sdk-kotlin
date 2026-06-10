@@ -5,7 +5,6 @@ javaTarget = "17"
 ## jetbrains
 kotlin = "2.4.0"
 kotlinxCoroutines = "1.11.0"
-# don't upgrade these 2 until kotlin-2.3.10 is released with native linux compilaiton hang fix
 kotlinxSerialization = "1.11.0"
 ktor = "3.5.0"
 asm = "9.9.1"
