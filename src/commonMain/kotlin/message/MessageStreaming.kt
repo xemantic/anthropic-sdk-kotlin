@@ -26,36 +26,44 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 
+private class BlockBuilder(
+    val block: ContentBlockStart.ContentBlock
+) {
+    val text = StringBuilder()
+    val signature = StringBuilder()
+
+    fun toContent(): Content = when (val block = block) {
+        is ContentBlockStart.ContentBlock.Text -> Text(text.toString())
+        is ContentBlockStart.ContentBlock.ToolUse -> ToolUse {
+            id = block.id
+            name = block.name
+            input = Json.decodeFromString<JsonObject>(text.toString())
+        }
+        is ContentBlockStart.ContentBlock.Thinking -> ThinkingBlock {
+            thinking = text.toString()
+            signature = this@BlockBuilder.signature.toString().ifEmpty { null }
+        }
+        is ContentBlockStart.ContentBlock.RedactedThinking -> RedactedThinkingBlock {
+            data = block.data
+        }
+    }
+}
+
 suspend fun Flow<Event>.toMessageResponse(): MessageResponse {
     var response: MessageResponse? = null
-    val builder = StringBuilder()
-    val signatureBuilder = StringBuilder()
-    val content = mutableListOf<Content>()
-    var currentBlock: ContentBlockStart.ContentBlock? = null
+    // Built blocks in arrival (start) order — emitted as-is on message_stop.
+    // We don't key emission by event.index because some Anthropic-compatible
+    // providers (e.g. Kimi via Moonshot) reuse the same index for sequential
+    // blocks (e.g. tool_use then text), so the index is not a stable
+    // identifier for a content block.
+    val builders = mutableListOf<BlockBuilder>()
+    // Currently-open builder per index — used only to route deltas/stops
+    // back to the correct builder while a block is in-flight. A new
+    // content_block_start at an already-open index implicitly closes the
+    // previous one (Kimi behavior); we don't remove it from `builders`,
+    // we only replace it in `openByIndex`.
+    val openByIndex = mutableMapOf<Int, BlockBuilder>()
     var messageStopped = false
-
-    // Flush open block — some providers (e.g. Kimi via Moonshot) omit content_block_stop.
-    fun flushCurrent() {
-        val block = currentBlock ?: return
-        content += when (block) {
-            is ContentBlockStart.ContentBlock.Text -> Text(builder.toString())
-            is ContentBlockStart.ContentBlock.ToolUse -> ToolUse {
-                id = block.id
-                name = block.name
-                input = Json.decodeFromString<JsonObject>(builder.toString())
-            }
-            is ContentBlockStart.ContentBlock.Thinking -> ThinkingBlock {
-                thinking = builder.toString()
-                signature = signatureBuilder.toString().ifEmpty { null }
-            }
-            is ContentBlockStart.ContentBlock.RedactedThinking -> RedactedThinkingBlock {
-                data = block.data
-            }
-        }
-        builder.clear()
-        signatureBuilder.clear()
-        currentBlock = null
-    }
 
     collect { event ->
         when (event) {
@@ -63,34 +71,39 @@ suspend fun Flow<Event>.toMessageResponse(): MessageResponse {
                 response = event.message
             }
             is ContentBlockStart -> {
-                flushCurrent()
-                currentBlock = event.contentBlock
+                val builder = BlockBuilder(event.contentBlock)
                 when (val block = event.contentBlock) {
                     is ContentBlockStart.ContentBlock.Text -> {
                         // actually, the first event seems to always have an empty text
-                        builder.append(block.text)
+                        builder.text.append(block.text)
                     }
                     is ContentBlockStart.ContentBlock.Thinking -> {
-                        builder.append(block.thinking)
-                        block.signature?.let(signatureBuilder::append)
+                        builder.text.append(block.thinking)
+                        block.signature?.let(builder.signature::append)
                     }
                     is ContentBlockStart.ContentBlock.ToolUse,
                     is ContentBlockStart.ContentBlock.RedactedThinking -> Unit
                 }
+                builders += builder
+                openByIndex[event.index] = builder
             }
             is ContentBlockDelta -> {
-                when (event.delta) {
-                    is TextDelta -> builder.append(event.delta.text)
-                    is InputJsonDelta -> builder.append(event.delta.partialJson)
-                    is ThinkingDelta -> builder.append(event.delta.thinking)
-                    is SignatureDelta -> signatureBuilder.append(event.delta.signature)
+                val builder = checkNotNull(openByIndex[event.index]) {
+                    "content_block_delta for unopened index ${event.index}"
+                }
+                when (val delta = event.delta) {
+                    is TextDelta -> builder.text.append(delta.text)
+                    is InputJsonDelta -> builder.text.append(delta.partialJson)
+                    is ThinkingDelta -> builder.text.append(delta.thinking)
+                    is SignatureDelta -> builder.signature.append(delta.signature)
                 }
             }
             is ContentBlockStop -> {
-                check(currentBlock != null) {
-                    "content_block_stop received without a preceding content_block_start"
-                }
-                flushCurrent()
+                // Deliberately lenient: an unknown or duplicate index is a
+                // no-op. The block is already in `builders` from its start,
+                // and stop is only used here to free routing — a missing or
+                // out-of-order stop must not drop content (see #147).
+                openByIndex.remove(event.index)
             }
             is MessageDelta -> {
                 val startUsage = response!!.usage
@@ -114,9 +127,8 @@ suspend fun Flow<Event>.toMessageResponse(): MessageResponse {
                 )
             }
             is MessageStop -> {
-                flushCurrent()
                 response = response!!.copy(
-                    content = content
+                    content = builders.map { it.toContent() }
                 )
                 messageStopped = true
             }

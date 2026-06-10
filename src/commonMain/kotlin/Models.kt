@@ -44,6 +44,18 @@ data class Model(
 
     companion object {
 
+        val CLAUDE_OPUS_4_8 = Model(
+            id = "claude-opus-4-8",
+            contextWindow = 1000000,
+            maxOutput = 128000,
+            messageBatchesApi = true,
+            cost = Cost {
+                inputTokens = "5".dollarsPerMillion
+                outputTokens = "25".dollarsPerMillion
+            },
+            cacheMinTokens = 1024
+        )
+
         val CLAUDE_OPUS_4_7 = Model(
             id = "claude-opus-4-7",
             contextWindow = 1000000,
@@ -53,7 +65,7 @@ data class Model(
                 inputTokens = "5".dollarsPerMillion
                 outputTokens = "25".dollarsPerMillion
             },
-            cacheMinTokens = 1024
+            cacheMinTokens = 2048
         )
 
         val CLAUDE_SONNET_4_6 = Model(
@@ -89,7 +101,7 @@ data class Model(
                 inputTokens = "5".dollarsPerMillion
                 outputTokens = "25".dollarsPerMillion
             },
-            cacheMinTokens = 1024
+            cacheMinTokens = 4096
         )
 
         val CLAUDE_OPUS_4_5_20251101 = Model(
@@ -101,7 +113,7 @@ data class Model(
                 inputTokens = "5".dollarsPerMillion
                 outputTokens = "25".dollarsPerMillion
             },
-            cacheMinTokens = 1024
+            cacheMinTokens = 4096
         )
 
         val CLAUDE_OPUS_4_1_20250805 = Model(
@@ -125,6 +137,7 @@ data class Model(
                 inputTokens = "15".dollarsPerMillion
                 outputTokens = "75".dollarsPerMillion
             },
+            deprecated = true,
             cacheMinTokens = 1024
         )
 
@@ -137,6 +150,7 @@ data class Model(
                 inputTokens = "3".dollarsPerMillion
                 outputTokens = "15".dollarsPerMillion
             },
+            deprecated = true,
             cacheMinTokens = 1024
         )
 
@@ -149,6 +163,7 @@ data class Model(
                 inputTokens = "3".dollarsPerMillion
                 outputTokens = "15".dollarsPerMillion
             },
+            deprecated = true,
             cacheMinTokens = 1024
         )
 
@@ -225,6 +240,7 @@ data class Model(
                 inputTokens = "0.25".dollarsPerMillion
                 outputTokens = "1.25".dollarsPerMillion
             },
+            deprecated = true,
             cacheMinTokens = 2048
         )
 

@@ -31,6 +31,7 @@ plugins {
     alias(libs.plugins.kotlin.plugin.serialization)
     alias(libs.plugins.dokka)
     alias(libs.plugins.versions)
+    alias(libs.plugins.version.catalog.update)
     alias(libs.plugins.maven.publish)
     alias(libs.plugins.jreleaser)
     alias(libs.plugins.xemantic.conventions)
@@ -307,6 +308,14 @@ repositories {
     mavenCentral()
 }
 
+configurations.all {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "org.ow2.asm") {
+            useVersion(libs.versions.asm.get())
+        }
+    }
+}
+
 if (!isJvmOnlyBuild) {
     // linux test native test temporarily disabled as it is causing GitHub action to stall
 //    tasks.named("linuxX64Test") { enabled = false }
@@ -338,6 +347,16 @@ powerAssert {
 dokka {
     pluginsConfiguration.html {
         footerMessage = xemantic.copyright
+    }
+}
+
+versionCatalogUpdate {
+    // preserve the manual, logically-grouped ordering of libs.versions.toml
+    sortByKey = false
+    keep {
+        // kotlinTarget / javaTarget are plain version constants with no version.ref
+        versions = setOf("kotlinTarget", "javaTarget", "asm")
+        keepUnusedVersions = false
     }
 }
 
