@@ -19,6 +19,8 @@ package com.xemantic.ai.anthropic.message
 import com.xemantic.ai.anthropic.Model
 import com.xemantic.ai.anthropic.content.Text
 import com.xemantic.ai.anthropic.json.anthropicJson
+import com.xemantic.ai.anthropic.output.Effort
+import com.xemantic.ai.anthropic.output.OutputConfig
 import com.xemantic.ai.anthropic.tool.*
 import com.xemantic.ai.tool.schema.meta.Description
 import com.xemantic.kotlin.test.sameAsJson
@@ -417,6 +419,110 @@ class MessageRequestTest {
         json sameAsJson """
             {
               "model": "claude-opus-4-6",
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Hey Claude!?"
+                    }
+                  ]
+                }
+              ],
+              "max_tokens": 128000
+            }
+        """.trimIndent()
+    }
+
+    @Test
+    fun `should serialize effort as output_config`() {
+        // given
+        // the DSL form of setting outputConfig, the next test verifies
+        // direct property assignment producing the same JSON
+        val request = MessageRequest(model = Model.CLAUDE_OPUS_4_8) {
+            outputConfig { effort = Effort.XHIGH }
+            +"Hey Claude!?"
+        }
+
+        // when
+        val json = anthropicJson.encodeToString(request)
+
+        // then
+        json sameAsJson """
+            {
+              "model": "claude-opus-4-8",
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Hey Claude!?"
+                    }
+                  ]
+                }
+              ],
+              "max_tokens": 128000,
+              "output_config": {
+                "effort": "xhigh"
+              }
+            }
+        """.trimIndent()
+    }
+
+    @Test
+    fun `should serialize effort as output_config when assigned as property`() {
+        // given
+        // the property assignment form of setting outputConfig, expected JSON
+        // is identical to the DSL form verified by the previous test
+        val request = MessageRequest(model = Model.CLAUDE_OPUS_4_8) {
+            outputConfig = OutputConfig {
+                effort = Effort.XHIGH
+            }
+            +"Hey Claude!?"
+        }
+
+        // when
+        val json = anthropicJson.encodeToString(request)
+
+        // then
+        json sameAsJson """
+            {
+              "model": "claude-opus-4-8",
+              "messages": [
+                {
+                  "role": "user",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Hey Claude!?"
+                    }
+                  ]
+                }
+              ],
+              "max_tokens": 128000,
+              "output_config": {
+                "effort": "xhigh"
+              }
+            }
+        """.trimIndent()
+    }
+
+    @Test
+    fun `should not serialize output_config when it is not set`() {
+        // given
+        val request = MessageRequest(model = Model.CLAUDE_OPUS_4_8) {
+            +"Hey Claude!?"
+        }
+
+        // when
+        val json = anthropicJson.encodeToString(request)
+
+        // then
+        json sameAsJson """
+            {
+              "model": "claude-opus-4-8",
               "messages": [
                 {
                   "role": "user",

@@ -25,6 +25,7 @@ import com.xemantic.ai.anthropic.content.Text
 import com.xemantic.ai.anthropic.content.ToolUse
 import com.xemantic.ai.anthropic.json.anthropicJson
 import com.xemantic.ai.anthropic.json.toPrettyJson
+import com.xemantic.ai.anthropic.output.OutputConfig
 import com.xemantic.ai.anthropic.thinking.ThinkingConfig
 import com.xemantic.ai.anthropic.tool.Tool
 import com.xemantic.ai.anthropic.tool.ToolChoice
@@ -76,7 +77,9 @@ data class MessageRequest(
     val topK: Int?,
     @SerialName("top_p")
     val topP: Double?,
-    val thinking: ThinkingConfig?
+    val thinking: ThinkingConfig?,
+    @SerialName("output_config")
+    val outputConfig: OutputConfig?
 ) {
 
     class Builder {
@@ -94,6 +97,15 @@ data class MessageRequest(
         var topK: Int? = null
         var topP: Double? = null
         var thinking: ThinkingConfig? = null
+
+        /**
+         * Controls how Claude produces output for this request, serialized as
+         * the `output_config` field — most notably the reasoning/output effort
+         * level. Assign a prebuilt [OutputConfig], or use the
+         * `outputConfig { … }` builder function below. See [OutputConfig] and
+         * [OutputConfig.effort] for per-model availability.
+         */
+        var outputConfig: OutputConfig? = null
 
         fun messages(vararg messages: Message) {
             this.messages += messages.toList()
@@ -128,6 +140,18 @@ data class MessageRequest(
             maxTokens = model.maxOutput
         }
 
+        /**
+         * Builds an [OutputConfig] from [block] and assigns it, enabling the
+         * idiomatic `outputConfig { effort = Effort.XHIGH }` form.
+         */
+        @OptIn(ExperimentalContracts::class)
+        fun outputConfig(block: OutputConfig.Builder.() -> Unit) {
+            contract {
+                callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+            }
+            outputConfig = OutputConfig(block)
+        }
+
         fun build(): MessageRequest = MessageRequest(
             model = requireNotNull(model) { "model must be specified" },
             maxTokens = requireNotNull(maxTokens) { "maxTokens must be specified" },
@@ -141,7 +165,8 @@ data class MessageRequest(
             tools = tools.ifEmpty { null },
             topK = topK,
             topP = topP,
-            thinking = thinking
+            thinking = thinking,
+            outputConfig = outputConfig
         )
 
     }
