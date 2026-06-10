@@ -50,7 +50,7 @@ sealed class ThinkingConfig {
         /**
          * Thinking blocks are returned with an empty `thinking` field, but the
          * `signature` is still provided for multi-turn continuity. Default on
-         * Claude Opus 4.7 and Claude Mythos Preview.
+         * Claude Opus 4.7, Claude Opus 4.8 and Claude Mythos Preview.
          */
         @SerialName("omitted")
         OMITTED
@@ -61,13 +61,14 @@ sealed class ThinkingConfig {
      * Extended thinking enabled with a specified token budget.
      *
      * Note: Deprecated on Claude Opus 4.6 and Claude Sonnet 4.6, and not
-     * supported on Claude Opus 4.7 — use [Adaptive] on those models.
+     * supported on Claude Opus 4.7 or Claude Opus 4.8 — use [Adaptive] on
+     * those models.
      *
      * @property budgetTokens Determines how many tokens Claude can use for its
      *   internal reasoning process. Must be ≥1024 and less than max_tokens.
      * @property display Whether to return summarized thinking text or only the
      *   signature. Defaults to [ThinkingConfig.Display.SUMMARIZED] on Claude 4 models
-     *   and [ThinkingConfig.Display.OMITTED] on Claude Opus 4.7 / Mythos Preview.
+     *   and [ThinkingConfig.Display.OMITTED] on Claude Opus 4.7 / 4.8 / Mythos Preview.
      */
     @Serializable
     @SerialName("enabled")
@@ -102,7 +103,7 @@ sealed class ThinkingConfig {
 
     /**
      * Adaptive extended thinking. Claude decides whether and how much to think
-     * based on the prompt. Recommended on Claude Opus 4.6 / 4.7 and Claude
+     * based on the prompt. Recommended on Claude Opus 4.6 / 4.7 / 4.8 and Claude
      * Sonnet 4.6, and the default on Claude Mythos Preview.
      *
      * @property display Whether to return summarized thinking text or only the
