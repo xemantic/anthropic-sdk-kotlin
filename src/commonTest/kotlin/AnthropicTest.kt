@@ -70,17 +70,47 @@ class AnthropicTest {
     }
 
     @Test
-    fun `should use topK topP and temperature`() = runTest {
+    fun `should use topK and temperature`() = runTest {
         // given
         val anthropic = testAnthropic()
 
         // when
         val response = anthropic.messages.create {
             +"Hello World! What's your name?"
-            model = Model.CLAUDE_SONNET_4_20250514.id // the latest sonnet does not allow to set up both
+            model = Model.CLAUDE_HAIKU_4_5_20251001.id
             topK = 40
-            topP = 0.7
-            temperature = 0.3
+            temperature = 0.3 // topP and temperature cannot be set together on current models
+        }
+
+        // then
+        response should {
+            have(role == Role.ASSISTANT)
+            have("claude" in model)
+            have(stopReason == StopReason.END_TURN)
+            have(content.size == 1)
+            content[0] should {
+                be<Text>()
+                have("Claude" in text)
+            }
+            have(stopSequence == null)
+            usage should {
+                have(inputTokens == 15)
+                have(outputTokens > 0)
+            }
+        }
+    }
+
+    @Test
+    fun `should use topK and topP`() = runTest {
+        // given
+        val anthropic = testAnthropic()
+
+        // when
+        val response = anthropic.messages.create {
+            +"Hello World! What's your name?"
+            model = Model.CLAUDE_HAIKU_4_5_20251001.id
+            topK = 40
+            topP = 0.7 // topP and temperature cannot be set together on current models
         }
 
         // then
