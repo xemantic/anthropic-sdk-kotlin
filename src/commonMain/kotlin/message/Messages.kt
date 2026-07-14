@@ -271,7 +271,54 @@ enum class StopReason {
     STOP_SEQUENCE,
 
     @SerialName("tool_use")
-    TOOL_USE
+    TOOL_USE,
+
+    /**
+     * The model paused a long-running server-tool turn and can be resumed by
+     * re-sending the conversation. Emitted during agentic flows that use
+     * server-side tools (e.g. web search).
+     */
+    @SerialName("pause_turn")
+    PAUSE_TURN,
+
+    /**
+     * The model declined to generate a response for safety reasons. When this
+     * is the [StopReason], [MessageResponse.stopDetails] is populated with the
+     * refusal [StopDetails.category] and [StopDetails.explanation].
+     */
+    @SerialName("refusal")
+    REFUSAL,
+
+    /**
+     * Generation stopped because the conversation reached the model's context
+     * window limit. Distinct from [MAX_TOKENS], which is the requested output
+     * cap — this signals the input plus output exceeded the context window.
+     */
+    @SerialName("model_context_window_exceeded")
+    MODEL_CONTEXT_WINDOW_EXCEEDED
+}
+
+/**
+ * Structured details accompanying a [StopReason]. Currently populated only
+ * when [MessageResponse.stopReason] is [StopReason.REFUSAL]; it is `null` for
+ * every other stop reason, so always guard on [MessageResponse.stopReason]
+ * before reading these fields.
+ *
+ * @property type The kind of stop detail, e.g. `"refusal"`.
+ * @property category The policy category that triggered the refusal (e.g.
+ *   `"cyber"`, `"bio"`), or `null` when no category is provided.
+ * @property explanation A human-readable explanation of the refusal, when
+ *   available.
+ */
+@Serializable
+data class StopDetails(
+    val type: String,
+    val category: String? = null,
+    val explanation: String? = null
+) {
+
+    override fun toString(): String = toPrettyJson()
+
 }
 
 operator fun MutableCollection<in Message>.plusAssign(
@@ -297,7 +344,9 @@ data class MessageResponse(
     val stopReason: StopReason?,
     @SerialName("stop_sequence")
     val stopSequence: String?,
-    val usage: Usage
+    val usage: Usage,
+    @SerialName("stop_details")
+    val stopDetails: StopDetails? = null
 ) : Response(type = "message") {
 
     fun asMessage(): Message = Message {

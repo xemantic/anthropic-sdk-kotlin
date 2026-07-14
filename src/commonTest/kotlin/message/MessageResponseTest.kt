@@ -300,6 +300,199 @@ class MessageResponseTest {
     }
 
     @Test
+    fun `should deserialize pause_turn stop reason`() {
+        // given
+        val jsonResponse = """
+            {
+              "id": "msg_01PauseTurn",
+              "type": "message",
+              "role": "assistant",
+              "model": "claude-sonnet-4-5-20250929",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Let me keep searching."
+                }
+              ],
+              "stop_reason": "pause_turn",
+              "stop_sequence": null,
+              "usage": {
+                "input_tokens": 100,
+                "output_tokens": 20
+              }
+            }
+        """
+
+        // when
+        val response = anthropicJson.decodeFromString<Response>(jsonResponse)
+
+        // then
+        response should {
+            be<MessageResponse>()
+            have(stopReason == StopReason.PAUSE_TURN)
+            have(stopDetails == null)
+        }
+    }
+
+    @Test
+    fun `should deserialize refusal stop reason with stop_details`() {
+        // given
+        val jsonResponse = """
+            {
+              "id": "msg_01Refusal",
+              "type": "message",
+              "role": "assistant",
+              "model": "claude-sonnet-4-5-20250929",
+              "content": [],
+              "stop_reason": "refusal",
+              "stop_sequence": null,
+              "stop_details": {
+                "type": "refusal",
+                "category": "cyber",
+                "explanation": "The request was declined for safety reasons."
+              },
+              "usage": {
+                "input_tokens": 100,
+                "output_tokens": 0
+              }
+            }
+        """
+
+        // when
+        val response = anthropicJson.decodeFromString<Response>(jsonResponse)
+
+        // then
+        response should {
+            be<MessageResponse>()
+            have(stopReason == StopReason.REFUSAL)
+            have(content.isEmpty())
+            stopDetails!! should {
+                have(type == "refusal")
+                have(category == "cyber")
+                have(explanation == "The request was declined for safety reasons.")
+            }
+        }
+    }
+
+    @Test
+    fun `should deserialize refusal stop_details with null category`() {
+        // given
+        val jsonResponse = """
+            {
+              "id": "msg_01RefusalNoCategory",
+              "type": "message",
+              "role": "assistant",
+              "model": "claude-sonnet-4-5-20250929",
+              "content": [],
+              "stop_reason": "refusal",
+              "stop_sequence": null,
+              "stop_details": {
+                "type": "refusal"
+              },
+              "usage": {
+                "input_tokens": 100,
+                "output_tokens": 0
+              }
+            }
+        """
+
+        // when
+        val response = anthropicJson.decodeFromString<Response>(jsonResponse)
+
+        // then
+        response should {
+            be<MessageResponse>()
+            have(stopReason == StopReason.REFUSAL)
+            stopDetails!! should {
+                have(type == "refusal")
+                have(category == null)
+                have(explanation == null)
+            }
+        }
+    }
+
+    @Test
+    fun `should deserialize model_context_window_exceeded stop reason`() {
+        // given
+        val jsonResponse = """
+            {
+              "id": "msg_01ContextExceeded",
+              "type": "message",
+              "role": "assistant",
+              "model": "claude-sonnet-4-5-20250929",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Partial answer"
+                }
+              ],
+              "stop_reason": "model_context_window_exceeded",
+              "stop_sequence": null,
+              "usage": {
+                "input_tokens": 100,
+                "output_tokens": 20
+              }
+            }
+        """
+
+        // when
+        val response = anthropicJson.decodeFromString<Response>(jsonResponse)
+
+        // then
+        response should {
+            be<MessageResponse>()
+            have(stopReason == StopReason.MODEL_CONTEXT_WINDOW_EXCEEDED)
+            have(stopDetails == null)
+        }
+    }
+
+    @Test
+    fun `should serialize refusal MessageResponse with stop_details to JSON via toString`() {
+        // given
+        val response = MessageResponse(
+            model = "claude-sonnet-4-5-20250929",
+            id = "msg_01Refusal",
+            role = Role.ASSISTANT,
+            content = emptyList(),
+            stopReason = StopReason.REFUSAL,
+            stopSequence = null,
+            usage = Usage {
+                inputTokens = 100
+                outputTokens = 0
+            },
+            stopDetails = StopDetails(
+                type = "refusal",
+                category = "cyber",
+                explanation = "The request was declined for safety reasons."
+            )
+        )
+
+        // when
+        val json = response.toString()
+
+        // then
+        json sameAs /* language=json */ """
+            {
+              "type": "message",
+              "model": "claude-sonnet-4-5-20250929",
+              "id": "msg_01Refusal",
+              "role": "assistant",
+              "content": [],
+              "stop_reason": "refusal",
+              "usage": {
+                "input_tokens": 100,
+                "output_tokens": 0
+              },
+              "stop_details": {
+                "type": "refusal",
+                "category": "cyber",
+                "explanation": "The request was declined for safety reasons."
+              }
+            }
+        """.trimIndent()
+    }
+
+    @Test
     fun `should serialize complex MessageResponse with WebFetch content to JSON via toString`() {
         val response = MessageResponse(
             model = "claude-sonnet-4-5-20250929",

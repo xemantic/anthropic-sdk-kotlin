@@ -70,6 +70,48 @@ class AnthropicTest {
     }
 
     @Test
+    fun `should receive no stopDetails for a normal end_turn response`() = runTest {
+        // Note: the newer stop reasons (refusal, pause_turn,
+        // model_context_window_exceeded) cannot be triggered reliably or
+        // safely in a live test, so this verifies that the new stop_details
+        // field deserializes correctly against real API responses and stays
+        // null for an ordinary completion. Enum-value and stop_details parsing
+        // are covered exhaustively by MessageResponseTest unit tests.
+
+        // given
+        val anthropic = testAnthropic()
+
+        // when
+        val response = anthropic.messages.create {
+            +"Hello World! What's your name?"
+        }
+
+        // then
+        response should {
+            have(stopReason == StopReason.END_TURN)
+            have(stopDetails == null)
+        }
+    }
+
+    @Test
+    fun `should stop with MAX_TOKENS and no stopDetails when max tokens reached`() = runTest {
+        // given
+        val anthropic = testAnthropic()
+
+        // when
+        val response = anthropic.messages.create {
+            +"Write a long essay about the history of computing."
+            maxTokens = 1
+        }
+
+        // then
+        response should {
+            have(stopReason == StopReason.MAX_TOKENS)
+            have(stopDetails == null)
+        }
+    }
+
+    @Test
     fun `should use topK and temperature`() = runTest {
         // given
         val anthropic = testAnthropic()
