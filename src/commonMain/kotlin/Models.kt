@@ -44,6 +44,18 @@ data class Model(
 
     companion object {
 
+        val CLAUDE_FABLE_5 = Model(
+            id = "claude-fable-5",
+            contextWindow = 1000000,
+            maxOutput = 128000,
+            messageBatchesApi = true,
+            cost = Cost {
+                inputTokens = "10".dollarsPerMillion
+                outputTokens = "50".dollarsPerMillion
+            },
+            cacheMinTokens = 512
+        )
+
         val CLAUDE_OPUS_4_8 = Model(
             id = "claude-opus-4-8",
             contextWindow = 1000000,
@@ -66,6 +78,20 @@ data class Model(
                 outputTokens = "25".dollarsPerMillion
             },
             cacheMinTokens = 2048
+        )
+
+        val CLAUDE_SONNET_5 = Model(
+            id = "claude-sonnet-5",
+            contextWindow = 1000000,
+            maxOutput = 128000,
+            messageBatchesApi = true,
+            // Standard pricing; introductory pricing of $2/$10 per MTok
+            // applies through 2026-08-31.
+            cost = Cost {
+                inputTokens = "3".dollarsPerMillion
+                outputTokens = "15".dollarsPerMillion
+            },
+            cacheMinTokens = 1024
         )
 
         val CLAUDE_SONNET_4_6 = Model(
