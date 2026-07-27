@@ -20,8 +20,10 @@ import com.xemantic.ai.anthropic.error.AnthropicApiException
 import com.xemantic.ai.anthropic.error.ErrorResponse
 import com.xemantic.ai.anthropic.event.Event
 import com.xemantic.ai.anthropic.json.anthropicJson
+import com.xemantic.ai.anthropic.message.MessageCountTokensRequest
 import com.xemantic.ai.anthropic.message.MessageRequest
 import com.xemantic.ai.anthropic.message.MessageResponse
+import com.xemantic.ai.anthropic.message.MessageTokensCount
 import com.xemantic.ai.anthropic.tool.Tool
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -245,6 +247,33 @@ class Anthropic internal constructor(
                     "Unsupported response: $response"
                 ) // should never happen
             }
+        }
+
+        suspend fun countTokens(
+            block: MessageRequest.Builder.() -> Unit
+        ): MessageTokensCount {
+            val messageRequest = MessageRequest.Builder().apply {
+                model = defaultModel
+                maxTokens = 1 // Dummy value, won't be sent to API
+                if (defaultTools != null) {
+                    tools = defaultTools
+                }
+                block(this)
+            }.build()
+
+            val countTokensRequest = MessageCountTokensRequest(
+                model = messageRequest.model,
+                messages = messageRequest.messages,
+                system = messageRequest.system,
+                toolChoice = messageRequest.toolChoice,
+                tools = messageRequest.tools
+            )
+
+            val apiResponse = client.post("/v1/messages/count_tokens") {
+                contentType(ContentType.Application.Json)
+                setBody(countTokensRequest)
+            }
+            return apiResponse.body<MessageTokensCount>()
         }
 
         fun stream(
